@@ -5,3 +5,4 @@ TQFScrollingText：滚动显示控件
 2024.03.09  
 ![截图](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE.png)
 ![截图2](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE2.png)
+![截图3](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE3.png)
