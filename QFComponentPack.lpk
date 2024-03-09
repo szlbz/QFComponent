@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <PathDelim Value="\"/>
+    <Name Value="QFComponentPack"/>
+    <Type Value="RunAndDesignTime"/>
+    <Author Value="秋风(QQ:315795176)"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="秋风(QQ:315795176)开发的控件包，有2个控件：
+TQFRichView：类RichView控件
+TQFScrollingText：滚动显示控件"/>
+    <Version Minor="1"/>
+    <Files>
+      <Item>
+        <Filename Value="QFComponent.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="QFComponent"/>
+      </Item>
+      <Item>
+        <Filename Value="QFComponentPack.pas"/>
+        <UnitName Value="QFComponentPack"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
