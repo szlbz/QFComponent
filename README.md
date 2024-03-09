@@ -1,9 +1,9 @@
-QFComponent for lazarus  
+ **QFComponent for lazarus**   
 秋风(QQ:315795176)开发的控件包，有2个控件：  
 TQFRichView：类RichView控件  
 TQFScrollingText：滚动显示控件  
 使用以下特定符号定义文字（行）的属性：  
-[img]demo.bmp  
+[img]本地图像文件名称  
 [!]下划线  
 [@]删除线  
 [#]粗体  
@@ -23,8 +23,9 @@ TQFScrollingText：滚动显示控件
 [S5]字体尺寸18  
 [LINE]分割线  
 [2LINE]双线条分割线  
-及初步支持markdown格式的表格  
-  
+初步 **支持markdown格式的表格**   
+图像格式支持： **jpg,bmp,png** 等    
+可在windows和linux使用，已在龙芯电脑实测可用。  
 可在windows和linux使用，已在龙芯电脑实测可用。  
 2024.03.09  
 ![截图](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE.png)
