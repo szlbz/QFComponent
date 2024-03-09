@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, DB, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  QFComponent, Ledger;
+  QFComponent;
 
 type
 
