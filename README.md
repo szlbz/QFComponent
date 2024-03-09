@@ -29,6 +29,6 @@ TQFScrollingText：滚动显示控件
 TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠标实现快速滚动。  
 2024.03.09  
 ![截图](%E6%88%AA%E5%9B%BE.png)
-![截图2](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE2.png)
-![截图3](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE3.png)
-![截图4](https://github.com/szlbz/QFComponent/blob/main/%E6%88%AA%E5%9B%BE4.png)  
+![截图2](%E6%88%AA%E5%9B%BE2.png)
+![截图3](%E6%88%AA%E5%9B%BE3.png)
+![截图4](%E6%88%AA%E5%9B%BE4.png)  
