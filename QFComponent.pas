@@ -9,8 +9,8 @@ unit QFComponent;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, Buttons, ExtCtrls, ComCtrls,
-  FPCAdds,lclintf,LazFileUtils,lazutf8,LMessages;
+  Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
+  lclintf, LazFileUtils, lazutf8, LMessages;
 
 type
 
@@ -41,6 +41,8 @@ type
 
   TCustomText = class(TCustomControl)
   private
+    TTableHeight:integer;
+    TTHNO:integer;
     FTS:integer;//表格数量
     FTablesl:array of TTableSL;
     FTable:Array of Array of TTableType;
@@ -365,6 +367,11 @@ var
         FLineHeight:=FLineHeight+IMG.Picture.Height;
       end;
     end;
+    //if (Pos(':-', s) >0) or (Pos(':-:', s) >0) or (Pos('-:', s) >0) then
+    //begin
+    //  FActiveLineHeight1:=FLineHeight-FBuffer.Canvas.TextHeight(s);//超链接出现时的高度
+    //  FActiveLineHeight2:=FLineHeight-FBuffer.Canvas.TextHeight(s); //超链接出现时的高度
+    //end;
     //超链接
     if (Pos('http://', s) = 1) or (Pos('https://', s) = 1) then
     begin
@@ -484,6 +491,7 @@ begin
   FActiveLineHeight1:=0;
   FActiveLineHeight2:=0;
   FActiveLineSave:=0;
+  FLineHeight:=0;//2024.3.10
   FLineList:=nil;
   setlength(FLineList,Linetemp.Count);
   Lineno:= Linetemp.Count;
@@ -494,6 +502,7 @@ begin
     begin
       preprocessing;
       FLineList[i].str:=s;
+      //FBuffer.Canvas.Font.Style:=FLineList[i].FontStyle;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight('X');
       FLineHeight:=FLineHeight+FLineList[i].LineHeight;
@@ -506,7 +515,7 @@ begin
   begin
     FOffset := FBuffer.Height;
     FActiveLineHeightSave1:=FActiveLineHeight1;
-    FActiveLineHeightSave2:=FActiveLineHeight2;
+    FActiveLineHeightSave2:=FActiveLineHeight2; //2024-03-10
   end;
 
   with FBuffer.Canvas do
@@ -604,7 +613,7 @@ procedure TCustomText.DrawTexts(y:integer);
 var
   w,x,disptable: integer;
   s: string;
-  tsno:integer;
+  tsno,addh:integer;
   i: integer;
 
   function strtext(str:string;fbwidth:integer):string;
@@ -636,10 +645,12 @@ var
     col:=FTablesl[no].col-1;
     FBuffer.Canvas.Font.Style:=[fsBold];
     h:=FBuffer.Canvas.TextHeight('国')+2;
+    TTableHeight:=h;
     w0:=(FBuffer.Width-FGapX*2) div col;
     FBuffer.Canvas.Pen.Color:=clBlack;//黑色画笔
     for i:=0 to row-1 do  //画横线
     begin
+      TTableHeight:=TTableHeight+h;
       FBuffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,FBuffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
     end;
     for j:=0 to col do//画竖线
@@ -703,6 +714,7 @@ var
 begin
   disptable:=0;
   tsNo:=0;
+  addh:=1;
   for i:=0 to  Lineno - 1 do
   begin
     if FLineList[i].DispType='LINE' then
@@ -744,7 +756,16 @@ begin
         GetTableInfo(TsNo);
         drawTable(TsNo);
         inc(disptable);
-        if tsno<FTS then inc(TsNo);
+        if tsno<FTS then
+        begin
+          inc(TsNo);
+          if (i<FActiveLineSave) and (TTHNO=-1) then
+          begin
+            TTHNO:=0;
+            FActiveLineHeight1:=FActiveLineHeight1+FBuffer.Canvas.TextHeight(FLineList[i].str)*(FTS-1); //超链接出现时的高度
+            FActiveLineHeight2:=FActiveLineHeight1+FBuffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
+          end;
+        end;
       end;
     end
     else
@@ -785,6 +806,7 @@ procedure TCustomText.DoOnChangeBounds;
 begin
   inherited DoOnChangeBounds;
 
+  TTHNO:=-1;
   Init;
 end;
 
@@ -815,6 +837,7 @@ begin
 
   Parent:=TWinControl(AOwner);
   FStepSize := 1;
+  TTHNO:=-1;
   FOffset := -1;
   FGapX:=0;
   FGapY:=0;
@@ -953,20 +976,21 @@ end;
 procedure TQFRichView.WMMouseWheel(var Message: TLMMouseEvent);
 begin
   inherited WMMouseWheel(Message);
+
   if Message.WheelDelta<0 then //up
   begin
-    if abs(FOffset)<(FLineHeight div 2)+ FBuffer.Height+20 then
+    if abs(FOffset)<(FLineHeight-35) then
     begin
       Dec(FOffset, FStepSize);
       Dec(FActiveLineHeight1, FStepSize);
-      Dec(FActiveLineHeight2, 10);
+      Dec(FActiveLineHeight2, FStepSize);
     end;
   end
   else
   begin   //down
     if FOffset<0 then
     begin
-      FOffset:=FOffset+10;
+      FOffset:=FOffset+FStepSize;
       FActiveLineHeight1:=FActiveLineHeight1+ FStepSize;
       FActiveLineHeight2:=FActiveLineHeight2+ FStepSize;
     end;
@@ -984,6 +1008,8 @@ end;
 
 procedure TQFRichView.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 begin
+  inherited MouseDown(Button, Shift, X, Y);
+
   if Button = mbLeft then
   begin
     // 处理左键按下
@@ -1004,41 +1030,43 @@ end;
 procedure TQFRichView.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   movedY: Integer;//存储鼠标移动的距离
+  y0:integer;
 begin
   inherited MouseMove(Shift, X, Y);
 
-  if (Y>FOffset+FActiveLineHeight1) and (Y<FOffset+FActiveLineHeight2) then
-      FActiveLine := FActiveLineSave
-  else FActiveLine:= -1;
+  if (Y>abs(FActiveLineHeight1)) and (Y<abs(FActiveLineHeight2)) then
+    FActiveLine := FActiveLineSave
+  else
+    FActiveLine:= -1;
 
   Cursor := crDefault;
 
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
     Cursor := crHandPoint;
 
-///////////////////////////////////////////////////////////////////////////////
   if isLeftButtonDown then
   begin
     movedY := Y - initialY; // 计算Y轴上的移动距离
+
     if movedY > 0 then
     begin
-        // 鼠标向下移动
-      if abs(FOffset)<(FLineHeight div 2)+ FBuffer.Height then
+      // 鼠标向下移动
+      if abs(FOffset)<(FLineHeight) then
       begin
-        Dec(FOffset, abs(movedY));
-        Dec(FActiveLineHeight1, abs(movedY));
-        Dec(FActiveLineHeight2, abs(movedY));
+        Dec(FOffset, abs(35));
+        Dec(FActiveLineHeight1, abs(35));
+        Dec(FActiveLineHeight2, abs(35));
       end;
     end
     else
     if movedY < 0 then
     begin
-        // 鼠标向上移动
+      // 鼠标向上移动
       if FOffset<0 then
       begin
-        inc(FOffset, abs(movedY));
-        inc(FActiveLineHeight1, abs(movedY));
-        inc(FActiveLineHeight2, abs(movedY));
+        inc(FOffset, abs(35));
+        inc(FActiveLineHeight1, abs(35));
+        inc(FActiveLineHeight2, abs(35));
       end;
     end;
 
@@ -1048,6 +1076,7 @@ begin
       Brush.Style := bsSolid;
       FillRect(0, 0, Width, Height);
     end;
+
     DrawTexts(0);
     Canvas.Draw(0,0,FBuffer);
   end;
