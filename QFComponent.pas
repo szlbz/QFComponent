@@ -41,6 +41,7 @@ type
 
   TCustomText = class(TCustomControl)
   private
+    isLeftButtonDown: Boolean;
     TTableHeight:integer;
     TTHNO:integer;
     FTS:integer;//表格数量
@@ -105,7 +106,6 @@ type
   TQFRichView =  class(TCustomText)
   private
     initialY: Integer; // 用于存储鼠标按下时的初始位置
-    isLeftButtonDown: Boolean;
     procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
   protected
@@ -816,7 +816,10 @@ begin
   inherited MouseDown(Button, Shift, X, Y);
 
   if ActiveLineIsURL then
+  begin
     OpenURL(FLineList[FActiveLine].str);
+    isLeftButtonDown := False;
+  end;
 end;
 
 procedure TCustomText.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -1008,14 +1011,13 @@ end;
 
 procedure TQFRichView.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 begin
-  inherited MouseDown(Button, Shift, X, Y);
-
   if Button = mbLeft then
   begin
     // 处理左键按下
     isLeftButtonDown := True;
     initialY := Y;
   end;
+  inherited MouseDown(Button, Shift, X, Y);
 end;
 
 procedure TQFRichView.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
@@ -1030,7 +1032,6 @@ end;
 procedure TQFRichView.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   movedY: Integer;//存储鼠标移动的距离
-  y0:integer;
 begin
   inherited MouseMove(Shift, X, Y);
 
