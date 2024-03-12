@@ -221,6 +221,21 @@ begin
   end;
 end;
 
+function ReplaceCharacters(str:string):string; //删除所有特殊符号
+begin
+  Result:=str;
+  Result:=Result.Replace('<#>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<!>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<@>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<C1>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<C2>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<C3>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<C4>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<C5>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
+end;
+
 procedure TCustomText.Init;
 var
   i,w,j,k,dc:integer;
@@ -454,6 +469,26 @@ var
   begin
     rs:=utf8copy(str0,i,1);
     Result:=rs;
+    if (rs='<') and (utf8copy(str0,i+1,1)='#') and (utf8copy(str0,i+2,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1)='!') and (utf8copy(str0,i+2,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1)='@') and (utf8copy(str0,i+2,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1)='>') then
+    begin
+      Result:='';
+    end
+    else
     if (rs='<') and (utf8copy(str0,i+1,1)='C') then
     begin
       if (utf8copy(str0,i+2,1)='1') and (utf8copy(str0,i+3,1)='>') then
@@ -468,17 +503,6 @@ var
     begin
       Result:='';
     end;
-  end;
-  function replstr0(str0:string):string;
-  var rs:string;
-  begin
-    Result:=str0;
-    Result:=Result.Replace('<C1>','',[rfReplaceAll, rfIgnoreCase]);
-    Result:=Result.Replace('<C2>','',[rfReplaceAll, rfIgnoreCase]);
-    Result:=Result.Replace('<C3>','',[rfReplaceAll, rfIgnoreCase]);
-    Result:=Result.Replace('<C4>','',[rfReplaceAll, rfIgnoreCase]);
-    Result:=Result.Replace('<C5>','',[rfReplaceAll, rfIgnoreCase]);
-    Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
   end;
 begin
   Lineno:=0;
@@ -497,7 +521,7 @@ begin
     begin
       preprocessing;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      w:=FBuffer.Canvas.TextWidth(replstr0(s));
+      w:=FBuffer.Canvas.TextWidth(ReplaceCharacters(s));
       if w>Width then //换行
       begin
          s1:='';
@@ -507,7 +531,7 @@ begin
          //for j:=0 to utf8length(s)-1 do
          begin
            s1:=s1+utf8copy(s,j,1);
-           if FBuffer.Canvas.TextWidth(replstr0(s1)+replstr(j,s))+FGapX*2>=Width then //跳过特定符号
+           if FBuffer.Canvas.TextWidth(ReplaceCharacters(s1)+replstr(j,s))+FGapX*2>=Width then //跳过特定符号
            //if FBuffer.Canvas.TextWidth(s1+utf8copy(s,j+1,1))+FGapX*2>=Width then
            begin
              if replstr(j,s)=''then
@@ -756,19 +780,49 @@ var
   var i,x1,ps:integer;
     s1:string;
     oldColor:TColor;
+    oldStyles:TFontStyles;
   begin
     if (pos('<C1>',str)>0) or
     (pos('<C2>',str)>0) or
     (pos('<C3>',str)>0) or
     (pos('<C4>',str)>0) or
     (pos('<C5>',str)>0) or
-    (pos('</C>',str)>0)
+    (pos('</C>',str)>0) or
+    (pos('<!>',str)>0) or
+    (pos('<@>',str)>0) or
+    (pos('<#>',str)>0) or
+    (pos('</>',str)>0)
     then
     begin
       oldColor:=FBuffer.Canvas.font.Color;
+      oldStyles:=FBuffer.Canvas.font.Style;
       while i<=utf8length(str) do
       begin
         s1:=utf8copy(str,i,1);
+        if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
+        begin
+          FBuffer.Canvas.font.Style:=[fsUnderline];//下划线
+          i:=i+3;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
+        begin
+          FBuffer.Canvas.font.Style:=[fsStrikeOut];//删除线
+          i:=i+3;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
+        begin
+          FBuffer.Canvas.font.Style:=[fsBold];//加粗
+          i:=i+3;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
+        begin
+          FBuffer.Canvas.font.Style:=oldStyles;//恢复原风格
+          i:=i+3;
+        end
+        else
         if (s1='<') and (utf8copy(str,i+1,1)='C') then
         begin
           if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clBlack;
@@ -867,7 +921,7 @@ begin
       if FLineList[i].FontStyle=4 then
           FBuffer.Canvas.Font.Style:=[fsUnderline];
       FBuffer.Canvas.Font.Color:=FLineList[i].FontColor;
-      w := FBuffer.Canvas.TextWidth(FLineList[i].str);
+      w := FBuffer.Canvas.TextWidth(ReplaceCharacters(FLineList[i].str));
       if FLineList[i].Align=1 then //行居左
         DisplayText(FGapX, FOffset + y+FGapY, FLineList[i].str);
         //FBuffer.Canvas.TextOut(FGapX, FOffset + y+FGapY, FLineList[i].str);
