@@ -10,7 +10,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
-  lclintf, LazFileUtils, lazutf8, LMessages;
+  lclintf, LazFileUtils, lazutf8, LMessages,StrUtils;
 
 type
 
@@ -30,6 +30,7 @@ type
      Align:byte;
      colWidth:integer;
      Color:TColor;
+     Height:integer;
   end;
 
   TTableSL = record
@@ -42,7 +43,6 @@ type
   TCustomText = class(TCustomControl)
   private
     isLeftButtonDown: Boolean;
-    TTableHeight:integer;
     TTHNO:integer;
     FTS:integer;//表格数量
     FTablesl:array of TTableSL;
@@ -448,6 +448,38 @@ var
       js:=0;
     end;
   end;
+
+  function replstr(i:integer;str0:string):string;
+  var rs:string;
+  begin
+    rs:=utf8copy(str0,i,1);
+    Result:=rs;
+    if (rs='<') and (utf8copy(str0,i+1,1)='C') then
+    begin
+      if (utf8copy(str0,i+2,1)='1') and (utf8copy(str0,i+3,1)='>') then
+         Result:='';
+      if (utf8copy(str0,i+2,1)='2') and (utf8copy(str0,i+3,1)='>') then Result:='';
+      if (utf8copy(str0,i+2,1)='3') and (utf8copy(str0,i+3,1)='>') then Result:='';
+      if (utf8copy(str0,i+2,1)='4') and (utf8copy(str0,i+3,1)='>') then Result:='';
+      if (utf8copy(str0,i+2,1)='5') and (utf8copy(str0,i+3,1)='>') then Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1)='C') and (utf8copy(str0,i+3,1)='>') then
+    begin
+      Result:='';
+    end;
+  end;
+  function replstr0(str0:string):string;
+  var rs:string;
+  begin
+    Result:=str0;
+    Result:=Result.Replace('<C1>','',[rfReplaceAll, rfIgnoreCase]);
+    Result:=Result.Replace('<C2>','',[rfReplaceAll, rfIgnoreCase]);
+    Result:=Result.Replace('<C3>','',[rfReplaceAll, rfIgnoreCase]);
+    Result:=Result.Replace('<C4>','',[rfReplaceAll, rfIgnoreCase]);
+    Result:=Result.Replace('<C5>','',[rfReplaceAll, rfIgnoreCase]);
+    Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
+  end;
 begin
   Lineno:=0;
   Linetemp:=TStringList.Create;
@@ -465,19 +497,31 @@ begin
     begin
       preprocessing;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      w:=FBuffer.Canvas.TextWidth(s);
+      w:=FBuffer.Canvas.TextWidth(replstr0(s));
       if w>Width then //换行
       begin
          s1:='';
          k:=0;
-         for j:=0 to utf8length(s)-1 do
+         j:=1;
+         while j<= utf8length(s) do
+         //for j:=0 to utf8length(s)-1 do
          begin
            s1:=s1+utf8copy(s,j,1);
-           if FBuffer.Canvas.TextWidth(s1+utf8copy(s,j+1,1))+FGapX*2>=Width then
+           if FBuffer.Canvas.TextWidth(replstr0(s1)+replstr(j,s))+FGapX*2>=Width then //跳过特定符号
+           //if FBuffer.Canvas.TextWidth(s1+utf8copy(s,j+1,1))+FGapX*2>=Width then
            begin
+             if replstr(j,s)=''then
+               s1:=s1+utf8copy(s,j+1,3);
              Linetemp.Add(textstyle+s1);
              s1:='';
            end;
+           if replstr(j,s)='' then
+           begin
+             s1:=s1+utf8copy(s,j+1,3);
+             j:=j+4;
+           end
+           else
+             inc(j);
          end;
          if s1<>'' then
            Linetemp.Add(textstyle+s1);
@@ -504,11 +548,10 @@ begin
       FLineList[i].str:=s;
       //FBuffer.Canvas.Font.Style:=FLineList[i].FontStyle;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight('X');
+      FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s);
       FLineHeight:=FLineHeight+FLineList[i].LineHeight;
     end;
   end;
-
   FBuffer.Width := Width;
   FBuffer.Height := Height;
   if FOffset = -1 then
@@ -616,6 +659,7 @@ var
   tsno,addh:integer;
   i: integer;
 
+  //将超过单元格宽度的字符串截断
   function strtext(str:string;fbwidth:integer):string;
   var w,i:integer;
       tmp:string;
@@ -636,32 +680,28 @@ var
      end;
   end;
 
-  procedure drawTable(no:integer);
-  var i,j,k,h,w0,row,col:integer;
-    x0,y0,y1,y2,xx0:integer;
-    hs:integer;
+  procedure DrawTable(Index:integer);
+  var i,j,w,h,row,col:integer;
+    x0,y0,x1,y1:integer;
   begin
-    row:=FTablesl[no].row;
-    col:=FTablesl[no].col-1;
+    row:=FTablesl[Index].row;
+    col:=FTablesl[Index].col-1;
     FBuffer.Canvas.Font.Style:=[fsBold];
     h:=FBuffer.Canvas.TextHeight('国')+2;
-    TTableHeight:=h;
-    w0:=(FBuffer.Width-FGapX*2) div col;
+    w:=(FBuffer.Width-FGapX*2) div col;
     FBuffer.Canvas.Pen.Color:=clBlack;//黑色画笔
     for i:=0 to row-1 do  //画横线
     begin
-      TTableHeight:=TTableHeight+h;
       FBuffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,FBuffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
     end;
     for j:=0 to col do//画竖线
     begin
       if j<col then
-        x0:=FGapX+j*w0
+        x0:=FGapX+j*w
       else
         x0:=FBuffer.Width-FGapX;
       y0:=FOffset + y+FGapY+3;
       y1:=FOffset + y+FGapY+3+(row-1)*h;
-      y2:=FOffset + y+FGapY+3+(y1-y0) div 2;
       FBuffer.Canvas.Line(
         x0,
         y0,
@@ -673,21 +713,21 @@ var
       y0:=FOffset + y+FGapY+i*h;
       for j:=0 to col-1 do
       begin
-        x0:=FGapX+j*w0;
-        xx0:=x0; //居左
+        x0:=FGapX+j*w;
+        x1:=x0; //居左
         if FTable[0,j+1].Align=1 then
-          xx0:=x0 ;//居左
+          x1:=x0 ;//居左
         if FTable[0,j+1].Align=2 then
-          xx0:=x0+(w0-FBuffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
+          x1:=x0+(w-FBuffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
         if FTable[0,j+1].Align=3 then
-          xx0:=x0+(w0-FBuffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
+          x1:=x0+(w-FBuffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
         if i=0 then
         begin
-          xx0:=x0+(w0-FBuffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
+          x1:=x0+(w-FBuffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
           y0:=FOffset + y+FGapY+i*h;
           FBuffer.Canvas.Font.Style:=[fsBold];
           FBuffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-          FBuffer.Canvas.TextOut(xx0+2, y0+5, strtext(FTable[i,j+1].str,w0))   //标题行
+          FBuffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w))   //标题行
         end
         else
         if i>1 then //跳过第2行--第2行定义单元格的对齐格式
@@ -704,12 +744,57 @@ var
            if FTable[i,j+1].FontStyle=4 then
               FBuffer.Canvas.Font.Style:=[fsUnderline];
            FBuffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-           FBuffer.Canvas.TextOut(xx0+2, y0+5, strtext(FTable[i,j+1].str,w0));//截断超过单元格的字符串
+           FBuffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w));//截断超过单元格的字符串
         end;
       end;
+      FTable[i,0].Height:=FBuffer.Canvas.TextHeight('国')+2;
     end;
     y:=y+(row-1)*h+5;
- end;
+  end;
+
+  procedure DisplayText(x,y:integer;str:string);
+  var i,x1,ps:integer;
+    s1:string;
+    oldColor:TColor;
+  begin
+    if (pos('<C1>',str)>0) or
+    (pos('<C2>',str)>0) or
+    (pos('<C3>',str)>0) or
+    (pos('<C4>',str)>0) or
+    (pos('<C5>',str)>0) or
+    (pos('</C>',str)>0)
+    then
+    begin
+      oldColor:=FBuffer.Canvas.font.Color;
+      while i<=utf8length(str) do
+      begin
+        s1:=utf8copy(str,i,1);
+        if (s1='<') and (utf8copy(str,i+1,1)='C') then
+        begin
+          if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clBlack;
+          if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clRed;
+          if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clYellow;
+          if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clGreen;
+          if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clBlue;
+          i:=i+4;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='C') and (utf8copy(str,i+3,1)='>') then
+        begin
+          FBuffer.Canvas.font.Color:=oldColor;
+          i:=i+4;
+        end
+        else
+        begin
+          FBuffer.Canvas.TextOut(x, y, s1);
+          x:=x+FBuffer.Canvas.TextWidth(s1);
+          inc(i);
+        end;
+      end;
+    end
+    else
+      FBuffer.Canvas.TextOut(x, y, str);
+  end;
 
 begin
   disptable:=0;
@@ -754,7 +839,7 @@ begin
       if (i>=FTablesl[TsNo].hs1) and (i<=FTablesl[TsNo].hs2) then
       begin
         GetTableInfo(TsNo);
-        drawTable(TsNo);
+        DrawTable(TsNo);
         inc(disptable);
         if tsno<FTS then
         begin
@@ -784,11 +869,14 @@ begin
       FBuffer.Canvas.Font.Color:=FLineList[i].FontColor;
       w := FBuffer.Canvas.TextWidth(FLineList[i].str);
       if FLineList[i].Align=1 then //行居左
-        FBuffer.Canvas.TextOut(FGapX, FOffset + y+FGapY, FLineList[i].str);
+        DisplayText(FGapX, FOffset + y+FGapY, FLineList[i].str);
+        //FBuffer.Canvas.TextOut(FGapX, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=2 then //行居中
-        FBuffer.Canvas.TextOut(FGapX+(FBuffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
+        DisplayText(FGapX+(FBuffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
+        //FBuffer.Canvas.TextOut(FGapX+(FBuffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=3 then //行居右
-        FBuffer.Canvas.TextOut((FBuffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
+        DisplayText((FBuffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
+        //FBuffer.Canvas.TextOut((FBuffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
       y:=y+ FLineList[i].LineHeight-FGapY*2+5;
     end;
   end;
