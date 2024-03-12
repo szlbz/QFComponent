@@ -491,7 +491,7 @@ begin
   //根据控件宽度进行自动换行处理
   for i := 0 to FLines.Count-1 do
   begin
-    s := Trim(FLines[i]);
+    s := FLines[i];
     textstyle:='';
     if Length(s) > 0 then
     begin
@@ -541,7 +541,7 @@ begin
   Lineno:= Linetemp.Count;
   for i := 0 to Linetemp.Count-1 do
   begin
-    s := Trim(Linetemp[i]);
+    s := Linetemp[i];
     if Length(s) > 0 then
     begin
       preprocessing;
