@@ -2,6 +2,44 @@
 秋风(QQ:315795176)开发的控件包，有2个控件：
 TQFRichView：类RichView控件
 TQFScrollingText：滚动显示控件
+使用以下特定符号定义文字（行）的属性：
+[img]本地图像文件名称
+[!]下划线
+[@]删除线
+[#]粗体
+[$]斜体
+[L]行居左
+[C]行居中
+[R]行居右
+[C1]黑色
+[C2]红色
+[C3]黄色
+[C4]绿色
+[C5]蓝色
+[S1]字体尺寸9
+[S2]字体尺寸12
+[S3]字体尺寸14
+[S4]字体尺寸16
+[S5]字体尺寸18
+[LINE]分割线
+[2LINE]双线条分割线
+定义文字颜色、样式：
+<C1>xxx</C>
+<C1>黑色
+<C2>红色
+<C3>黄色
+<C4>绿色
+<C5>蓝色
+</C>恢复原来的文字颜色
+<!>下划线
+<@>删除线
+<#>加粗
+</>恢复原来的文字样式
+初步支持markdown格式的表格
+图像格式支持：jpg,bmp,png等
+可在windows和linux使用，已在龙芯电脑实测可用。
+TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠标实现快速滚动。
+
 2024.03.09
 }
 unit QFComponent;
@@ -65,10 +103,12 @@ type
     Lineno:integer;
     FGapX:integer;
     FGapY:integer;
+    FColor:TColor;
     function ActiveLineIsURL: boolean;
     procedure Init;
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
+    procedure SetColor(const AValue: TColor);
     procedure DrawTexts(y:integer);
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out TableType:TTableType);
@@ -85,6 +125,7 @@ type
     property Lines: TStrings read FLines write SetLines;
     property GapX: integer read FGapX write FGapX;
     property GapY: integer read FGapY write FGapY;
+    property Color: TColor read FColor write SetColor;
   end;
 
   TQFScrollingText = class(TCustomText)
@@ -140,6 +181,12 @@ begin
     FLines.Assign(AValue);
     Init;
   end;
+end;
+
+procedure TCustomText.SetColor(const AValue: TColor);
+begin
+  FColor:=AValue;
+  //Init;
 end;
 
 procedure TCustomText.GetFontStyle(s:string;out TableType:TTableType);
@@ -587,7 +634,7 @@ begin
 
   with FBuffer.Canvas do
   begin
-    Brush.Color := clWhite;
+    Brush.Color := FColor;//clWhite;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -598,7 +645,7 @@ procedure TCustomText.DrawScrollingText(Sender: TObject);
 begin
   with FBuffer.Canvas do
   begin
-    Brush.Color := clWhite;
+    Brush.Color := Fcolor;//clWhite;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -987,6 +1034,7 @@ begin
   FGapX:=0;
   FGapY:=0;
   FOldFontSize:=FBuffer.Canvas.Font.Size;
+  FColor:=clWhite;
 end;
 
 destructor TCustomText.Destroy;
@@ -1047,7 +1095,7 @@ begin
   begin
     with FBuffer.Canvas do
     begin
-      Brush.Color := clWhite;
+      Brush.Color := FColor;//clWhite;
       Brush.Style := bsSolid;
       FillRect(0, 0, Width, Height);
     end;
@@ -1081,7 +1129,7 @@ begin
   Dec(FActiveLineHeight2, FStepSize);
   with FBuffer.Canvas do
   begin
-    Brush.Color := clWhite;
+    Brush.Color := FColor;//clWhite;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -1142,7 +1190,7 @@ begin
   end;
   with FBuffer.Canvas do
   begin
-    Brush.Color := clWhite;
+    Brush.Color := FColor;//clWhite;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -1215,7 +1263,7 @@ begin
 
     with FBuffer.Canvas do
     begin
-      Brush.Color := clWhite;
+      Brush.Color := FColor;//clWhite;
       Brush.Style := bsSolid;
       FillRect(0, 0, Width, Height);
     end;
@@ -1230,7 +1278,7 @@ begin
   init;
   with FBuffer.Canvas do
   begin
-    Brush.Color := clWhite;
+    Brush.Color := FColor;//clWhite;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
