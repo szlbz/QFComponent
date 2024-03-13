@@ -104,6 +104,7 @@ type
     FGapX:integer;
     FGapY:integer;
     FColor:TColor;
+    function GetStringTextWidth(str:string):integer;
     function ActiveLineIsURL: boolean;
     procedure Init;
     procedure DrawScrollingText(Sender: TObject);
@@ -186,7 +187,6 @@ end;
 procedure TCustomText.SetColor(const AValue: TColor);
 begin
   FColor:=AValue;
-  //Init;
 end;
 
 procedure TCustomText.GetFontStyle(s:string;out TableType:TTableType);
@@ -281,7 +281,131 @@ begin
   Result:=Result.Replace('<C4>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<C5>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<SUP>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<SUB>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</SUP>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
 end;
+
+function TCustomText.GetStringTextWidth(str:string):integer;
+var
+  x,i:integer;
+  s1:string;
+  oldFontSize,NewFontSize:integer;
+  oldStyles:TFontStyles;
+begin
+  x:=0;
+  if (pos('<C1>',str.ToUpper)>0) or
+  (pos('<C2>',str.ToUpper)>0) or
+  (pos('<C3>',str.ToUpper)>0) or
+  (pos('<C4>',str.ToUpper)>0) or
+  (pos('<C5>',str.ToUpper)>0) or
+  (pos('<SUP>',str.ToUpper)>0) or
+  (pos('<SUB>',str.ToUpper)>0) or
+  (pos('</SUP>',str.ToUpper)>0) or
+  (pos('</SUB>',str.ToUpper)>0) or
+  (pos('</C>',str.ToUpper)>0) or
+  (pos('<$>',str)>0) or
+  (pos('<!>',str)>0) or
+  (pos('<@>',str)>0) or
+  (pos('<#>',str)>0) or
+  (pos('</>',str)>0)
+  then
+  begin
+    i:=0;
+    oldStyles:=FBuffer.Canvas.font.Style;
+    oldFontSize:=FBuffer.Canvas.font.Size;
+    NewFontSize:=FBuffer.Canvas.font.Size div 2;
+    if NewFontSize=0 then NewFontSize:=5;
+    while i<=utf8length(str) do
+    begin
+      s1:=utf8copy(str,i,1);
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
+         and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
+      begin
+        FBuffer.Canvas.font.Size:=NewFontSize;//上标
+        i:=i+5;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
+         and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
+      begin
+        FBuffer.Canvas.font.Size:=NewFontSize;//下标
+        i:=i+5;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
+         and (utf8copy(str,i+3,1).ToUpper='U')
+         and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
+      begin
+        FBuffer.Canvas.font.Size:=oldFontSize;//取消上标
+        i:=i+6;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
+         and (utf8copy(str,i+3,1).ToUpper='U')
+         and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
+      begin
+        FBuffer.Canvas.font.Size:=oldFontSize;//取消下标
+        i:=i+6;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
+      begin
+        FBuffer.Canvas.font.Style:=[fsUnderline];//下划线
+        i:=i+3;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
+      begin
+        FBuffer.Canvas.font.Style:=[fsItalic];//斜体
+        i:=i+3;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
+      begin
+        FBuffer.Canvas.font.Style:=[fsStrikeOut];//删除线
+        i:=i+3;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
+      begin
+        FBuffer.Canvas.font.Style:=[fsBold];//加粗
+        i:=i+3;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
+      begin
+        FBuffer.Canvas.font.Style:=oldStyles;//恢复原风格
+        i:=i+3;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C') then
+      begin
+        if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then i:=i+4;
+        if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then i:=i+4;
+        if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then i:=i+4;
+        if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then i:=i+4;
+        if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then i:=i+4;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C')
+         and (utf8copy(str,i+3,1)='>') then
+      begin
+        i:=i+4;
+      end
+      else
+      begin
+        x:=x+FBuffer.Canvas.TextWidth(s1);
+        inc(i);
+      end;
+    end;
+    Result:=x;
+  end
+  else
+  Result:=FBuffer.Canvas.TextWidth(str);
+end;
+
 
 procedure TCustomText.Init;
 var
@@ -429,11 +553,6 @@ var
         FLineHeight:=FLineHeight+IMG.Picture.Height;
       end;
     end;
-    //if (Pos(':-', s) >0) or (Pos(':-:', s) >0) or (Pos('-:', s) >0) then
-    //begin
-    //  FActiveLineHeight1:=FLineHeight-FBuffer.Canvas.TextHeight(s);//超链接出现时的高度
-    //  FActiveLineHeight2:=FLineHeight-FBuffer.Canvas.TextHeight(s); //超链接出现时的高度
-    //end;
     //超链接
     if (Pos('http://', s) = 1) or (Pos('https://', s) = 1) then
     begin
@@ -516,12 +635,51 @@ var
   begin
     rs:=utf8copy(str0,i,1);
     Result:=rs;
+    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
+       (utf8copy(str0,i+2,1).ToUpper='U') and
+       (utf8copy(str0,i+3,1).ToUpper='P') and
+       (utf8copy(str0,i+4,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
+       (utf8copy(str0,i+2,1).ToUpper='U') and
+       (utf8copy(str0,i+3,1).ToUpper='B') and
+       (utf8copy(str0,i+4,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
+       (utf8copy(str0,i+2,1).ToUpper='S') and
+       (utf8copy(str0,i+3,1).ToUpper='U') and
+       (utf8copy(str0,i+4,1).ToUpper='P') and
+       (utf8copy(str0,i+5,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
+       (utf8copy(str0,i+2,1).ToUpper='S') and
+       (utf8copy(str0,i+3,1).ToUpper='U') and
+       (utf8copy(str0,i+4,1).ToUpper='B') and
+       (utf8copy(str0,i+5,1)='>') then
+    begin
+      Result:='';
+    end
+    else
     if (rs='<') and (utf8copy(str0,i+1,1)='#') and (utf8copy(str0,i+2,1)='>') then
     begin
       Result:='';
     end
     else
     if (rs='<') and (utf8copy(str0,i+1,1)='!') and (utf8copy(str0,i+2,1)='>') then
+    begin
+      Result:='';
+    end
+    else
+    if (rs='<') and (utf8copy(str0,i+1,1)='$') and (utf8copy(str0,i+2,1)='>') then
     begin
       Result:='';
     end
@@ -536,7 +694,7 @@ var
       Result:='';
     end
     else
-    if (rs='<') and (utf8copy(str0,i+1,1)='C') then
+    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='C') then
     begin
       if (utf8copy(str0,i+2,1)='1') and (utf8copy(str0,i+3,1)='>') then
          Result:='';
@@ -546,7 +704,7 @@ var
       if (utf8copy(str0,i+2,1)='5') and (utf8copy(str0,i+3,1)='>') then Result:='';
     end
     else
-    if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1)='C') and (utf8copy(str0,i+3,1)='>') then
+    if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1).ToUpper='C') and (utf8copy(str0,i+3,1)='>') then
     begin
       Result:='';
     end;
@@ -634,7 +792,7 @@ begin
 
   with FBuffer.Canvas do
   begin
-    Brush.Color := FColor;//clWhite;
+    Brush.Color := FColor;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -645,7 +803,7 @@ procedure TCustomText.DrawScrollingText(Sender: TObject);
 begin
   with FBuffer.Canvas do
   begin
-    Brush.Color := Fcolor;//clWhite;
+    Brush.Color := Fcolor;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -824,28 +982,82 @@ var
   end;
 
   procedure DisplayText(x,y:integer;str:string);
-  var i,x1,ps:integer;
+  var i:integer;
     s1:string;
+    oldFontSize,NewFontSize:integer;
     oldColor:TColor;
     oldStyles:TFontStyles;
+    oldy,supy,suby:integer;
   begin
-    if (pos('<C1>',str)>0) or
-    (pos('<C2>',str)>0) or
-    (pos('<C3>',str)>0) or
-    (pos('<C4>',str)>0) or
-    (pos('<C5>',str)>0) or
-    (pos('</C>',str)>0) or
+    if (pos('<C1>',str.ToUpper)>0) or
+    (pos('<C2>',str.ToUpper)>0) or
+    (pos('<C3>',str.ToUpper)>0) or
+    (pos('<C4>',str.ToUpper)>0) or
+    (pos('<C5>',str.ToUpper)>0) or
+    (pos('<SUP>',str.ToUpper)>0) or
+    (pos('<SUB>',str.ToUpper)>0) or
+    (pos('</SUP>',str.ToUpper)>0) or
+    (pos('</SUB>',str.ToUpper)>0) or
+    (pos('</C>',str.ToUpper)>0) or
     (pos('<!>',str)>0) or
+    (pos('<$>',str)>0) or
     (pos('<@>',str)>0) or
     (pos('<#>',str)>0) or
     (pos('</>',str)>0)
     then
     begin
+      i:=0;
       oldColor:=FBuffer.Canvas.font.Color;
       oldStyles:=FBuffer.Canvas.font.Style;
+      oldFontSize:=FBuffer.Canvas.font.Size;
+      oldy:=y;
+      supy:=y;
+      suby:=y+(FBuffer.Canvas.TextHeight('国') div 2)-5;
+      NewFontSize:=FBuffer.Canvas.font.Size div 2;
+      if NewFontSize=0 then NewFontSize:=5;
       while i<=utf8length(str) do
       begin
         s1:=utf8copy(str,i,1);
+        if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
+           and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
+        begin
+          FBuffer.Canvas.font.Size:=NewFontSize;//上标
+          y:=supy;
+          i:=i+5;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
+           and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
+        begin
+          FBuffer.Canvas.font.Size:=NewFontSize;//下标
+          y:=suby;
+          i:=i+5;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
+           and (utf8copy(str,i+3,1).ToUpper='U')
+           and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
+        begin
+          FBuffer.Canvas.font.Size:=oldFontSize;//取消上标
+          y:=oldy;
+          i:=i+6;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
+           and (utf8copy(str,i+3,1).ToUpper='U')
+           and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
+        begin
+          FBuffer.Canvas.font.Size:=oldFontSize;//取消下标
+          y:=oldy;
+          i:=i+6;
+        end
+        else
+        if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
+        begin
+          FBuffer.Canvas.font.Style:=[fsItalic];//斜体
+          i:=i+3;
+        end
+        else
         if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
         begin
           FBuffer.Canvas.font.Style:=[fsUnderline];//下划线
@@ -870,7 +1082,7 @@ var
           i:=i+3;
         end
         else
-        if (s1='<') and (utf8copy(str,i+1,1)='C') then
+        if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C') then
         begin
           if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clBlack;
           if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clRed;
@@ -880,7 +1092,7 @@ var
           i:=i+4;
         end
         else
-        if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='C') and (utf8copy(str,i+3,1)='>') then
+        if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C') and (utf8copy(str,i+3,1)='>') then
         begin
           FBuffer.Canvas.font.Color:=oldColor;
           i:=i+4;
@@ -968,7 +1180,8 @@ begin
       if FLineList[i].FontStyle=4 then
           FBuffer.Canvas.Font.Style:=[fsUnderline];
       FBuffer.Canvas.Font.Color:=FLineList[i].FontColor;
-      w := FBuffer.Canvas.TextWidth(ReplaceCharacters(FLineList[i].str));
+      w:=GetStringTextWidth(FLineList[i].str);
+      //w := FBuffer.Canvas.TextWidth(ReplaceCharacters(FLineList[i].str));
       if FLineList[i].Align=1 then //行居左
         DisplayText(FGapX, FOffset + y+FGapY, FLineList[i].str);
         //FBuffer.Canvas.TextOut(FGapX, FOffset + y+FGapY, FLineList[i].str);
@@ -1095,7 +1308,7 @@ begin
   begin
     with FBuffer.Canvas do
     begin
-      Brush.Color := FColor;//clWhite;
+      Brush.Color := FColor;
       Brush.Style := bsSolid;
       FillRect(0, 0, Width, Height);
     end;
@@ -1129,7 +1342,7 @@ begin
   Dec(FActiveLineHeight2, FStepSize);
   with FBuffer.Canvas do
   begin
-    Brush.Color := FColor;//clWhite;
+    Brush.Color := FColor;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -1190,7 +1403,7 @@ begin
   end;
   with FBuffer.Canvas do
   begin
-    Brush.Color := FColor;//clWhite;
+    Brush.Color := FColor;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
@@ -1263,7 +1476,7 @@ begin
 
     with FBuffer.Canvas do
     begin
-      Brush.Color := FColor;//clWhite;
+      Brush.Color := FColor;
       Brush.Style := bsSolid;
       FillRect(0, 0, Width, Height);
     end;
@@ -1278,7 +1491,7 @@ begin
   init;
   with FBuffer.Canvas do
   begin
-    Brush.Color := FColor;//clWhite;
+    Brush.Color := FColor;
     Brush.Style := bsSolid;
     FillRect(0, 0, Width, Height);
   end;
