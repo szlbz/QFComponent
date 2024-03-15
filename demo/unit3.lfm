@@ -9,15 +9,16 @@ object Form1: TForm1
   DesignTimePPI = 144
   OnCreate = FormCreate
   object QFRichView1: TQFRichView
-    Left = 18
-    Height = 452
-    Top = 304
-    Width = 940
+    Left = 8
+    Height = 444
+    Top = 360
+    Width = 958
     Anchors = [akTop, akLeft, akRight, akBottom]
     Lines.Strings = (
-      '[s5][c2]QF<C1>R</C><!>ich<#>V</>iew<C5>使用</C>说明[c]'
+      '[s5][c2]测试QF<C1>R</C><!>ich<#>V</>iew<C5>使用</C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+      '[s5][c2]测试QF<C1>RichView<C5><@>使用</></C>说明测试[c]'
       '[2line][c2]'
-      '[s2]以下为<C2><@>markdown</></C>格式的表格：'
+      '[s2]以下为<C2>markdown</C><sup>格式</sup>的表格：'
       '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
       '|:-:|:-|-:|:-:|:-|'
       '|秋风1|[$][c2]检测中心1|南山建工村1|183233649|2030年13月33日入职|'
@@ -33,7 +34,7 @@ object Form1: TForm1
       '|[c2]秋风8|检测中心3|南山建工村3|'
       '|秋风9|检测中心4|南山建工村4|'
       '|秋风10|检测中心5|南山建工村5|'
-      '以下是显示图片：'
+      '以下<sub>是</sub>显<sup>示</sup>图片：'
       '[img]demo.bmp'
       '[!]下划线'
       '[@]删除线'
@@ -76,18 +77,20 @@ object Form1: TForm1
     )
     GapX = 10
     GapY = 0
+    Color = clInfoBk
     StepSize = 15
   end
   object ScrollingText1: TQFScrollingText
-    Left = 18
-    Height = 288
+    AnchorSideTop.Side = asrCenter
+    Left = 8
+    Height = 298
     Top = 8
-    Width = 940
+    Width = 958
     Anchors = [akTop, akLeft, akRight]
     Lines.Strings = (
       '[s5][c2]QFScrollingText<C5>使用</C><C4>说</C>明[c]'
       '[2line][c2]'
-      '[s2]以下为markdown格式的表格：'
+      '[s2]以下为markdown<sup>格式</sup>的表格：'
       '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
       '|:-:|:-|-:|:-:|:-|'
       '|秋风1|[$][c2]检测中心1|南山建工村1|183233649|2030年13月33日入职|'
@@ -146,6 +149,34 @@ object Form1: TForm1
     )
     GapX = 10
     GapY = 0
+    Color = clCream
     Active = False
+  end
+  object Button1: TButton
+    Left = 8
+    Height = 38
+    Top = 317
+    Width = 152
+    Caption = '编辑QFRich'
+    TabOrder = 2
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+    Left = 176
+    Height = 38
+    Top = 317
+    Width = 152
+    Caption = '打开QFRich文件'
+    TabOrder = 3
+    OnClick = Button1Click
+  end
+  object Button3: TButton
+    Left = 352
+    Height = 38
+    Top = 317
+    Width = 113
+    Caption = '导出图片'
+    TabOrder = 4
+    OnClick = Button3Click
   end
 end
