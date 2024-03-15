@@ -52,7 +52,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
-  ComponentEditors,
+  ComponentEditors,Dialogs,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
 type
@@ -127,6 +127,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure OpenFile(files:string);
     procedure RichEditor;
     //procedure RichEditor(const AValue: TQFRichEditor);
  published
@@ -1299,6 +1300,37 @@ begin
   DrawTexts(0,FBuffer);
   Canvas.Draw(0,0,FBuffer);
   QFRichEdit.Free;
+end;
+
+procedure TCustomText.OpenFile(files:string);
+var
+  od: TOpenDialog;
+begin
+  if trim(files)='' then
+  begin
+    od := TOpenDialog.Create(nil);
+    od.Title := '打开';
+    od.Filter := 'QF富文本文件(*.QF)|*.QF|文本文件(*.txt)|*.txt|所有文件(*.*)|*.*';
+
+    if od.Execute then
+      FLines.LoadFromFile(od.FileName);
+    od.Free;
+  end
+  else
+  begin
+    if  FileExists(files) then
+      FLines.LoadFromFile(files);
+  end;
+  init;
+  with FBuffer.Canvas do
+  begin
+    Brush.Color := FColor;
+    Brush.Style := bsSolid;
+    FillRect(0, 0, Width, Height);
+  end;
+
+  DrawTexts(0,FBuffer);
+  Canvas.Draw(0,0,FBuffer);
 end;
 
 constructor TQFScrollingText.Create(AOwner: TComponent);
