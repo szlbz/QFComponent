@@ -40,6 +40,7 @@ TQFScrollingText：滚动显示控件
 可在windows和linux使用，已在龙芯电脑实测可用。  
 TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠标实现快速滚动。  
 2024.03.09  
+**QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor部分界面及代码**
 ![截图](%E6%88%AA%E5%9B%BE.png)
 ![截图2](%E6%88%AA%E5%9B%BE2.png)
 ![截图3](%E6%88%AA%E5%9B%BE3.png)
