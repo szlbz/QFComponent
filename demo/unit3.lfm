@@ -168,7 +168,7 @@ object Form1: TForm1
     Width = 152
     Caption = '打开QFRich文件'
     TabOrder = 3
-    OnClick = Button1Click
+    OnClick = Button2Click
   end
   object Button3: TButton
     Left = 352

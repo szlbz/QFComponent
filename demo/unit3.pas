@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, DB, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  QFComponent, DBGridsEh;
+  QFComponent;
 
 type
 
@@ -19,6 +19,7 @@ type
     QFRichView1: TQFRichView;
     ScrollingText1: TQFScrollingText;
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     //procedure UniQuery1nameGetText(Sender: TField; var aText: string;
@@ -51,9 +52,14 @@ begin
    QFRichView1.RichEditor;
 end;
 
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+  QFRichView1.OpenFile('');
+end;
+
 procedure TForm1.Button3Click(Sender: TObject);
 begin
-  QFRichView1.SavePicture('11123.jpg');
+  QFRichView1.SavePicture('QFRichView_demo.jpg');
 end;
 
 //procedure TForm1.UniQuery1nameGetText(Sender: TField; var aText: string;
