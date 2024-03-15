@@ -1,0 +1,103 @@
+object frmTable: TfrmTable
+  Left = 660
+  Height = 519
+  Top = 216
+  Width = 544
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = '插入表格'
+  ClientHeight = 519
+  ClientWidth = 544
+  DesignTimePPI = 144
+  OnCreate = FormCreate
+  Position = poMainFormCenter
+  object lblRows: TLabeledEdit
+    Left = 24
+    Height = 32
+    Top = 48
+    Width = 296
+    EditLabel.Height = 24
+    EditLabel.Width = 296
+    EditLabel.Caption = '行数:'
+    EditLabel.ParentColor = False
+    TabOrder = 1
+    Text = '3'
+    OnChange = lblRowsChange
+  end
+  object lblCells: TLabeledEdit
+    Left = 24
+    Height = 32
+    Top = 128
+    Width = 296
+    EditLabel.Height = 24
+    EditLabel.Width = 296
+    EditLabel.Caption = '列数:'
+    EditLabel.ParentColor = False
+    TabOrder = 2
+    Text = '3'
+    OnChange = lblCellsChange
+  end
+  object cboCellAlign: TComboBox
+    Left = 24
+    Height = 32
+    Top = 208
+    Width = 142
+    ItemHeight = 24
+    ItemIndex = 0
+    Items.Strings = (
+      '左'
+      '右'
+      '居中'
+    )
+    Style = csDropDownList
+    TabOrder = 3
+    Text = '左'
+  end
+  object Label1: TLabel
+    Left = 24
+    Height = 24
+    Top = 176
+    Width = 108
+    Caption = '文字对齐方式'
+    ParentColor = False
+  end
+  object cmdInsert: TButton
+    Left = 400
+    Height = 38
+    Top = 48
+    Width = 113
+    Caption = '插入表格'
+    Default = True
+    TabOrder = 0
+    OnClick = cmdInsertClick
+  end
+  object cmdClose: TButton
+    Left = 400
+    Height = 38
+    Top = 96
+    Width = 113
+    Caption = '关闭'
+    TabOrder = 4
+    OnClick = cmdCloseClick
+  end
+  object StringGrid1: TStringGrid
+    Left = 24
+    Height = 227
+    Top = 280
+    Width = 508
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ColCount = 3
+    FixedCols = 0
+    FixedRows = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
+    RowCount = 3
+    TabOrder = 5
+  end
+  object Label2: TLabel
+    Left = 24
+    Height = 24
+    Top = 248
+    Width = 155
+    Caption = '表格第1行为标题行'
+  end
+end

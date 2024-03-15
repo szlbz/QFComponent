@@ -24,6 +24,10 @@ TQFScrollingText：滚动显示控件
 [LINE]分割线
 [2LINE]双线条分割线
 定义文字颜色、样式：
+<sup>上标
+<sub>下标
+</sup>取消上标
+</sub>取消下标
 <C1>xxx</C>
 <C1>黑色
 <C2>红色
@@ -48,7 +52,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
-  lclintf, LazFileUtils, lazutf8, LMessages,StrUtils;
+  ComponentEditors,
+  lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
 type
 
@@ -80,6 +85,8 @@ type
 
   TCustomText = class(TCustomControl)
   private
+    FTextHeigth:integer;
+    FQFRE:TQFRichEditor;
     isLeftButtonDown: Boolean;
     TTHNO:integer;
     FTS:integer;//表格数量
@@ -104,13 +111,13 @@ type
     FGapX:integer;
     FGapY:integer;
     FColor:TColor;
-    function GetStringTextWidth(str:string):integer;
+    function GetStringTextWidth(str:string;Buffer: TBitmap):integer;
     function ActiveLineIsURL: boolean;
     procedure Init;
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
     procedure SetColor(const AValue: TColor);
-    procedure DrawTexts(y:integer);
+    procedure DrawTexts(y:integer;Buffer: TBitmap);
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out TableType:TTableType);
   protected
@@ -120,13 +127,16 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-  published
+    procedure RichEditor;
+    //procedure RichEditor(const AValue: TQFRichEditor);
+ published
     property Align;
     property Anchors;
     property Lines: TStrings read FLines write SetLines;
     property GapX: integer read FGapX write FGapX;
     property GapY: integer read FGapY write FGapY;
     property Color: TColor read FColor write SetColor;
+    //property RichEdit:TQFRichEditor read FQFRE write RichEditor;
   end;
 
   TQFScrollingText = class(TCustomText)
@@ -158,6 +168,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure SavePicture(Files:string);
   published
     property StepSize: integer read FStepSize write FStepSize;
   end;
@@ -170,6 +181,8 @@ implementation
 
 procedure Register;
 begin
+  //RegisterClasses([TQFRichEditor]);
+  //RegisterComponentEditor(TString,TQFRichEditor);
   RegisterComponents('QF Component', [TQFScrollingText,TQFRichView]);
 end;
 
@@ -272,6 +285,7 @@ function ReplaceCharacters(str:string):string; //删除所有特殊符号
 begin
   Result:=str;
   Result:=Result.Replace('<#>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<$>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<!>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<@>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</>','',[rfReplaceAll, rfIgnoreCase]);
@@ -287,7 +301,7 @@ begin
   Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
 end;
 
-function TCustomText.GetStringTextWidth(str:string):integer;
+function TCustomText.GetStringTextWidth(str:string;Buffer: TBitmap):integer;
 var
   x,i:integer;
   s1:string;
@@ -313,9 +327,9 @@ begin
   then
   begin
     i:=0;
-    oldStyles:=FBuffer.Canvas.font.Style;
-    oldFontSize:=FBuffer.Canvas.font.Size;
-    NewFontSize:=FBuffer.Canvas.font.Size div 2;
+    oldStyles:=Buffer.Canvas.font.Style;
+    oldFontSize:=Buffer.Canvas.font.Size;
+    NewFontSize:=Buffer.Canvas.font.Size div 2;
     if NewFontSize=0 then NewFontSize:=5;
     while i<=utf8length(str) do
     begin
@@ -323,14 +337,14 @@ begin
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
       begin
-        FBuffer.Canvas.font.Size:=NewFontSize;//上标
+        Buffer.Canvas.font.Size:=NewFontSize;//上标
         i:=i+5;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
       begin
-        FBuffer.Canvas.font.Size:=NewFontSize;//下标
+        Buffer.Canvas.font.Size:=NewFontSize;//下标
         i:=i+5;
       end
       else
@@ -338,7 +352,7 @@ begin
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
       begin
-        FBuffer.Canvas.font.Size:=oldFontSize;//取消上标
+        Buffer.Canvas.font.Size:=oldFontSize;//取消上标
         i:=i+6;
       end
       else
@@ -346,37 +360,37 @@ begin
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
       begin
-        FBuffer.Canvas.font.Size:=oldFontSize;//取消下标
+        Buffer.Canvas.font.Size:=oldFontSize;//取消下标
         i:=i+6;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
       begin
-        FBuffer.Canvas.font.Style:=[fsUnderline];//下划线
+        Buffer.Canvas.font.Style:=[fsUnderline];//下划线
         i:=i+3;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
       begin
-        FBuffer.Canvas.font.Style:=[fsItalic];//斜体
+        Buffer.Canvas.font.Style:=[fsItalic];//斜体
         i:=i+3;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
       begin
-        FBuffer.Canvas.font.Style:=[fsStrikeOut];//删除线
+        Buffer.Canvas.font.Style:=[fsStrikeOut];//删除线
         i:=i+3;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
       begin
-        FBuffer.Canvas.font.Style:=[fsBold];//加粗
+        Buffer.Canvas.font.Style:=[fsBold];//加粗
         i:=i+3;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
       begin
-        FBuffer.Canvas.font.Style:=oldStyles;//恢复原风格
+        Buffer.Canvas.font.Style:=oldStyles;//恢复原风格
         i:=i+3;
       end
       else
@@ -396,14 +410,14 @@ begin
       end
       else
       begin
-        x:=x+FBuffer.Canvas.TextWidth(s1);
+        x:=x+Buffer.Canvas.TextWidth(s1);
         inc(i);
       end;
     end;
     Result:=x;
   end
   else
-  Result:=FBuffer.Canvas.TextWidth(str);
+  Result:=Buffer.Canvas.TextWidth(str);
 end;
 
 
@@ -808,7 +822,7 @@ begin
     FillRect(0, 0, Width, Height);
   end;
   FOffset:=0;
-  DrawTexts(FOffset);
+  DrawTexts(FOffset,FBuffer);
   Canvas.Draw(0,0,FBuffer)
 end;
 
@@ -881,7 +895,7 @@ begin
   end;
 end;
 
-procedure TCustomText.DrawTexts(y:integer);
+procedure TCustomText.DrawTexts(y:integer;Buffer: TBitmap);
 var
   w,x,disptable: integer;
   s: string;
@@ -898,7 +912,7 @@ var
      i:=0;
      while i<utf8length(str) do
      begin
-       w:=FBuffer.Canvas.TextWidth(tmp+utf8copy(str,i+1,1))+5;
+       w:=Buffer.Canvas.TextWidth(tmp+utf8copy(str,i+1,1))+5;
        if w>fbwidth then
        begin
          Result:=tmp;
@@ -915,23 +929,23 @@ var
   begin
     row:=FTablesl[Index].row;
     col:=FTablesl[Index].col-1;
-    FBuffer.Canvas.Font.Style:=[fsBold];
-    h:=FBuffer.Canvas.TextHeight('国')+2;
-    w:=(FBuffer.Width-FGapX*2) div col;
-    FBuffer.Canvas.Pen.Color:=clBlack;//黑色画笔
+    Buffer.Canvas.Font.Style:=[fsBold];
+    h:=Buffer.Canvas.TextHeight('国')+2;
+    w:=(Buffer.Width-FGapX*2) div col;
+    Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
     for i:=0 to row-1 do  //画横线
     begin
-      FBuffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,FBuffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
+      Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,Buffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
     end;
     for j:=0 to col do//画竖线
     begin
       if j<col then
         x0:=FGapX+j*w
       else
-        x0:=FBuffer.Width-FGapX;
+        x0:=Buffer.Width-FGapX;
       y0:=FOffset + y+FGapY+3;
       y1:=FOffset + y+FGapY+3+(row-1)*h;
-      FBuffer.Canvas.Line(
+      Buffer.Canvas.Line(
         x0,
         y0,
         x0,
@@ -947,36 +961,36 @@ var
         if FTable[0,j+1].Align=1 then
           x1:=x0 ;//居左
         if FTable[0,j+1].Align=2 then
-          x1:=x0+(w-FBuffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
+          x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
         if FTable[0,j+1].Align=3 then
-          x1:=x0+(w-FBuffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
+          x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
         if i=0 then
         begin
-          x1:=x0+(w-FBuffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
+          x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
           y0:=FOffset + y+FGapY+i*h;
-          FBuffer.Canvas.Font.Style:=[fsBold];
-          FBuffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-          FBuffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w))   //标题行
+          Buffer.Canvas.Font.Style:=[fsBold];
+          Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+          Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w))   //标题行
         end
         else
         if i>1 then //跳过第2行--第2行定义单元格的对齐格式
         begin
            y0:=FOffset + y+FGapY+(i-1)*h;
            if FTable[i,j+1].FontStyle=0 then
-              FBuffer.Canvas.Font.Style:=[];
+              Buffer.Canvas.Font.Style:=[];
            if FTable[i,j+1].FontStyle=1 then
-              FBuffer.Canvas.Font.Style:=[fsBold];
+              Buffer.Canvas.Font.Style:=[fsBold];
            if FTable[i,j+1].FontStyle=2 then
-              FBuffer.Canvas.Font.Style:=[fsStrikeOut];
+              Buffer.Canvas.Font.Style:=[fsStrikeOut];
            if FTable[i,j+1].FontStyle=3 then
-              FBuffer.Canvas.Font.Style:=[fsItalic];
+              Buffer.Canvas.Font.Style:=[fsItalic];
            if FTable[i,j+1].FontStyle=4 then
-              FBuffer.Canvas.Font.Style:=[fsUnderline];
-           FBuffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-           FBuffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w));//截断超过单元格的字符串
+              Buffer.Canvas.Font.Style:=[fsUnderline];
+           Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+           Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w));//截断超过单元格的字符串
         end;
       end;
-      FTable[i,0].Height:=FBuffer.Canvas.TextHeight('国')+2;
+      FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
     end;
     y:=y+(row-1)*h+5;
   end;
@@ -1007,13 +1021,13 @@ var
     then
     begin
       i:=0;
-      oldColor:=FBuffer.Canvas.font.Color;
-      oldStyles:=FBuffer.Canvas.font.Style;
-      oldFontSize:=FBuffer.Canvas.font.Size;
+      oldColor:=Buffer.Canvas.font.Color;
+      oldStyles:=Buffer.Canvas.font.Style;
+      oldFontSize:=Buffer.Canvas.font.Size;
       oldy:=y;
       supy:=y;
-      suby:=y+(FBuffer.Canvas.TextHeight('国') div 2)-5;
-      NewFontSize:=FBuffer.Canvas.font.Size div 2;
+      suby:=y+(Buffer.Canvas.TextHeight('国') div 2)-5;
+      NewFontSize:=Buffer.Canvas.font.Size div 2;
       if NewFontSize=0 then NewFontSize:=5;
       while i<=utf8length(str) do
       begin
@@ -1021,7 +1035,7 @@ var
         if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
            and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
         begin
-          FBuffer.Canvas.font.Size:=NewFontSize;//上标
+          Buffer.Canvas.font.Size:=NewFontSize;//上标
           y:=supy;
           i:=i+5;
         end
@@ -1029,7 +1043,7 @@ var
         if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
            and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
         begin
-          FBuffer.Canvas.font.Size:=NewFontSize;//下标
+          Buffer.Canvas.font.Size:=NewFontSize;//下标
           y:=suby;
           i:=i+5;
         end
@@ -1038,7 +1052,7 @@ var
            and (utf8copy(str,i+3,1).ToUpper='U')
            and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
         begin
-          FBuffer.Canvas.font.Size:=oldFontSize;//取消上标
+          Buffer.Canvas.font.Size:=oldFontSize;//取消上标
           y:=oldy;
           i:=i+6;
         end
@@ -1047,86 +1061,87 @@ var
            and (utf8copy(str,i+3,1).ToUpper='U')
            and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
         begin
-          FBuffer.Canvas.font.Size:=oldFontSize;//取消下标
+          Buffer.Canvas.font.Size:=oldFontSize;//取消下标
           y:=oldy;
           i:=i+6;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
         begin
-          FBuffer.Canvas.font.Style:=[fsItalic];//斜体
+          Buffer.Canvas.font.Style:=[fsItalic];//斜体
           i:=i+3;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
         begin
-          FBuffer.Canvas.font.Style:=[fsUnderline];//下划线
+          Buffer.Canvas.font.Style:=[fsUnderline];//下划线
           i:=i+3;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
         begin
-          FBuffer.Canvas.font.Style:=[fsStrikeOut];//删除线
+          Buffer.Canvas.font.Style:=[fsStrikeOut];//删除线
           i:=i+3;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
         begin
-          FBuffer.Canvas.font.Style:=[fsBold];//加粗
+          Buffer.Canvas.font.Style:=[fsBold];//加粗
           i:=i+3;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
         begin
-          FBuffer.Canvas.font.Style:=oldStyles;//恢复原风格
+          Buffer.Canvas.font.Style:=oldStyles;//恢复原风格
           i:=i+3;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C') then
         begin
-          if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clBlack;
-          if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clRed;
-          if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clYellow;
-          if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clGreen;
-          if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then FBuffer.Canvas.font.Color:=clBlue;
+          if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clBlack;
+          if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clRed;
+          if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clYellow;
+          if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clGreen;
+          if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clBlue;
           i:=i+4;
         end
         else
         if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C') and (utf8copy(str,i+3,1)='>') then
         begin
-          FBuffer.Canvas.font.Color:=oldColor;
+          Buffer.Canvas.font.Color:=oldColor;
           i:=i+4;
         end
         else
         begin
-          FBuffer.Canvas.TextOut(x, y, s1);
-          x:=x+FBuffer.Canvas.TextWidth(s1);
+          Buffer.Canvas.TextOut(x, y, s1);
+          x:=x+Buffer.Canvas.TextWidth(s1);
           inc(i);
         end;
       end;
     end
     else
-      FBuffer.Canvas.TextOut(x, y, str);
+      Buffer.Canvas.TextOut(x, y, str);
   end;
 
 begin
   disptable:=0;
   tsNo:=0;
   addh:=1;
+  FTextHeigth:=0;
   for i:=0 to  Lineno - 1 do
   begin
     if FLineList[i].DispType='LINE' then
     begin
-      FBuffer.Canvas.Pen.Color:=FLineList[i].FontColor;
-      FBuffer.Canvas.Line(FGapX,FOffset + y+FGapY+3,FBuffer.Width-FGapX,FOffset + y+FGapY+3);
+      Buffer.Canvas.Pen.Color:=FLineList[i].FontColor;
+      Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3,Buffer.Width-FGapX,FOffset + y+FGapY+3);
       y:=y+5;
     end
     else
     if FLineList[i].DispType='2LINE' then
     begin
-      FBuffer.Canvas.Pen.Color:=FLineList[i].FontColor;
-      FBuffer.Canvas.Line(FGapX,FOffset + y+FGapY,FBuffer.Width-FGapX,FOffset + y+FGapY);
-      FBuffer.Canvas.Line(FGapX,FOffset + y+FGapY+3,FBuffer.Width-FGapX,FOffset + y+FGapY+3);
+      Buffer.Canvas.Pen.Color:=FLineList[i].FontColor;
+      Buffer.Canvas.Line(FGapX,FOffset + y+FGapY,Buffer.Width-FGapX,FOffset + y+FGapY);
+      Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3,Buffer.Width-FGapX,FOffset + y+FGapY+3);
       y:=y+5;
     end
     else
@@ -1139,10 +1154,10 @@ begin
         if FLineList[i].Align=1 then //行居左
          x:=FGapX;
         if FLineList[i].Align=2 then //行居中
-         x:=FGapX+(FBuffer.Width - img.Picture.Width) div 2;
+         x:=FGapX+(Buffer.Width - img.Picture.Width) div 2;
         if FLineList[i].Align=3 then //行居右
-         x:=(FBuffer.Width - img.Picture.Width)-FGapX;
-        FBuffer.Canvas.Draw(x, FOffset+y, img.Picture.Bitmap);
+         x:=(Buffer.Width - img.Picture.Width)-FGapX;
+        Buffer.Canvas.Draw(x, FOffset+y, img.Picture.Bitmap);
         y:=y+img.Picture.Height+5;
       end;
     end
@@ -1160,39 +1175,40 @@ begin
           if (i<FActiveLineSave) and (TTHNO=-1) then
           begin
             TTHNO:=0;
-            FActiveLineHeight1:=FActiveLineHeight1+FBuffer.Canvas.TextHeight(FLineList[i].str)*(FTS-1); //超链接出现时的高度
-            FActiveLineHeight2:=FActiveLineHeight1+FBuffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
+            FActiveLineHeight1:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str)*(FTS-1); //超链接出现时的高度
+            FActiveLineHeight2:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
           end;
         end;
       end;
     end
     else
     begin
-      FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
+      Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
       if FLineList[i].FontStyle=0 then
-        FBuffer.Canvas.Font.Style:=[];
+        Buffer.Canvas.Font.Style:=[];
       if FLineList[i].FontStyle=1 then
-          FBuffer.Canvas.Font.Style:=[fsBold];
+          Buffer.Canvas.Font.Style:=[fsBold];
       if FLineList[i].FontStyle=2 then
-          FBuffer.Canvas.Font.Style:=[fsStrikeOut];
+          Buffer.Canvas.Font.Style:=[fsStrikeOut];
       if FLineList[i].FontStyle=3 then
-          FBuffer.Canvas.Font.Style:=[fsItalic];
+          Buffer.Canvas.Font.Style:=[fsItalic];
       if FLineList[i].FontStyle=4 then
-          FBuffer.Canvas.Font.Style:=[fsUnderline];
-      FBuffer.Canvas.Font.Color:=FLineList[i].FontColor;
-      w:=GetStringTextWidth(FLineList[i].str);
+          Buffer.Canvas.Font.Style:=[fsUnderline];
+      Buffer.Canvas.Font.Color:=FLineList[i].FontColor;
+      w:=GetStringTextWidth(FLineList[i].str,Buffer);
       //w := FBuffer.Canvas.TextWidth(ReplaceCharacters(FLineList[i].str));
       if FLineList[i].Align=1 then //行居左
         DisplayText(FGapX, FOffset + y+FGapY, FLineList[i].str);
         //FBuffer.Canvas.TextOut(FGapX, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=2 then //行居中
-        DisplayText(FGapX+(FBuffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
+        DisplayText(FGapX+(Buffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
         //FBuffer.Canvas.TextOut(FGapX+(FBuffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=3 then //行居右
-        DisplayText((FBuffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
+        DisplayText((Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
         //FBuffer.Canvas.TextOut((FBuffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
       y:=y+ FLineList[i].LineHeight-FGapY*2+5;
     end;
+    FTextHeigth:=y;
   end;
 end;
 
@@ -1263,6 +1279,28 @@ begin
   inherited Destroy;
 end;
 
+procedure TCustomText.RichEditor;
+//procedure TCustomText.RichEditor(const AValue: TQFRichEditor);
+var QFRichEdit:TQFRichEditor;
+begin
+  QFRichEdit:=TQFRichEditor.Create(nil);
+  QFRichEdit.RichEdit.Text:=FLines.Text;
+  QFRichEdit.ShowModal;
+  FLines.Text:=QFRichEdit.RichEdit.Text;
+
+  init;
+  with FBuffer.Canvas do
+  begin
+    Brush.Color := FColor;
+    Brush.Style := bsSolid;
+    FillRect(0, 0, Width, Height);
+  end;
+
+  DrawTexts(0,FBuffer);
+  Canvas.Draw(0,0,FBuffer);
+  QFRichEdit.Free;
+end;
+
 constructor TQFScrollingText.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -1313,7 +1351,7 @@ begin
       FillRect(0, 0, Width, Height);
     end;
     FOffset:=0;
-    DrawTexts(FOffset);
+    DrawTexts(FOffset,FBuffer);
     Canvas.Draw(0,0,FBuffer)
   end;
 end;
@@ -1347,7 +1385,7 @@ begin
     FillRect(0, 0, Width, Height);
   end;
 
-  DrawTexts(0);
+  DrawTexts(0,FBuffer);
   if FOffset+FLineHeight=0 then
   begin
     FActiveLineHeight1:=FActiveLineHeightSave1;
@@ -1385,7 +1423,7 @@ begin
 
   if Message.WheelDelta<0 then //up
   begin
-    if abs(FOffset)<(FLineHeight-35) then
+    if abs(FOffset)<FTextHeigth-FBuffer.Height+FStepSize+35 then
     begin
       Dec(FOffset, FStepSize);
       Dec(FActiveLineHeight1, FStepSize);
@@ -1408,7 +1446,7 @@ begin
     FillRect(0, 0, Width, Height);
   end;
 
-  DrawTexts(0);
+  DrawTexts(0,FBuffer);
   Canvas.Draw(0,0,FBuffer);
 end;
 
@@ -1455,7 +1493,7 @@ begin
     if movedY > 0 then
     begin
       // 鼠标向下移动
-      if abs(FOffset)<(FLineHeight) then
+      if abs(FOffset)<(FTextHeigth-FBuffer.Height+35) then
       begin
         Dec(FOffset, abs(35));
         Dec(FActiveLineHeight1, abs(35));
@@ -1481,7 +1519,7 @@ begin
       FillRect(0, 0, Width, Height);
     end;
 
-    DrawTexts(0);
+    DrawTexts(0,FBuffer);
     Canvas.Draw(0,0,FBuffer);
   end;
 end;
@@ -1496,8 +1534,37 @@ begin
     FillRect(0, 0, Width, Height);
   end;
   FOffset:=0;
-  DrawTexts(FOffset);
+  DrawTexts(FOffset,FBuffer);
   Canvas.Draw(0,0,FBuffer)
+end;
+
+procedure TQFRichView.SavePicture(Files:string);
+var im:TImage;
+  FCanvas: TBitmap;
+  ARect : TRect;
+begin
+  init;
+  FCanvas:=TBitmap.Create;
+  FCanvas.Height:=FTextHeigth;
+  FCanvas.Width:=FBuffer.Width;
+  ARect.Width:=Width;
+  ARect.Height:=FTextHeigth;//FLineHeight;//FTextHeigth;
+  ARect.Left:=0;
+  ARect.Top:=0;
+  with FCanvas.Canvas do
+  begin
+    Brush.Color := FColor;
+    Brush.Style := bsSolid;
+    FillRect(ARect);
+  end;
+  FOffset:=0;
+  DrawTexts(0,FCanvas);
+
+  im:=TImage.Create(nil);
+  im.Picture.Jpeg.Assign(FCanvas);
+  im.Picture.SaveToFile(Files);
+  im.Free;
+  FCanvas.Free;
 end;
 
 initialization

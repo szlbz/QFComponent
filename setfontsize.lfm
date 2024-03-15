@@ -1,0 +1,92 @@
+object SetFontSizeFrm: TSetFontSizeFrm
+  Left = 404
+  Height = 339
+  Top = 36
+  Width = 303
+  BorderStyle = bsDialog
+  Caption = '选择字号'
+  ClientHeight = 339
+  ClientWidth = 303
+  DesignTimePPI = 144
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  LCLVersion = '3.0.0.3'
+  object CheckBox1: TCheckBox
+    Left = 80
+    Height = 28
+    Top = 32
+    Width = 152
+    AutoSize = False
+    Caption = '字体9'
+    Font.Height = -18
+    ParentFont = False
+    TabOrder = 0
+    OnClick = CheckBox1Click
+  end
+  object CheckBox2: TCheckBox
+    Left = 80
+    Height = 35
+    Top = 72
+    Width = 152
+    AutoSize = False
+    Caption = '字体12'
+    Font.Height = -24
+    ParentFont = False
+    TabOrder = 1
+    OnClick = CheckBox2Click
+  end
+  object CheckBox3: TCheckBox
+    Left = 80
+    Height = 40
+    Top = 113
+    Width = 152
+    AutoSize = False
+    Caption = '字体14'
+    Font.Height = -28
+    ParentFont = False
+    TabOrder = 2
+    OnClick = CheckBox3Click
+  end
+  object CheckBox4: TCheckBox
+    Left = 80
+    Height = 45
+    Top = 161
+    Width = 152
+    AutoSize = False
+    Caption = '字体16'
+    Font.Height = -32
+    ParentFont = False
+    TabOrder = 3
+    OnClick = CheckBox4Click
+  end
+  object CheckBox5: TCheckBox
+    Left = 80
+    Height = 50
+    Top = 212
+    Width = 152
+    AutoSize = False
+    Caption = '字体18'
+    Font.Height = -36
+    ParentFont = False
+    TabOrder = 4
+    OnClick = CheckBox5Click
+  end
+  object Button1: TButton
+    Left = 16
+    Height = 38
+    Top = 288
+    Width = 113
+    Caption = '插入字号'
+    TabOrder = 5
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+    Left = 168
+    Height = 38
+    Top = 288
+    Width = 113
+    Caption = '取消'
+    TabOrder = 6
+    OnClick = Button2Click
+  end
+end
