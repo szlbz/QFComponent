@@ -1,6 +1,6 @@
  **QFComponent for lazarus**   
 秋风(QQ:315795176)开发的控件包，有2个控件：  
-这个控件包是自定义的富文本编辑、显示和导出图片等功能。  
+这个控件包采用自定义的类富文本，集编辑、显示和导出图片等功能。  
 TQFRichView：类RichView控件  
 TQFScrollingText：滚动显示控件  
 
@@ -42,7 +42,10 @@ TQFScrollingText：滚动显示控件
 可在windows和linux使用，已在龙芯电脑实测可用。  
 TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠标实现快速滚动。  
 2024.03.09  
-**QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor部分界面及代码**  
+注意：  
+1、文字显示渲染等核心功能是秋风独立编写的。 
+2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor部分界面及代码  
+3、滚动控件的滚动部分参考了lazarus about的算法。  
 ![截图](%E6%88%AA%E5%9B%BE.png)  
 ![截图2](%E6%88%AA%E5%9B%BE2.png)  
 ![截图3](%E6%88%AA%E5%9B%BE3.png)  
