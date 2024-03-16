@@ -46,7 +46,7 @@ TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠
 1、文字显示渲染等核心功能是秋风独立编写的。  
 2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor部分界面及代码  
 3、滚动控件的滚动部分参考了lazarus about的算法。  
-![截图](%E6%88%AA%E5%9B%BE.png)  
+![截图1](%E6%88%AA%E5%9B%BE.png)  
 ![截图2](%E6%88%AA%E5%9B%BE2.png)  
 ![截图3](%E6%88%AA%E5%9B%BE3.png)  
 ![截图4](%E6%88%AA%E5%9B%BE4.png)  
