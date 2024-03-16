@@ -3,7 +3,10 @@
 这个控件包采用自定义的类富文本，集编辑、显示和导出图片等功能。  
 TQFRichView：类RichView控件  
 TQFScrollingText：滚动显示控件  
-
+说明：
+1、文字显示渲染等核心功能是秋风原创独立编写的。
+2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor界面及代码
+3、滚动控件的滚动部分参考了lazarus about的算法。   
 使用以下特定符号定义文字（行）的属性：  
 [img]本地图像文件名称  
 [!]下划线  
@@ -37,15 +40,11 @@ TQFScrollingText：滚动显示控件
 <@>删除线  
 <#>加粗  
 </>恢复原来的文字样式  
-初步 **支持markdown格式的表格**   
-图像格式支持： **jpg,bmp,png** 等    
+支持markdown格式的表格   
+图像格式支持：jpg,bmp,png等    
 可在windows和linux使用，已在龙芯电脑实测可用。  
 TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠标实现快速滚动。  
 2024.03.09  
-注意：  
-1、文字显示渲染等核心功能是秋风独立编写的。  
-2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor部分界面及代码  
-3、滚动控件的滚动部分参考了lazarus about的算法。  
 ![截图1](%E6%88%AA%E5%9B%BE.png)  
 ![截图2](%E6%88%AA%E5%9B%BE2.png)  
 ![截图3](%E6%88%AA%E5%9B%BE3.png)  
