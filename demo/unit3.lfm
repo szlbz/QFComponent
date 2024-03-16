@@ -77,7 +77,7 @@ object Form1: TForm1
     )
     GapX = 10
     GapY = 0
-    Color = clInfoBk
+    Color = clCream
     StepSize = 15
   end
   object ScrollingText1: TQFScrollingText
@@ -155,7 +155,7 @@ object Form1: TForm1
   object Button1: TButton
     Left = 8
     Height = 38
-    Top = 317
+    Top = 314
     Width = 152
     Caption = '编辑QFRich'
     TabOrder = 2
@@ -164,19 +164,47 @@ object Form1: TForm1
   object Button2: TButton
     Left = 176
     Height = 38
-    Top = 317
-    Width = 152
+    Top = 314
+    Width = 176
     Caption = '打开QFRich文件'
     TabOrder = 3
     OnClick = Button2Click
   end
   object Button3: TButton
-    Left = 352
+    Left = 368
     Height = 38
-    Top = 317
+    Top = 314
     Width = 113
     Caption = '导出图片'
     TabOrder = 4
     OnClick = Button3Click
+  end
+  object CheckBox1: TCheckBox
+    Left = 507
+    Height = 28
+    Top = 319
+    Width = 97
+    Caption = '滚动文字'
+    TabOrder = 5
+    OnClick = CheckBox1Click
+  end
+  object ColorBox1: TColorBox
+    Left = 752
+    Height = 28
+    Top = 316
+    Width = 214
+    ItemHeight = 20
+    OnChange = ColorBox1Change
+    TabOrder = 6
+  end
+  object Label1: TLabel
+    AnchorSideRight.Control = ColorBox1
+    Left = 642
+    Height = 24
+    Top = 319
+    Width = 108
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 2
+    Caption = '设置背景颜色'
   end
 end
