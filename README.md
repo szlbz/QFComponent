@@ -1,7 +1,9 @@
  **QFComponent for lazarus**   
 秋风(QQ:315795176)开发的控件包，有2个控件：  
+这个控件包是自定义的富文本编辑、显示和导出图片等功能。  
 TQFRichView：类RichView控件  
 TQFScrollingText：滚动显示控件  
+
 使用以下特定符号定义文字（行）的属性：  
 [img]本地图像文件名称  
 [!]下划线  
