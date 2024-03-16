@@ -3,9 +3,9 @@
 这个控件包采用自定义的类富文本，集编辑、显示和导出图片等功能。  
 TQFRichView：类RichView控件  
 TQFScrollingText：滚动显示控件  
-说明：
-1、文字显示渲染等核心功能是秋风原创独立编写的。
-2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor界面及代码
+说明：  
+1、文字显示渲染等核心功能是秋风原创独立编写的。  
+2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor界面及代码   
 3、滚动控件的滚动部分参考了lazarus about的算法。   
 使用以下特定符号定义文字（行）的属性：  
 [img]本地图像文件名称  
