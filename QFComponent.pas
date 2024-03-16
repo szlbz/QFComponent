@@ -999,6 +999,7 @@ var
   procedure DisplayText(x,y:integer;str:string);
   var i:integer;
     s1:string;
+    zwh,ywh:integer;
     oldFontSize,NewFontSize:integer;
     oldColor:TColor;
     oldStyles:TFontStyles;
@@ -1114,7 +1115,18 @@ var
         end
         else
         begin
-          Buffer.Canvas.TextOut(x, y, s1);
+          ywh:=0;
+          if s1<>'' then
+          begin
+            if ord(s1[1])<127 then
+            begin
+              ywh:=Buffer.Canvas.TextHeight(s1);
+              zwh:=Buffer.Canvas.TextHeight('国');
+              if ywh<>zwh then ywh:=abs(zwh-ywh) div 2
+              else ywh:=0;
+            end;
+          end;
+          Buffer.Canvas.TextOut(x, y+ywh, s1);//在linux中文和英文显示高度有差别
           x:=x+Buffer.Canvas.TextWidth(s1);
           inc(i);
         end;
@@ -1376,6 +1388,7 @@ begin
     Canvas.Draw(0,0,FBuffer)
   else
   begin
+    init;
     with FBuffer.Canvas do
     begin
       Brush.Color := FColor;
@@ -1574,6 +1587,7 @@ procedure TQFRichView.SavePicture(Files:string);
 var im:TImage;
   FCanvas: TBitmap;
   ARect : TRect;
+  oldFOffset:integer;
 begin
   init;
   FCanvas:=TBitmap.Create;
@@ -1587,8 +1601,10 @@ begin
   begin
     Brush.Color := FColor;
     Brush.Style := bsSolid;
-    FillRect(ARect);
+    FillRect(ARect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+                      //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
   end;
+  oldFOffset:=FOffset;
   FOffset:=0;
   DrawTexts(0,FCanvas);
 
@@ -1597,6 +1613,7 @@ begin
   im.Picture.SaveToFile(Files);
   im.Free;
   FCanvas.Free;
+  FOffset:=oldFOffset;
 end;
 
 initialization
