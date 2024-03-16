@@ -201,6 +201,9 @@ end;
 procedure TCustomText.SetColor(const AValue: TColor);
 begin
   FColor:=AValue;
+  Init;
+  DrawTexts(0,FBuffer);
+  Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TCustomText.GetFontStyle(s:string;out TableType:TTableType);
