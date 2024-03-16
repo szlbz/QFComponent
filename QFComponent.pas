@@ -120,7 +120,7 @@ type
     procedure SetColor(const AValue: TColor);
     procedure DrawTexts(y:integer;Buffer: TBitmap);
     procedure GetTableInfo(no:integer);
-    procedure GetFontStyle(s:string;out TableType:TCellType);
+    procedure GetFontStyle(s:string;out CellType:TCellType);
   protected
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
@@ -207,82 +207,82 @@ begin
   Canvas.Draw(0,0,FBuffer)
 end;
 
-procedure TCustomText.GetFontStyle(s:string;out TableType:TCellType);
+procedure TCustomText.GetFontStyle(s:string;out CellType:TCellType);
 begin
-  TableType.FontStyle:=0;
-  TableType.Color:=clBlack;
-  TableType.str:=s;
+  CellType.FontStyle:=0;
+  CellType.Color:=clBlack;
+  CellType.str:=s;
   if pos('[L]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.Align :=1;
+    CellType.str:=s;
+    CellType.Align :=1;
   end;
   if pos('[C]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[C]','',[rfReplaceAll,rfIgnoreCase]);
-    TableType.str:=s;
-    TableType.Align :=2;
+    CellType.str:=s;
+    CellType.Align :=2;
   end;
   if pos('[R]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[R]','',[rfReplaceAll,rfIgnoreCase]);
-    TableType.str:=s;
-    TableType.Align :=3;
+    CellType.str:=s;
+    CellType.Align :=3;
   end;
   if pos('[#]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[#]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.FontStyle :=1;//[fsBold];
+    CellType.str:=s;
+    CellType.FontStyle :=1;//[fsBold];
   end;
   if pos('[@]',s)<>0 then
   begin
     s:=s.Replace('[@]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.FontStyle :=2;//[fsStrikeOut];
+    CellType.str:=s;
+    CellType.FontStyle :=2;//[fsStrikeOut];
   end;
   if pos('[$]',s)<>0 then
   begin
     s:=s.Replace('[$]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.FontStyle :=3;//[fsItalic];
+    CellType.str:=s;
+    CellType.FontStyle :=3;//[fsItalic];
   end;
   if pos('[!]',s)<>0 then
   begin
     s:=s.Replace('[!]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.FontStyle :=4;//[fsUnderline];
+    CellType.str:=s;
+    CellType.FontStyle :=4;//[fsUnderline];
   end;
   if pos('[C1]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[C1]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.Color := clBlack;
+    CellType.str:=s;
+    CellType.Color := clBlack;
   end;
   if pos('[C2]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[C2]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.Color := clRed;
+    CellType.str:=s;
+    CellType.Color := clRed;
   end;
   if pos('[C3]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[C3]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.Color := clYellow;
+    CellType.str:=s;
+    CellType.Color := clYellow;
   end;
   if pos('[C4]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[C4]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.Color := clGreen;
+    CellType.str:=s;
+    CellType.Color := clGreen;
   end;
   if pos('[C5]',s.ToUpper)<>0 then
   begin
     s:=s.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    TableType.str:=s;
-    TableType.Color := clBlue;
+    CellType.str:=s;
+    CellType.Color := clBlue;
   end;
 end;
 
@@ -834,7 +834,7 @@ end;
 procedure TCustomText.GetTableInfo(no:integer);
 var col,row,js,i,j,dc:integer;
   s,str:string;
-  MyTableType:TCellType;
+  MyCellType:TCellType;
 begin
   //解释表格有几行几列
 {
@@ -877,11 +877,11 @@ begin
             begin
               if row<=FTablesl[no].row-1 then
               begin
-                GetfontStyle(str,MyTableType);
-                FTable[row,col].str:= MyTableType.str;
-                FTable[row,col].Align:=MyTableType.Align;
-                FTable[row,col].Color:=MyTableType.Color;
-                FTable[row,col].FontStyle:=MyTableType.FontStyle;
+                GetfontStyle(str,MyCellType);
+                FTable[row,col].str:= MyCellType.str;
+                FTable[row,col].Align:=MyCellType.Align;
+                FTable[row,col].Color:=MyCellType.Color;
+                FTable[row,col].FontStyle:=MyCellType.FontStyle;
               end;
             end;
           end;
