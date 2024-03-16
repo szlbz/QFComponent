@@ -52,7 +52,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
-  ComponentEditors,Dialogs,
+  ComponentEditors,Dialogs, Printers,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
 type
@@ -67,12 +67,13 @@ type
      DispType:string;
   end;
 
-  TTableType = record
+  TCellType = record
      str:string[255];
+     FontName:string[20];
      FontStyle:byte;
-     Align:byte;
-     colWidth:integer;
      Color:TColor;
+     Align:byte;
+     Width:integer;
      Height:integer;
   end;
 
@@ -91,7 +92,7 @@ type
     TTHNO:integer;
     FTS:integer;//表格数量
     FTablesl:array of TTableSL;
-    FTable:Array of Array of TTableType;
+    FTable:Array of Array of TCellType;
     FOldFontSize:integer;
     FLineList:array of TLineType;
     FActive: boolean;
@@ -119,7 +120,7 @@ type
     procedure SetColor(const AValue: TColor);
     procedure DrawTexts(y:integer;Buffer: TBitmap);
     procedure GetTableInfo(no:integer);
-    procedure GetFontStyle(s:string;out TableType:TTableType);
+    procedure GetFontStyle(s:string;out TableType:TCellType);
   protected
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
@@ -206,7 +207,7 @@ begin
   Canvas.Draw(0,0,FBuffer)
 end;
 
-procedure TCustomText.GetFontStyle(s:string;out TableType:TTableType);
+procedure TCustomText.GetFontStyle(s:string;out TableType:TCellType);
 begin
   TableType.FontStyle:=0;
   TableType.Color:=clBlack;
@@ -833,7 +834,7 @@ end;
 procedure TCustomText.GetTableInfo(no:integer);
 var col,row,js,i,j,dc:integer;
   s,str:string;
-  MyTableType:TTableType;
+  MyTableType:TCellType;
 begin
   //解释表格有几行几列
 {
@@ -1212,20 +1213,16 @@ begin
           Buffer.Canvas.Font.Style:=[fsUnderline];
       Buffer.Canvas.Font.Color:=FLineList[i].FontColor;
       w:=GetStringTextWidth(FLineList[i].str,Buffer);
-      //w := FBuffer.Canvas.TextWidth(ReplaceCharacters(FLineList[i].str));
       if FLineList[i].Align=1 then //行居左
         DisplayText(FGapX, FOffset + y+FGapY, FLineList[i].str);
-        //FBuffer.Canvas.TextOut(FGapX, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=2 then //行居中
         DisplayText(FGapX+(Buffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
-        //FBuffer.Canvas.TextOut(FGapX+(FBuffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=3 then //行居右
         DisplayText((Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
-        //FBuffer.Canvas.TextOut((FBuffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
       y:=y+ FLineList[i].LineHeight-FGapY*2+5;
     end;
-    FTextHeigth:=y;
   end;
+  FTextHeigth:=y;
 end;
 
 function TCustomText.ActiveLineIsURL: boolean;
