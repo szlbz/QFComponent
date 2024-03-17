@@ -120,6 +120,7 @@ type
     procedure SetColor(const AValue: TColor);
     procedure DisplayText(Buffer: TBitmap;x,y:integer;str:string);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
+    function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out CellType:TCellType);
   protected
@@ -1041,13 +1042,9 @@ begin
     Buffer.Canvas.TextOut(x, y, str);
 end;
 
-procedure TCustomText.DrawTexts(Buffer: TBitmap;y:integer);
-var
-  w,x,disptable: integer;
-  s: string;
-  tsno,addh:integer;
-  i: integer;
-
+function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
+var i,j,w,h,row,col:integer;
+  x0,y0,x1,y1:integer;
   //将超过单元格宽度的字符串截断
   function strtext(str:string;fbwidth:integer):string;
   var w,i:integer;
@@ -1069,77 +1066,82 @@ var
      end;
   end;
 
-  procedure DrawTable(Index:integer);
-  var i,j,w,h,row,col:integer;
-    x0,y0,x1,y1:integer;
+begin
+  row:=FTablesl[Index].row;
+  col:=FTablesl[Index].col-1;
+  Buffer.Canvas.Font.Style:=[fsBold];
+  h:=Buffer.Canvas.TextHeight('国')+2;
+  w:=(Buffer.Width-FGapX*2) div col;
+  Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
+  for i:=0 to row-1 do  //画横线
   begin
-    row:=FTablesl[Index].row;
-    col:=FTablesl[Index].col-1;
-    Buffer.Canvas.Font.Style:=[fsBold];
-    h:=Buffer.Canvas.TextHeight('国')+2;
-    w:=(Buffer.Width-FGapX*2) div col;
-    Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
-    for i:=0 to row-1 do  //画横线
-    begin
-      Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,Buffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
-    end;
-    for j:=0 to col do//画竖线
-    begin
-      if j<col then
-        x0:=FGapX+j*w
-      else
-        x0:=Buffer.Width-FGapX;
-      y0:=FOffset + y+FGapY+3;
-      y1:=FOffset + y+FGapY+3+(row-1)*h;
-      Buffer.Canvas.Line(
-        x0,
-        y0,
-        x0,
-        y1);
-    end;
-    for i:=0 to row-1 do  //绘表格文字
-    begin
-      y0:=FOffset + y+FGapY+i*h;
-      for j:=0 to col-1 do
-      begin
-        x0:=FGapX+j*w;
-        x1:=x0; //居左
-        if FTable[0,j+1].Align=1 then
-          x1:=x0 ;//居左
-        if FTable[0,j+1].Align=2 then
-          x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
-        if FTable[0,j+1].Align=3 then
-          x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
-        if i=0 then
-        begin
-          x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
-          y0:=FOffset + y+FGapY+i*h;
-          Buffer.Canvas.Font.Style:=[fsBold];
-          Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-          Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w))   //标题行
-        end
-        else
-        if i>1 then //跳过第2行--第2行定义单元格的对齐格式
-        begin
-           y0:=FOffset + y+FGapY+(i-1)*h;
-           if FTable[i,j+1].FontStyle=0 then
-              Buffer.Canvas.Font.Style:=[];
-           if FTable[i,j+1].FontStyle=1 then
-              Buffer.Canvas.Font.Style:=[fsBold];
-           if FTable[i,j+1].FontStyle=2 then
-              Buffer.Canvas.Font.Style:=[fsStrikeOut];
-           if FTable[i,j+1].FontStyle=3 then
-              Buffer.Canvas.Font.Style:=[fsItalic];
-           if FTable[i,j+1].FontStyle=4 then
-              Buffer.Canvas.Font.Style:=[fsUnderline];
-           Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-           Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w));//截断超过单元格的字符串
-        end;
-      end;
-      FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
-    end;
-    y:=y+(row-1)*h+5;
+    Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,Buffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
   end;
+  for j:=0 to col do//画竖线
+  begin
+    if j<col then
+      x0:=FGapX+j*w
+    else
+      x0:=Buffer.Width-FGapX;
+    y0:=FOffset + y+FGapY+3;
+    y1:=FOffset + y+FGapY+3+(row-1)*h;
+    Buffer.Canvas.Line(
+      x0,
+      y0,
+      x0,
+      y1);
+  end;
+  for i:=0 to row-1 do  //绘表格文字
+  begin
+    y0:=FOffset + y+FGapY+i*h;
+    for j:=0 to col-1 do
+    begin
+      x0:=FGapX+j*w;
+      x1:=x0; //居左
+      if FTable[0,j+1].Align=1 then
+        x1:=x0 ;//居左
+      if FTable[0,j+1].Align=2 then
+        x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
+      if FTable[0,j+1].Align=3 then
+        x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
+      if i=0 then
+      begin
+        x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
+        y0:=FOffset + y+FGapY+i*h;
+        Buffer.Canvas.Font.Style:=[fsBold];
+        Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+        Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w))   //标题行
+      end
+      else
+      if i>1 then //跳过第2行--第2行定义单元格的对齐格式
+      begin
+         y0:=FOffset + y+FGapY+(i-1)*h;
+         if FTable[i,j+1].FontStyle=0 then
+            Buffer.Canvas.Font.Style:=[];
+         if FTable[i,j+1].FontStyle=1 then
+            Buffer.Canvas.Font.Style:=[fsBold];
+         if FTable[i,j+1].FontStyle=2 then
+            Buffer.Canvas.Font.Style:=[fsStrikeOut];
+         if FTable[i,j+1].FontStyle=3 then
+            Buffer.Canvas.Font.Style:=[fsItalic];
+         if FTable[i,j+1].FontStyle=4 then
+            Buffer.Canvas.Font.Style:=[fsUnderline];
+         Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+         Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w));//截断超过单元格的字符串
+      end;
+    end;
+    FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
+  end;
+  y:=y+(row-1)*h+5;
+  Result:=y;
+end;
+
+procedure TCustomText.DrawTexts(Buffer: TBitmap;y:integer);
+var
+  w,x,disptable: integer;
+  s: string;
+  tsno,addh:integer;
+  i: integer;
 begin
   disptable:=0;
   tsNo:=0;
@@ -1184,7 +1186,7 @@ begin
       if (i>=FTablesl[TsNo].hs1) and (i<=FTablesl[TsNo].hs2) then
       begin
         GetTableInfo(TsNo);
-        DrawTable(TsNo);
+        y:=DrawTable(Buffer,TsNo,y);
         inc(disptable);
         if tsno<FTS then
         begin
