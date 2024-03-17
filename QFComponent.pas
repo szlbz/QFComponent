@@ -87,7 +87,7 @@ type
   TCustomText = class(TCustomControl)
   private
     FTextHeigth:integer;
-    FQFRE:TQFRichEditor;
+    //FQFRE:TQFRichEditor;
     isLeftButtonDown: Boolean;
     TTHNO:integer;
     FTS:integer;//表格数量
@@ -112,16 +112,16 @@ type
     FGapX:integer;
     FGapY:integer;
     FColor:TColor;
-    function GetStringTextWidth(str:string;Buffer: TBitmap):integer;
     function ActiveLineIsURL: boolean;
     procedure Init;
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
     procedure SetColor(const AValue: TColor);
+    function GetStringTextWidth(Buffer: TBitmap;str:string):integer;
     procedure DisplayText(Buffer: TBitmap;x,y:integer;str:string);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
-    function Deleteidentification(i:integer;str0:string;out j:integer):string;
+    function Deleteidentification(i:integer;str:string;out j:integer):string;//删除标识
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out CellType:TCellType);
   protected
@@ -309,7 +309,7 @@ begin
   Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
 end;
 
-function TCustomText.GetStringTextWidth(str:string;Buffer: TBitmap):integer;
+function TCustomText.GetStringTextWidth(Buffer: TBitmap;str:string):integer;
 var
   x,i:integer;
   s1:string;
@@ -823,110 +823,108 @@ begin
 end;
 
 //删除标识
-function TCustomText.Deleteidentification(i:integer;str0:string;out j:integer):string;
-var rs:string;
+function TCustomText.Deleteidentification(i:integer;str:string;out j:integer):string;
 begin
-  rs:=utf8copy(str0,i,1);
-  Result:=rs;
+  Result:=utf8copy(str,i,1);
   j:=0;
-  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
-     (utf8copy(str0,i+2,1).ToUpper='U') and
-     (utf8copy(str0,i+3,1).ToUpper='P') and
-     (utf8copy(str0,i+4,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='S') and
+     (utf8copy(str,i+2,1).ToUpper='U') and
+     (utf8copy(str,i+3,1).ToUpper='P') and
+     (utf8copy(str,i+4,1)='>') then
   begin
     Result:='';
     j:=5;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
-     (utf8copy(str0,i+2,1).ToUpper='U') and
-     (utf8copy(str0,i+3,1).ToUpper='B') and
-     (utf8copy(str0,i+4,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='S') and
+     (utf8copy(str,i+2,1).ToUpper='U') and
+     (utf8copy(str,i+3,1).ToUpper='B') and
+     (utf8copy(str,i+4,1)='>') then
   begin
     Result:='';
     j:=5;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
-     (utf8copy(str0,i+2,1).ToUpper='S') and
-     (utf8copy(str0,i+3,1).ToUpper='U') and
-     (utf8copy(str0,i+4,1).ToUpper='P') and
-     (utf8copy(str0,i+5,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='/') and
+     (utf8copy(str,i+2,1).ToUpper='S') and
+     (utf8copy(str,i+3,1).ToUpper='U') and
+     (utf8copy(str,i+4,1).ToUpper='P') and
+     (utf8copy(str,i+5,1)='>') then
   begin
     Result:='';
     j:=6;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
-     (utf8copy(str0,i+2,1).ToUpper='S') and
-     (utf8copy(str0,i+3,1).ToUpper='U') and
-     (utf8copy(str0,i+4,1).ToUpper='B') and
-     (utf8copy(str0,i+5,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='/') and
+     (utf8copy(str,i+2,1).ToUpper='S') and
+     (utf8copy(str,i+3,1).ToUpper='U') and
+     (utf8copy(str,i+4,1).ToUpper='B') and
+     (utf8copy(str,i+5,1)='>') then
   begin
     Result:='';
     j:=6;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1)='#') and (utf8copy(str0,i+2,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
   begin
     Result:='';
     j:=3;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1)='!') and (utf8copy(str0,i+2,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
   begin
     Result:='';
     j:=3;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1)='$') and (utf8copy(str0,i+2,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
   begin
     Result:='';
     j:=3;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1)='@') and (utf8copy(str0,i+2,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
   begin
     Result:='';
     j:=3;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
   begin
     Result:='';
     j:=3;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='C') then
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='C') then
   begin
-    if (utf8copy(str0,i+2,1)='1') and (utf8copy(str0,i+3,1)='>') then
+    if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then
     begin
        Result:='';
        j:=3;
     end;
-    if (utf8copy(str0,i+2,1)='2') and (utf8copy(str0,i+3,1)='>') then
+    if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then
     begin
        Result:='';
        j:=3;
     end;
-    if (utf8copy(str0,i+2,1)='3') and (utf8copy(str0,i+3,1)='>') then
+    if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then
     begin
        Result:='';
        j:=3;
     end;
-    if (utf8copy(str0,i+2,1)='4') and (utf8copy(str0,i+3,1)='>') then
+    if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then
     begin
        Result:='';
        j:=3;
     end;
-    if (utf8copy(str0,i+2,1)='5') and (utf8copy(str0,i+3,1)='>') then
+    if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then
     begin
        Result:='';
        j:=3;
     end;
   end
   else
-  if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1).ToUpper='C') and (utf8copy(str0,i+3,1)='>') then
+  if (Result='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C') and (utf8copy(str,i+3,1)='>') then
   begin
     Result:='';
     j:=4;
@@ -1144,12 +1142,12 @@ begin
       if FTable[0,j+1].Align=1 then
         x1:=x0 ;//居左
      if FTable[0,j+1].Align=2 then
-        x1:=x0+(w-GetStringTextWidth(FTable[i,j+1].str,Buffer)) div 2; //居中
+        x1:=x0+(w-GetStringTextWidth(Buffer,FTable[i,j+1].str)) div 2; //居中
       if FTable[0,j+1].Align=3 then
-         x1:=x0+(w-GetStringTextWidth(FTable[i,j+1].str,Buffer))-5; //居右
+         x1:=x0+(w-GetStringTextWidth(Buffer,FTable[i,j+1].str))-5; //居右
       if i=0 then
       begin
-        x1:=x0+(w-GetStringTextWidth(FTable[i,j+1].str,Buffer)) div 2;//标题行文字居中
+        x1:=x0+(w-GetStringTextWidth(Buffer,FTable[i,j+1].str)) div 2;//标题行文字居中
         y0:=FOffset + y+FGapY+i*h;
         Buffer.Canvas.Font.Style:=[fsBold];
         Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
@@ -1257,7 +1255,7 @@ begin
       if FLineList[i].FontStyle=4 then
           Buffer.Canvas.Font.Style:=[fsUnderline];
       Buffer.Canvas.Font.Color:=FLineList[i].FontColor;
-      w:=GetStringTextWidth(FLineList[i].str,Buffer);
+      w:=GetStringTextWidth(Buffer,FLineList[i].str);
       if FLineList[i].Align=1 then //行居左
         DisplayText(Buffer,FGapX, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=2 then //行居中
