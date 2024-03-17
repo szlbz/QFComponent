@@ -121,6 +121,7 @@ type
     procedure DisplayText(Buffer: TBitmap;x,y:integer;str:string);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
+    function Deleteidentification(i:integer;str0:string;out j:integer):string;
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out CellType:TCellType);
   protected
@@ -430,7 +431,7 @@ end;
 
 procedure TCustomText.Init;
 var
-  i,w,j,k,dc:integer;
+  i,w,j,k,dc,rj:integer;
   str:string;
   s,s1,textstyle:string;
   Linetemp: TStringList;
@@ -650,86 +651,6 @@ var
       js:=0;
     end;
   end;
-
-  function replstr(i:integer;str0:string):string;
-  var rs:string;
-  begin
-    rs:=utf8copy(str0,i,1);
-    Result:=rs;
-    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
-       (utf8copy(str0,i+2,1).ToUpper='U') and
-       (utf8copy(str0,i+3,1).ToUpper='P') and
-       (utf8copy(str0,i+4,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
-       (utf8copy(str0,i+2,1).ToUpper='U') and
-       (utf8copy(str0,i+3,1).ToUpper='B') and
-       (utf8copy(str0,i+4,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
-       (utf8copy(str0,i+2,1).ToUpper='S') and
-       (utf8copy(str0,i+3,1).ToUpper='U') and
-       (utf8copy(str0,i+4,1).ToUpper='P') and
-       (utf8copy(str0,i+5,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
-       (utf8copy(str0,i+2,1).ToUpper='S') and
-       (utf8copy(str0,i+3,1).ToUpper='U') and
-       (utf8copy(str0,i+4,1).ToUpper='B') and
-       (utf8copy(str0,i+5,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1)='#') and (utf8copy(str0,i+2,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1)='!') and (utf8copy(str0,i+2,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1)='$') and (utf8copy(str0,i+2,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1)='@') and (utf8copy(str0,i+2,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1)='>') then
-    begin
-      Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='C') then
-    begin
-      if (utf8copy(str0,i+2,1)='1') and (utf8copy(str0,i+3,1)='>') then
-         Result:='';
-      if (utf8copy(str0,i+2,1)='2') and (utf8copy(str0,i+3,1)='>') then Result:='';
-      if (utf8copy(str0,i+2,1)='3') and (utf8copy(str0,i+3,1)='>') then Result:='';
-      if (utf8copy(str0,i+2,1)='4') and (utf8copy(str0,i+3,1)='>') then Result:='';
-      if (utf8copy(str0,i+2,1)='5') and (utf8copy(str0,i+3,1)='>') then Result:='';
-    end
-    else
-    if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1).ToUpper='C') and (utf8copy(str0,i+3,1)='>') then
-    begin
-      Result:='';
-    end;
-  end;
 begin
   Lineno:=0;
   Linetemp:=TStringList.Create;
@@ -743,6 +664,7 @@ begin
   begin
     s := FLines[i];
     textstyle:='';
+    rj:=0;
     if Length(s) > 0 then
     begin
       preprocessing;
@@ -754,21 +676,19 @@ begin
          k:=0;
          j:=1;
          while j<= utf8length(s) do
-         //for j:=0 to utf8length(s)-1 do
          begin
            s1:=s1+utf8copy(s,j,1);
-           if FBuffer.Canvas.TextWidth(ReplaceCharacters(s1)+replstr(j,s))+FGapX*2>=Width then //跳过特定符号
-           //if FBuffer.Canvas.TextWidth(s1+utf8copy(s,j+1,1))+FGapX*2>=Width then
+           if FBuffer.Canvas.TextWidth(ReplaceCharacters(s1)+Deleteidentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
            begin
-             if replstr(j,s)=''then
-               s1:=s1+utf8copy(s,j+1,3);
+             if Deleteidentification(j,s,rj)=''then
+               s1:=s1+utf8copy(s,j+1,rj);//3);
              Linetemp.Add(textstyle+s1);
              s1:='';
            end;
-           if replstr(j,s)='' then
+           if Deleteidentification(j,s,rj)='' then
            begin
-             s1:=s1+utf8copy(s,j+1,3);
-             j:=j+4;
+             s1:=s1+utf8copy(s,j+1,rj);//3);
+             j:=j+rj+1;//4;
            end
            else
              inc(j);
@@ -899,6 +819,117 @@ begin
     end;
     inc(row);
     js:=0;
+  end;
+end;
+
+//删除标识
+function TCustomText.Deleteidentification(i:integer;str0:string;out j:integer):string;
+var rs:string;
+begin
+  rs:=utf8copy(str0,i,1);
+  Result:=rs;
+  j:=0;
+  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
+     (utf8copy(str0,i+2,1).ToUpper='U') and
+     (utf8copy(str0,i+3,1).ToUpper='P') and
+     (utf8copy(str0,i+4,1)='>') then
+  begin
+    Result:='';
+    j:=5;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='S') and
+     (utf8copy(str0,i+2,1).ToUpper='U') and
+     (utf8copy(str0,i+3,1).ToUpper='B') and
+     (utf8copy(str0,i+4,1)='>') then
+  begin
+    Result:='';
+    j:=5;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
+     (utf8copy(str0,i+2,1).ToUpper='S') and
+     (utf8copy(str0,i+3,1).ToUpper='U') and
+     (utf8copy(str0,i+4,1).ToUpper='P') and
+     (utf8copy(str0,i+5,1)='>') then
+  begin
+    Result:='';
+    j:=6;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='/') and
+     (utf8copy(str0,i+2,1).ToUpper='S') and
+     (utf8copy(str0,i+3,1).ToUpper='U') and
+     (utf8copy(str0,i+4,1).ToUpper='B') and
+     (utf8copy(str0,i+5,1)='>') then
+  begin
+    Result:='';
+    j:=6;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1)='#') and (utf8copy(str0,i+2,1)='>') then
+  begin
+    Result:='';
+    j:=3;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1)='!') and (utf8copy(str0,i+2,1)='>') then
+  begin
+    Result:='';
+    j:=3;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1)='$') and (utf8copy(str0,i+2,1)='>') then
+  begin
+    Result:='';
+    j:=3;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1)='@') and (utf8copy(str0,i+2,1)='>') then
+  begin
+    Result:='';
+    j:=3;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1)='>') then
+  begin
+    Result:='';
+    j:=3;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1).ToUpper='C') then
+  begin
+    if (utf8copy(str0,i+2,1)='1') and (utf8copy(str0,i+3,1)='>') then
+    begin
+       Result:='';
+       j:=3;
+    end;
+    if (utf8copy(str0,i+2,1)='2') and (utf8copy(str0,i+3,1)='>') then
+    begin
+       Result:='';
+       j:=3;
+    end;
+    if (utf8copy(str0,i+2,1)='3') and (utf8copy(str0,i+3,1)='>') then
+    begin
+       Result:='';
+       j:=3;
+    end;
+    if (utf8copy(str0,i+2,1)='4') and (utf8copy(str0,i+3,1)='>') then
+    begin
+       Result:='';
+       j:=3;
+    end;
+    if (utf8copy(str0,i+2,1)='5') and (utf8copy(str0,i+3,1)='>') then
+    begin
+       Result:='';
+       j:=3;
+    end;
+  end
+  else
+  if (rs='<') and (utf8copy(str0,i+1,1)='/') and (utf8copy(str0,i+2,1).ToUpper='C') and (utf8copy(str0,i+3,1)='>') then
+  begin
+    Result:='';
+    j:=4;
   end;
 end;
 
@@ -1045,27 +1076,39 @@ end;
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var i,j,w,h,row,col:integer;
   x0,y0,x1,y1:integer;
+
   //将超过单元格宽度的字符串截断
-  function strtext(str:string;fbwidth:integer):string;
-  var w,i:integer;
+  function TruncationStr(str:string;fbwidth:integer):string;
+  var w,i,rj:integer;
       tmp:string;
   begin
      Result:=str;
      tmp:='';
      i:=0;
-     while i<utf8length(str) do
+     rj:=0;
+     w:=Buffer.Canvas.TextWidth(ReplaceCharacters(str))+5;
+     if w>fbwidth then
      begin
-       w:=Buffer.Canvas.TextWidth(tmp+utf8copy(str,i+1,1))+5;
-       if w>fbwidth then
-       begin
-         Result:=tmp;
-         break;
-       end;
-       inc(i);
-       tmp:=tmp+utf8copy(str,i,1);
+        tmp:='';
+        j:=1;
+        while j<= utf8length(str) do
+        begin
+          tmp:=tmp+utf8copy(str,j,1);
+          if Buffer.Canvas.TextWidth(ReplaceCharacters(tmp)+Deleteidentification(j,str,rj))+FGapX*2>=fbwidth then //跳过特定符号
+          begin
+            Result:=tmp;
+            Break;
+          end;
+          if Deleteidentification(j,str,rj)='' then
+          begin
+            tmp:=tmp+utf8copy(str,j+1,rj);//3);
+            j:=j+rj+1;//4;
+          end
+          else
+            inc(j);
+        end;
      end;
   end;
-
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
@@ -1100,17 +1143,17 @@ begin
       x1:=x0; //居左
       if FTable[0,j+1].Align=1 then
         x1:=x0 ;//居左
-      if FTable[0,j+1].Align=2 then
-        x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2; //居中
+     if FTable[0,j+1].Align=2 then
+        x1:=x0+(w-GetStringTextWidth(FTable[i,j+1].str,Buffer)) div 2; //居中
       if FTable[0,j+1].Align=3 then
-        x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str))-5; //居右
+         x1:=x0+(w-GetStringTextWidth(FTable[i,j+1].str,Buffer))-5; //居右
       if i=0 then
       begin
-        x1:=x0+(w-Buffer.Canvas.TextWidth(FTable[i,j+1].str)) div 2;//标题行文字居中
+        x1:=x0+(w-GetStringTextWidth(FTable[i,j+1].str,Buffer)) div 2;//标题行文字居中
         y0:=FOffset + y+FGapY+i*h;
         Buffer.Canvas.Font.Style:=[fsBold];
         Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-        Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w))   //标题行
+        DisplayText(Buffer,x1+2, y0+5,TruncationStr(FTable[i,j+1].str,w));
       end
       else
       if i>1 then //跳过第2行--第2行定义单元格的对齐格式
@@ -1127,7 +1170,7 @@ begin
          if FTable[i,j+1].FontStyle=4 then
             Buffer.Canvas.Font.Style:=[fsUnderline];
          Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-         Buffer.Canvas.TextOut(x1+2, y0+5, strtext(FTable[i,j+1].str,w));//截断超过单元格的字符串
+         DisplayText(Buffer,x1+2, y0+5,TruncationStr(FTable[i,j+1].str,w));
       end;
     end;
     FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
