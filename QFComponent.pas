@@ -216,73 +216,73 @@ begin
   CellType.FontStyle:=0;
   CellType.Color:=clBlack;
   CellType.str:=s;
-  if pos('[L]',s.ToUpper)<>0 then
+  if pos('[L]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.Align :=1;
   end;
-  if pos('[C]',s.ToUpper)<>0 then
+  if pos('[C]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C]','',[rfReplaceAll,rfIgnoreCase]);
     CellType.str:=s;
     CellType.Align :=2;
   end;
-  if pos('[R]',s.ToUpper)<>0 then
+  if pos('[R]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[R]','',[rfReplaceAll,rfIgnoreCase]);
     CellType.str:=s;
     CellType.Align :=3;
   end;
-  if pos('[#]',s.ToUpper)<>0 then
+  if pos('[#]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[#]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.FontStyle :=1;//[fsBold];
   end;
-  if pos('[@]',s)<>0 then
+  if pos('[@]',s)>0 then
   begin
     s:=s.Replace('[@]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.FontStyle :=2;//[fsStrikeOut];
   end;
-  if pos('[$]',s)<>0 then
+  if pos('[$]',s)>0 then
   begin
     s:=s.Replace('[$]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.FontStyle :=3;//[fsItalic];
   end;
-  if pos('[!]',s)<>0 then
+  if pos('[!]',s)>0 then
   begin
     s:=s.Replace('[!]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.FontStyle :=4;//[fsUnderline];
   end;
-  if pos('[C1]',s.ToUpper)<>0 then
+  if pos('[C1]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C1]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.Color := clBlack;
   end;
-  if pos('[C2]',s.ToUpper)<>0 then
+  if pos('[C2]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C2]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.Color := clRed;
   end;
-  if pos('[C3]',s.ToUpper)<>0 then
+  if pos('[C3]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C3]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.Color := clYellow;
   end;
-  if pos('[C4]',s.ToUpper)<>0 then
+  if pos('[C4]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C4]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.Color := clGreen;
   end;
-  if pos('[C5]',s.ToUpper)<>0 then
+  if pos('[C5]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
@@ -444,128 +444,128 @@ var
     FLineList[i].Align :=1;
     FLineList[i].FontStyle:=0;
     //行对齐模式
-    if pos('[L]',s.ToUpper)<>0 then
+    if pos('[L]',s.ToUpper)>0 then
     begin
      textstyle:=textstyle+'[L]';
      s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
      FLineList[i].Align :=1;
     end;
-    if pos('[C]',s.ToUpper)<>0 then
+    if pos('[C]',s.ToUpper)>0 then
     begin
      textstyle:=textstyle+'[C]';
      s:=s.Replace('[C]','',[rfReplaceAll,rfIgnoreCase]);
      FLineList[i].Align :=2;
     end;
-    if pos('[R]',s.ToUpper)<>0 then
+    if pos('[R]',s.ToUpper)>0 then
     begin
      textstyle:=textstyle+'[R]';
      s:=s.Replace('[R]','',[rfReplaceAll,rfIgnoreCase]);
      FLineList[i].Align :=3;
     end;
     //字体风格
-    if pos('[#]',s.ToUpper)<>0 then
+    if pos('[#]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[#]';
       s:=s.Replace('[#]','',[rfReplaceAll,rfIgnoreCase]);
       FLineList[i].FontStyle :=1;// fsBold;
     end;
-    if pos('[@]',s)<>0 then
+    if pos('[@]',s)>0 then
     begin
       textstyle:=textstyle+'[@]';
       s:=s.Replace('[@]','',[rfReplaceAll,rfIgnoreCase]);
       FLineList[i].FontStyle :=2;// fsStrikeOut;
     end;
-    if pos('[$]',s)<>0 then
+    if pos('[$]',s)>0 then
     begin
       textstyle:=textstyle+'[$]';
       s:=s.Replace('[$]','',[rfReplaceAll,rfIgnoreCase]);
       FLineList[i].FontStyle :=3;// fsItalic;
     end;
-    if pos('[!]',s)<>0 then
+    if pos('[!]',s)>0 then
     begin
       textstyle:=textstyle+'[!]';
       s:=s.Replace('[!]','',[rfReplaceAll,rfIgnoreCase]);
       FLineList[i].FontStyle :=4;// fsUnderline;
     end;
     //字体颜色
-    if pos('[C1]',s.ToUpper)<>0 then
+    if pos('[C1]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[C1]';
        s:=s.Replace('[C1]','',[rfReplaceAll,rfIgnoreCase]);
        FLineList[i].FontColor := clBlack;
     end;
-    if pos('[C2]',s.ToUpper)<>0 then
+    if pos('[C2]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[C2]';
        s:=s.Replace('[C2]','',[rfReplaceAll,rfIgnoreCase]);
        FLineList[i].FontColor := clRed;
     end;
-    if pos('[C3]',s.ToUpper)<>0 then
+    if pos('[C3]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[C3]';
        s:=s.Replace('[C3]','',[rfReplaceAll,rfIgnoreCase]);
        FLineList[i].FontColor := clYellow;
     end;
-    if pos('[C4]',s.ToUpper)<>0 then
+    if pos('[C4]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[C4]';
        s:=s.Replace('[C4]','',[rfReplaceAll,rfIgnoreCase]);
        FLineList[i].FontColor := clGreen;
     end;
-    if pos('[C5]',s.ToUpper)<>0 then
+    if pos('[C5]',s.ToUpper)>0 then
     begin
        textstyle:=textstyle+'[C5]';
        s:=s.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);
        FLineList[i].FontColor := clBlue;
     end;
     //字体尺寸
-    if pos('[S1]',s.ToUpper)<>0 then
+    if pos('[S1]',s.ToUpper)>0 then
     begin
       s:=s.Replace('[S1]','',[rfReplaceAll,rfIgnoreCase]);
       textstyle:=textstyle+'[S1]';
       FLineList[i].FontSize := 9
     end;
-    if pos('[S2]',s.ToUpper)<>0 then
+    if pos('[S2]',s.ToUpper)>0 then
     begin
       s:=s.Replace('[S2]','',[rfReplaceAll,rfIgnoreCase]);
       textstyle:=textstyle+'[S2]';
       FLineList[i].FontSize := 12
     end;
-    if pos('[S3]',s.ToUpper)<>0 then
+    if pos('[S3]',s.ToUpper)>0 then
     begin
       s:=s.Replace('[S3]','',[rfReplaceAll,rfIgnoreCase]);
       textstyle:=textstyle+'[S3]';
       FLineList[i].FontSize := 14
     end;
-    if pos('[S4]',s.ToUpper)<>0 then
+    if pos('[S4]',s.ToUpper)>0 then
     begin
       s:=s.Replace('[S4]','',[rfReplaceAll,rfIgnoreCase]);
       textstyle:=textstyle+'[S4]';
       FLineList[i].FontSize := 16
     end;
-    if pos('[S5]',s.ToUpper)<>0 then
+    if pos('[S5]',s.ToUpper)>0 then
     begin
       s:=s.Replace('[S5]','',[rfReplaceAll,rfIgnoreCase]);
       textstyle:=textstyle+'[S5]';
       FLineList[i].FontSize := 18;
     end;
     //分割线
-    if (pos('[LINE]',s.ToUpper)<>0) or (pos('***',s.ToUpper)<>0) or
-       (pos('___',s.ToUpper)<>0) or (pos('---',s.ToUpper)<>0) then
+    if (pos('[LINE]',s.ToUpper)>0) or (pos('***',s.ToUpper)>0) or
+       (pos('___',s.ToUpper)>0) or (pos('---',s.ToUpper)>0) then
     begin
       textstyle:=textstyle+'[LINE]';
       FLineList[i].DispType:='LINE';
       s:=s.Replace('[LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     end;
     //双分割线
-    if pos('[2LINE]',s.ToUpper)<>0 then
+    if pos('[2LINE]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[2LINE]';
       FLineList[i].DispType:='2LINE';
       s:=s.Replace('[2LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     end;
     //图像
-    if pos('[IMG]',s.ToUpper)<>0 then
+    if pos('[IMG]',s.ToUpper)>0 then
     begin
       textstyle:=textstyle+'[IMG]';
       FLineList[i].DispType:='IMG';
@@ -1104,11 +1104,9 @@ begin
    end;
 end;
 
-
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var i,j,w,h,row,col:integer;
   x0,y0,x1,y1:integer;
-
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
@@ -1139,6 +1137,15 @@ begin
     y0:=FOffset + y+FGapY+i*h;
     for j:=0 to col-1 do
     begin
+      //设置字体属性
+      if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
+      if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
+      if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
+      if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
+      if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
+      Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+      //设置字体属性
+
       x0:=FGapX+j*w;
       x1:=x0; //居左
       if FTable[0,j+1].Align=1 then
@@ -1159,17 +1166,6 @@ begin
       if i>1 then //跳过第2行--第2行定义单元格的对齐格式
       begin
          y0:=FOffset + y+FGapY+(i-1)*h;
-         if FTable[i,j+1].FontStyle=0 then
-            Buffer.Canvas.Font.Style:=[];
-         if FTable[i,j+1].FontStyle=1 then
-            Buffer.Canvas.Font.Style:=[fsBold];
-         if FTable[i,j+1].FontStyle=2 then
-            Buffer.Canvas.Font.Style:=[fsStrikeOut];
-         if FTable[i,j+1].FontStyle=3 then
-            Buffer.Canvas.Font.Style:=[fsItalic];
-         if FTable[i,j+1].FontStyle=4 then
-            Buffer.Canvas.Font.Style:=[fsUnderline];
-         Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
          DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
       end;
     end;
@@ -1639,7 +1635,7 @@ begin
   FCanvas.Height:=FTextHeigth;
   FCanvas.Width:=FBuffer.Width;
   ARect.Width:=Width;
-  ARect.Height:=FTextHeigth;//FLineHeight;//FTextHeigth;
+  ARect.Height:=FTextHeigth;
   ARect.Left:=0;
   ARect.Top:=0;
   with FCanvas.Canvas do
