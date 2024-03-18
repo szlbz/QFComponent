@@ -605,7 +605,12 @@ var
       s := Trim(FLines[i]);
       if pos('|',s)>0 then
       begin
-        if pos('|',Trim(FLines[i+1]))=0 then //表格最后一行
+        if (pos('|',Trim(FLines[i+1]))=0) or
+           (
+           (pos('|',Trim(FLines[i+1]))>0) and
+           (pos('|',Trim(FLines[i+2]))>0) and
+           (pos('-',Trim(FLines[i+2]))>0)
+           ) then //表格最后一行
         begin
           inc(FTS);
         end;
@@ -638,7 +643,12 @@ var
             end;
           end;
         end;
-        if pos('|',Trim(FLines[i+1]))=0 then //表格最后一行
+        if (pos('|',Trim(FLines[i+1]))=0) or
+           (
+           (pos('|',Trim(FLines[i+1]))>0) and
+           (pos('|',Trim(FLines[i+2]))>0) and
+           (pos('-',Trim(FLines[i+2]))>0)
+           ) then //表格最后一行
         begin
           FTablesl[no].row:=row;//行数
           FTablesl[no].col:=col;//列数
