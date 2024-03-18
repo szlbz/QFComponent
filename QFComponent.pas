@@ -122,6 +122,7 @@ type
     procedure DrawTexts(Buffer: TBitmap;y:integer);
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
     function Deleteidentification(i:integer;str:string;out j:integer):string;//删除标识
+    function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out CellType:TCellType);
   protected
@@ -1071,42 +1072,43 @@ begin
     Buffer.Canvas.TextOut(x, y, str);
 end;
 
+//将超过单元格宽度的字符串截断
+function TCustomText.TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
+var w1,rj,i:integer;
+    tmp:string;
+begin
+   Result:=str;
+   tmp:='';
+   rj:=0;
+   w1:=Buffer.Canvas.TextWidth(ReplaceCharacters(str))+5;
+   if w1>fbwidth then
+   begin
+      tmp:='';
+      i:=1;
+      while i<= utf8length(str) do
+      begin
+        tmp:=tmp+utf8copy(str,i,1);
+        if Buffer.Canvas.TextWidth(ReplaceCharacters(tmp)+Deleteidentification(i,str,rj))+5>fbwidth then //跳过特定符号
+        begin
+          Result:=tmp;
+          Break;
+        end;
+        if Deleteidentification(i,str,rj)='' then
+        begin
+          tmp:=tmp+utf8copy(str,i+1,rj);
+          i:=i+rj+1;
+        end
+        else
+          inc(i);
+      end;
+   end;
+end;
+
+
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var i,j,w,h,row,col:integer;
   x0,y0,x1,y1:integer;
 
-  //将超过单元格宽度的字符串截断
-  function TruncationStr(str:string;fbwidth:integer):string;
-  var w,i,rj:integer;
-      tmp:string;
-  begin
-     Result:=str;
-     tmp:='';
-     i:=0;
-     rj:=0;
-     w:=Buffer.Canvas.TextWidth(ReplaceCharacters(str))+5;
-     if w>fbwidth then
-     begin
-        tmp:='';
-        j:=1;
-        while j<= utf8length(str) do
-        begin
-          tmp:=tmp+utf8copy(str,j,1);
-          if Buffer.Canvas.TextWidth(ReplaceCharacters(tmp)+Deleteidentification(j,str,rj))+FGapX*2>=fbwidth then //跳过特定符号
-          begin
-            Result:=tmp;
-            Break;
-          end;
-          if Deleteidentification(j,str,rj)='' then
-          begin
-            tmp:=tmp+utf8copy(str,j+1,rj);//3);
-            j:=j+rj+1;//4;
-          end
-          else
-            inc(j);
-        end;
-     end;
-  end;
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
@@ -1142,16 +1144,16 @@ begin
       if FTable[0,j+1].Align=1 then
         x1:=x0 ;//居左
      if FTable[0,j+1].Align=2 then
-        x1:=x0+(w-GetStringTextWidth(Buffer,FTable[i,j+1].str)) div 2; //居中
+        x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2; //居中
       if FTable[0,j+1].Align=3 then
-         x1:=x0+(w-GetStringTextWidth(Buffer,FTable[i,j+1].str))-5; //居右
+         x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w)))-5; //居右
       if i=0 then
       begin
-        x1:=x0+(w-GetStringTextWidth(Buffer,FTable[i,j+1].str)) div 2;//标题行文字居中
+        x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
         y0:=FOffset + y+FGapY+i*h;
         Buffer.Canvas.Font.Style:=[fsBold];
         Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-        DisplayText(Buffer,x1+2, y0+5,TruncationStr(FTable[i,j+1].str,w));
+        DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
       end
       else
       if i>1 then //跳过第2行--第2行定义单元格的对齐格式
@@ -1168,7 +1170,7 @@ begin
          if FTable[i,j+1].FontStyle=4 then
             Buffer.Canvas.Font.Style:=[fsUnderline];
          Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-         DisplayText(Buffer,x1+2, y0+5,TruncationStr(FTable[i,j+1].str,w));
+         DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
       end;
     end;
     FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
