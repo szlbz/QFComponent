@@ -1229,7 +1229,7 @@ begin
         end
         else
         begin
-          DisplayText(Buffer,x0+2, y0+5,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
+          DisplayText(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
         end;
       end;
     end;
