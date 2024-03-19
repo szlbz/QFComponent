@@ -15,7 +15,7 @@
     <Description Value="秋风(QQ:315795176)开发的控件包，有2个控件：
 TQFRichView：类RichView控件
 TQFScrollingText：滚动显示控件"/>
-    <Version Minor="1"/>
+    <Version Minor="8"/>
     <Files>
       <Item>
         <Filename Value="QFComponent.pas"/>
@@ -26,8 +26,35 @@ TQFScrollingText：滚动显示控件"/>
         <Filename Value="QFComponentPack.pas"/>
         <UnitName Value="QFComponentPack"/>
       </Item>
+      <Item>
+        <Filename Value="QFRichEdit.pas"/>
+        <UnitName Value="QFRichEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="setfontcolor.pas"/>
+        <UnitName Value="setfontcolor"/>
+      </Item>
+      <Item>
+        <Filename Value="setfontsize.pas"/>
+        <UnitName Value="SetFontSize"/>
+      </Item>
+      <Item>
+        <Filename Value="SetImage.pas"/>
+        <UnitName Value="SetImage"/>
+      </Item>
+      <Item>
+        <Filename Value="SetTable.pas"/>
+        <UnitName Value="SetTable"/>
+      </Item>
+      <Item>
+        <Filename Value="tools.pas"/>
+        <UnitName Value="Tools"/>
+      </Item>
     </Files>
     <RequiredPkgs>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
       <Item>
         <PackageName Value="LCL"/>
       </Item>
