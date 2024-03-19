@@ -1218,12 +1218,19 @@ begin
         //显示图形
         x0:=FGapX+j*w+1;
         y0:=FOffset + y+FGapY+(i-1)*h+4;
-        IMG.Picture.LoadFromFile(FTable[i,j+1].str);
-        r.Top:=y0;
-        r.Left:=x0;
-        r.Width:=w-1;
-        r.Height:=h-1;
-        Buffer.Canvas.StretchDraw(r,img.Picture.Bitmap);
+        if  FileExists(FTable[i,j+1].str) then
+        begin
+          IMG.Picture.LoadFromFile(FTable[i,j+1].str);
+          r.Top:=y0;
+          r.Left:=x0;
+          r.Width:=w-1;
+          r.Height:=h-1;
+          Buffer.Canvas.StretchDraw(r,img.Picture.Bitmap);
+        end
+        else
+        begin
+          DisplayText(Buffer,x0+2, y0+5,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
+        end;
       end;
     end;
     FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
