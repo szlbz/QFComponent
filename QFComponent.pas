@@ -94,6 +94,9 @@ type
      Align:byte;
      Width:integer;
      Height:integer;
+     ColSpan:integer;
+     RowSpan:integer;
+     DispType:integer;//0--文字 1--图像
   end;
 
   TTableSL = record
@@ -232,6 +235,7 @@ end;
 
 procedure TCustomText.GetFontStyle(s:string;out CellType:TCellType);
 begin
+  CellType.DispType:=0;
   CellType.FontStyle:=0;
   CellType.Color:=clBlack;
   CellType.str:=s;
@@ -305,7 +309,14 @@ begin
   begin
     s:=s.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
+    CellType.DispType:=0;
     CellType.Color := clBlue;
+  end;
+  if pos('[IMG]',s.ToUpper)>0 then
+  begin
+    s:=s.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    CellType.str:=s;
+    CellType.DispType:=1;
   end;
 end;
 
@@ -831,6 +842,7 @@ begin
               begin
                 GetfontStyle(str,MyCellType);
                 FTable[row,col].str:= MyCellType.str;
+                FTable[row,col].DispType:= MyCellType.DispType;
                 FTable[row,col].Align:=MyCellType.Align;
                 FTable[row,col].Color:=MyCellType.Color;
                 FTable[row,col].FontStyle:=MyCellType.FontStyle;
@@ -1136,6 +1148,7 @@ end;
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var i,j,w,h,row,col:integer;
   x0,y0,x1,y1:integer;
+  r:TRect;
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
@@ -1166,36 +1179,51 @@ begin
     y0:=FOffset + y+FGapY+i*h;
     for j:=0 to col-1 do
     begin
-      //设置字体属性
-      if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
-      if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
-      if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
-      if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
-      if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
-      Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-      //设置字体属性
-
-      x0:=FGapX+j*w;
-      x1:=x0; //居左
-      if FTable[0,j+1].Align=1 then
-        x1:=x0 ;//居左
-     if FTable[0,j+1].Align=2 then
-        x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2; //居中
-      if FTable[0,j+1].Align=3 then
-         x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w)))-5; //居右
-      if i=0 then
+      if FTable[i,j+1].DispType=0 then
       begin
-        x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
-        y0:=FOffset + y+FGapY+i*h;
-        Buffer.Canvas.Font.Style:=[fsBold];
+        //设置字体属性
+        if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
+        if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
+        if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
+        if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
+        if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
         Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-        DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
+        //设置字体属性
+
+        x0:=FGapX+j*w;
+        x1:=x0; //居左
+        if FTable[0,j+1].Align=1 then
+          x1:=x0 ;//居左
+       if FTable[0,j+1].Align=2 then
+          x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2; //居中
+        if FTable[0,j+1].Align=3 then
+           x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w)))-5; //居右
+        if i=0 then
+        begin
+          x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
+          y0:=FOffset + y+FGapY+i*h;
+          Buffer.Canvas.Font.Style:=[fsBold];
+          Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+          DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
+        end
+        else
+        if i>1 then //跳过第2行--第2行定义单元格的对齐格式
+        begin
+           y0:=FOffset + y+FGapY+(i-1)*h;
+           DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
+        end;
       end
       else
-      if i>1 then //跳过第2行--第2行定义单元格的对齐格式
       begin
-         y0:=FOffset + y+FGapY+(i-1)*h;
-         DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
+        //显示图形
+        x0:=FGapX+j*w+1;
+        y0:=FOffset + y+FGapY+(i-1)*h+4;
+        IMG.Picture.LoadFromFile(FTable[i,j+1].str);
+        r.Top:=y0;
+        r.Left:=x0;
+        r.Width:=w-1;
+        r.Height:=h-1;
+        Buffer.Canvas.StretchDraw(r,img.Picture.Bitmap);
       end;
     end;
     FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
