@@ -1535,7 +1535,7 @@ begin
   end;
 
   DrawTexts(FBuffer,0);
-  if FOffset+FLineHeight=0 then
+  if FOffset+FTextHeigth=0 then
   begin
     FActiveLineHeight1:=FActiveLineHeightSave1;
     FActiveLineHeight2:=FActiveLineHeightSave2;
