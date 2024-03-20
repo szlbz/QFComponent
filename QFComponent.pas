@@ -1509,8 +1509,8 @@ procedure TQFScrollingText.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   inherited MouseMove(Shift, X, Y);
 
-  if (Y>FBuffer.Height+FActiveLineHeight1) and (Y<FBuffer.Height+FActiveLineHeight2) then
-      FActiveLine := FActiveLineSave
+  if (Y>abs(FOffset+FActiveLineHeight1)) and (Y<abs(FOffset+FActiveLineHeight2)) then
+     FActiveLine := FActiveLineSave
   else FActiveLine:= -1;
 
   Cursor := crDefault;
