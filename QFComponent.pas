@@ -618,8 +618,6 @@ var
       end
       else
         FLineList[i].FontColor := clBlue;
-      //FActiveLineHeight1:=FLineHeight;//超链接出现时的高度
-      //FActiveLineHeight2:=FLineHeight+FBuffer.Canvas.TextHeight(s); //超链接出现时的高度
       FActiveLineSave:=i;//超链接出现时的行数
     end;
   end;
@@ -768,11 +766,7 @@ begin
   FBuffer.Width := Width;
   FBuffer.Height := Height;
   if FOffset = -1 then
-  begin
     FOffset := FBuffer.Height;
-    FActiveLineHeightSave1:=FActiveLineHeight1;
-    FActiveLineHeightSave2:=FActiveLineHeight2; //2024-03-10
-  end;
 
   with FBuffer.Canvas do
   begin
@@ -1299,11 +1293,7 @@ begin
         begin
           inc(TsNo);
           if (i<FActiveLineSave) and (TTHNO=-1) then
-          begin
             TTHNO:=0;
-            FActiveLineHeight1:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str)*(FTS-1); //超链接出现时的高度
-            FActiveLineHeight2:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
-          end;
         end;
       end;
     end
@@ -1330,7 +1320,7 @@ begin
         DisplayText(Buffer,(Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].DispType='URL' then
       begin
-        FActiveLineHeight1:=y-Buffer.Canvas.TextHeight(FLineList[i].str) div 2; //超链接出现时的高度
+        FActiveLineHeight1:=y; //超链接出现时的高度
         FActiveLineHeight2:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
       end;
       y:=y+ FLineList[i].LineHeight-FGapY*2+5;
@@ -1580,6 +1570,8 @@ procedure TQFRichView.WMMouseWheel(var Message: TLMMouseEvent);
 begin
   inherited WMMouseWheel(Message);
 
+  FActiveLine:= -1;
+  Cursor := crDefault;
   if Message.WheelDelta<0 then //up
   begin
     if abs(FOffset)<FTextHeigth-FBuffer.Height+FStepSize+35 then
@@ -1632,12 +1624,9 @@ end;
 procedure TQFRichView.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   movedY: Integer;//存储鼠标移动的距离
-  m:integer;
 begin
   inherited MouseMove(Shift, X, Y);
-  m:=FOffset+FActiveLineHeight1;
-  //if (Y>abs(FActiveLineHeight1)) and (Y<abs(FActiveLineHeight2)) then
-  if (Y>abs(m)) and (Y<abs(FOffset+FActiveLineHeight2)) then
+  if (Y>abs(FOffset+FActiveLineHeight1)) and (Y<abs(FOffset+FActiveLineHeight2)) then
     FActiveLine := FActiveLineSave
   else
     FActiveLine:= -1;
