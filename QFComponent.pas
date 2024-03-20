@@ -608,8 +608,9 @@ var
       end;
     end;
     //超链接
-    if (Pos('http://', s) = 1) or (Pos('https://', s) = 1) then
+    if (Pos('HTTP://', s.ToUpper) = 1) or (Pos('HTTPS://', s.ToUpper) = 1) then
     begin
+      FLineList[i].DispType:='URL';
       if i = FActiveLine then
       begin
         FLineList[i].FontStyle := 4;//fsUnderline;
@@ -617,8 +618,8 @@ var
       end
       else
         FLineList[i].FontColor := clBlue;
-      FActiveLineHeight1:=FLineHeight;//超链接出现时的高度
-      FActiveLineHeight2:=FLineHeight+FBuffer.Canvas.TextHeight(s); //超链接出现时的高度
+      //FActiveLineHeight1:=FLineHeight;//超链接出现时的高度
+      //FActiveLineHeight2:=FLineHeight+FBuffer.Canvas.TextHeight(s); //超链接出现时的高度
       FActiveLineSave:=i;//超链接出现时的行数
     end;
   end;
@@ -1181,7 +1182,7 @@ begin
   begin
     for j:=0 to col-1 do
     begin
-      if FTable[i,j+1].DispType=0 then
+      if FTable[i,j+1].DispType=0 then  //显示文字
       begin
         //设置字体属性
         if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
@@ -1214,15 +1215,15 @@ begin
            y0:=FOffset + y+FGapY+(i-1)*h+abs(h- th) div 2;//垂直居中
            DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
         end;
-      end
-      else
+      end;
+      if FTable[i,j+1].DispType=1 then  //显示图形
       begin
-        //显示图形
         x0:=FGapX+j*w+1;
         y0:=FOffset + y+FGapY+(i-1)*h+4;
         if  FileExists(FTable[i,j+1].str) then
         begin
           IMG.Picture.LoadFromFile(FTable[i,j+1].str);
+          //设置图像显示位置及尺寸（单元格大小）
           r.Top:=y0;
           r.Left:=x0;
           r.Width:=w-1;
@@ -1231,6 +1232,7 @@ begin
         end
         else
         begin
+          //没找到图像文件
           DisplayText(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
         end;
       end;
@@ -1326,6 +1328,11 @@ begin
         DisplayText(Buffer,FGapX+(Buffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=3 then //行居右
         DisplayText(Buffer,(Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
+      if FLineList[i].DispType='URL' then
+      begin
+        FActiveLineHeight1:=y-Buffer.Canvas.TextHeight(FLineList[i].str) div 2; //超链接出现时的高度
+        FActiveLineHeight2:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
+      end;
       y:=y+ FLineList[i].LineHeight-FGapY*2+5;
     end;
   end;
@@ -1625,10 +1632,12 @@ end;
 procedure TQFRichView.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   movedY: Integer;//存储鼠标移动的距离
+  m:integer;
 begin
   inherited MouseMove(Shift, X, Y);
-
-  if (Y>abs(FActiveLineHeight1)) and (Y<abs(FActiveLineHeight2)) then
+  m:=FOffset+FActiveLineHeight1;
+  //if (Y>abs(FActiveLineHeight1)) and (Y<abs(FActiveLineHeight2)) then
+  if (Y>abs(m)) and (Y<abs(FOffset+FActiveLineHeight2)) then
     FActiveLine := FActiveLineSave
   else
     FActiveLine:= -1;
