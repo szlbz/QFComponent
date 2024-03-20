@@ -71,7 +71,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
-  ComponentEditors,Dialogs, Printers,
+  //ComponentEditors,
+  Dialogs, Printers,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
 type
@@ -1148,13 +1149,15 @@ end;
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var i,j,w,h,row,col:integer;
   x0,y0,x1,y1:integer;
+  th:integer;//文字高度
   r:TRect;
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
   Buffer.Canvas.Font.Style:=[fsBold];
-  h:=Buffer.Canvas.TextHeight('国')+2;
-  w:=(Buffer.Width-FGapX*2) div col;
+  th:= Buffer.Canvas.TextHeight('国');
+  h:=round(th*1.5); //表格行高
+  w:=(Buffer.Width-FGapX*2) div col; //单元格宽
   Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
   for i:=0 to row-1 do  //画横线
   begin
@@ -1176,7 +1179,6 @@ begin
   end;
   for i:=0 to row-1 do  //绘表格文字
   begin
-    y0:=FOffset + y+FGapY+i*h;
     for j:=0 to col-1 do
     begin
       if FTable[i,j+1].DispType=0 then
@@ -1201,7 +1203,7 @@ begin
         if i=0 then
         begin
           x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
-          y0:=FOffset + y+FGapY+i*h;
+          y0:=FOffset + y+FGapY+i*h+abs(h- th) div 2;//垂直居中
           Buffer.Canvas.Font.Style:=[fsBold];
           Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
           DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
@@ -1209,7 +1211,7 @@ begin
         else
         if i>1 then //跳过第2行--第2行定义单元格的对齐格式
         begin
-           y0:=FOffset + y+FGapY+(i-1)*h;
+           y0:=FOffset + y+FGapY+(i-1)*h+abs(h- th) div 2;//垂直居中
            DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
         end;
       end
