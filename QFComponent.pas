@@ -171,6 +171,7 @@ type
  published
     property Align;
     property Anchors;
+    property LineSpacing: integer read FLineSpacing write FLineSpacing;
     property Lines: TStrings read FLines write SetLines;
     property GapX: integer read FGapX write FGapX;
     property GapY: integer read FGapY write FGapY;
