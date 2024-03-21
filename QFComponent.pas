@@ -117,6 +117,7 @@ type
   TCustomText = class(TCustomControl)
   private
     FRect:TRect;
+    FLineSpacing:integer;//行距
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
     isLeftButtonDown: Boolean;
@@ -769,7 +770,7 @@ begin
       FLineList[i].str:=s;
       //FBuffer.Canvas.Font.Style:=FLineList[i].FontStyle;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s);
+      FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
       FLineHeight:=FLineHeight+FLineList[i].LineHeight;
     end;
   end;
@@ -788,12 +789,21 @@ begin
         FBackgroundImage:=TImage.Create(self);
         FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
       end;
+      FRect.Top:=0;
+      FRect.Left:=0;
+      FRect.Width:=Width;
+      FRect.Height:=Height;
+      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
+    end
+    else
+    begin
+      with FBuffer.Canvas do
+      begin
+        Brush.Color := FColor;
+        Brush.Style := bsSolid;
+        FillRect(0, 0, Width, Height);
+      end;
     end;
-    FRect.Top:=0;
-    FRect.Left:=0;
-    FRect.Width:=Width;
-    FRect.Height:=Height;
-    FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
   end
   else
   begin
@@ -1418,6 +1428,8 @@ begin
   img:=TImage.Create(nil);
 
   Parent:=TWinControl(AOwner);
+  FLineSpacing:=0;
+  FBackImageFile:='';
   FStepSize := 1;
   TTHNO:=-1;
   FOffset := -1;
