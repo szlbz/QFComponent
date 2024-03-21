@@ -46,6 +46,8 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  QFRichView1.BackImagefile:='bg.jpg';
+  ScrollingText1.BackImagefile:='bg.jpg';
   //UniConnection1.SpecificOptions.Values['SQL Server.Provider']:='prDirect';// .Add('SQL Server.Provider=prDirect');
   //UniConnection1.Connected:=true;
   //UniQuery1.Active:=true;

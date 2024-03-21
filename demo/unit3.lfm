@@ -22,11 +22,10 @@ object Form1: TForm1
       '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
       '|:-:|:-|-:|:-:|:-|'
       '|秋风1|[$][c2]检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-      '|秋风2|检测中心2|[#][c4]南山建工村2|283233648||'
-      '|[c2]秋风3|检测中心3|南山建工村3|383233647||'
+      '|秋风2|检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
+      '|[c2]秋风3|检测中心3|南山建工村3|383233647|[img]3.png|'
       '|秋风4|检测中心4|南山建工村4|483233646||'
       '|秋风5|检测中心5|南山建工村5|583233645||'
-      '------'
       '|姓名|[#][C2]单位|办公地址|'
       '|:-:|:-:|:-:|'
       '|秋风6|检测中心1|南山建工村1|'
@@ -34,6 +33,7 @@ object Form1: TForm1
       '|[c2]秋风8|检测中心3|南山建工村3|'
       '|秋风9|检测中心4|南山建工村4|'
       '|秋风10|检测中心5|南山建工村5|'
+      'http://www.cnblogs.com/'
       '以下<sub>是</sub>显<sup>示</sup>图片：'
       '[img]demo.bmp'
       '[!]下划线'
@@ -98,7 +98,6 @@ object Form1: TForm1
       '|[c2]秋风3|检测中心3|南山建工村3|383233647||'
       '|秋风4|检测中心4|南山建工村4|483233646||'
       '|秋风5|检测中心5|南山建工村5|583233645||'
-      '------'
       '|姓名|[#][C2]单位|办公地址|'
       '|:-:|:-:|:-:|'
       '|秋风6|检测中心1|南山建工村1|'
@@ -189,21 +188,20 @@ object Form1: TForm1
     OnClick = CheckBox1Click
   end
   object ColorBox1: TColorBox
-    Left = 752
-    Height = 28
-    Top = 316
-    Width = 214
+    Left = 759
+    Height = 26
+    Top = 314
+    Width = 206
     ItemHeight = 20
     OnChange = ColorBox1Change
     TabOrder = 6
   end
   object Label1: TLabel
     AnchorSideRight.Control = ColorBox1
-    Left = 642
+    Left = 649
     Height = 24
-    Top = 319
+    Top = 314
     Width = 108
-    Anchors = [akTop, akRight]
     BorderSpacing.Right = 2
     Caption = '设置背景颜色'
   end
