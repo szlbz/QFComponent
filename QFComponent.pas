@@ -781,10 +781,13 @@ begin
   freeandnil(Linetemp);
   if trim(FBackImageFile)<>'' then
   begin
-    if FBackgroundImage=nil then
+    if  FileExists(FBackImageFile) then
     begin
-      FBackgroundImage:=TImage.Create(self);
-      FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
+      if FBackgroundImage=nil then
+      begin
+        FBackgroundImage:=TImage.Create(self);
+        FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
+      end;
     end;
     FRect.Top:=0;
     FRect.Left:=0;
@@ -1433,7 +1436,8 @@ begin
   FLines.Free;
   img.Free;
   FBuffer.Free;
-
+  if Assigned(FBackgroundImage) then
+    FBackgroundImage.Free;
   inherited Destroy;
 end;
 
