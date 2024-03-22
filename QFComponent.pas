@@ -124,6 +124,7 @@ type
   private
     FRect:TRect;
     FMV:integer;
+    FBMSL:integer;//书签数量
     FLineSpacing:integer;//行距
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
@@ -132,6 +133,8 @@ type
     FTS:integer;//表格数量
     FBackgroundImage:TImage;
     FBackImageFile:string;
+    FBookMark1:array of TQFBookMark;
+    FBookMark2:array of TQFBookMark;
     FHyperLink:array of THyperLink;
     FTablesl:array of TTableSL;
     FTable:Array of Array of TCellType;
@@ -202,7 +205,7 @@ type
 
   TQFRichView =  class(TCustomText)
   private
-    initialY: Integer; // 用于存储鼠标按下时的初始位置
+    FinitialY: Integer; // 用于存储鼠标按下时的初始位置
     procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
   protected
@@ -396,61 +399,52 @@ begin
       begin
         Buffer.Canvas.font.Size:=NewFontSize;//上标
         i:=i+5;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
       begin
         Buffer.Canvas.font.Size:=NewFontSize;//下标
         i:=i+5;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
       begin
         Buffer.Canvas.font.Size:=oldFontSize;//取消上标
         i:=i+6;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
       begin
         Buffer.Canvas.font.Size:=oldFontSize;//取消下标
         i:=i+6;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsUnderline];//下划线
         i:=i+3;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsItalic];//斜体
         i:=i+3;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsStrikeOut];//删除线
         i:=i+3;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsBold];//加粗
         i:=i+3;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=oldStyles;//恢复原风格
         i:=i+3;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C') then
       begin
         if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then i:=i+4;
@@ -458,8 +452,7 @@ begin
         if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then i:=i+4;
         if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then i:=i+4;
         if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then i:=i+4;
-      end
-      else
+      end;
       if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C')
          and (utf8copy(str,i+3,1)='>') then
       begin
@@ -479,6 +472,10 @@ end;
 
 procedure TCustomText.BackgroundRefresh(Buffer:TBitmap);
 begin
+  FRect.Top:=0;
+  FRect.Left:=0;
+  FRect.Width:=Width;
+  FRect.Height:=Height;
   if trim(FBackImageFile)<>'' then
   begin
     if  FileExists(FBackImageFile) then
@@ -488,10 +485,6 @@ begin
         FBackgroundImage:=TImage.Create(self);
         FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
       end;
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
       Buffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
     end
     else
@@ -500,7 +493,7 @@ begin
       begin
         Brush.Color := FColor;
         Brush.Style := bsSolid;
-        FillRect(0, 0, Width, Height);
+        FillRect(FRect);
       end;
     end;
   end
@@ -510,7 +503,7 @@ begin
     begin
       Brush.Color := FColor;
       Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
+      FillRect(FRect);
     end;
   end;
 end;
@@ -518,6 +511,7 @@ end;
 procedure TCustomText.Init;
 var
   i,w,j,k,dc,rj,hls:integer;
+  kmsl1,kmsl2:integer;
   str:string;
   s,s1,textstyle:string;
   Linetemp: TStringList;
@@ -671,6 +665,12 @@ var
       end
       else
         FLineList[i].FontColor := clBlue;
+    end
+    else
+    if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
+    begin
+      FLineList[i].DispType:='BOOKMARK';
+      FLineList[i].FontColor := clBlue;
     end;
   end;
 
@@ -683,9 +683,15 @@ var
     //解析有几个表格
     FTS:=0;
     hl:=0;
+    FBMSL:=0; //书签数量
     for i := 0 to FLines.Count-1 do
     begin
       s := Trim(FLines[i]);
+      if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
+      begin
+        inc(FBMSL);//书签数量
+      end
+      else
       if (pos('HTTP',s.ToUpper)>0) then
       begin
          inc(hl);
@@ -709,6 +715,15 @@ var
       if Assigned(FHyperLink) then
         FHyperLink:=nil;
       setlength(FHyperLink,hl);
+    end;
+    if FBMSL>0 then
+    begin
+      if Assigned(FBookMark1) then
+        FBookMark1:=nil;
+      setlength(FBookMark1,FBMSL);
+      if Assigned(FBookMark2) then
+        FBookMark2:=nil;
+      setlength(FBookMark2,FBMSL);
     end;
     setlength(FTablesl,FTS);//FTS--表格数量
     ////////////////////////////////
@@ -811,6 +826,8 @@ begin
   setlength(FLineList,Linetemp.Count);
   Lineno:= Linetemp.Count;
   hls:=0;
+  kmsl1:=0;
+  kmsl2:=0;
   for i := 0 to Linetemp.Count-1 do
   begin
     s := Linetemp[i];
@@ -821,11 +838,26 @@ begin
       //FBuffer.Canvas.Font.Style:=FLineList[i].FontStyle;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
+
       if (pos('HTTP',s.ToUpper)>0) then
       begin
         FHyperLink[hls].URL:=s;//url
-        FHyperLink[hls].hs:=i;//所有行数
+        FHyperLink[hls].hs:=i;//所在行数
         inc(hls);
+      end
+      else
+      if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
+      begin
+         FBookMark1[kmsl1].BookMark:=s;
+         FBookMark1[kmsl1].hs:=i;//所在行数
+         inc(kmsl1);
+      end
+      else
+      if (pos('[BM',s.ToUpper)>0) and (pos(']',s.ToUpper)>0) then
+      begin
+        FBookMark2[kmsl2].BookMark:=s;
+        FBookMark2[kmsl2].hs:=i;//所在行数
+        inc(kmsl2);
       end;
     end;
   end;
@@ -840,30 +872,10 @@ end;
 
 procedure TCustomText.DrawScrollingText(Sender: TObject);
 begin
-  BackgroundRefresh(FBuffer); //刷新背景
-  //if trim(FBackImageFile)<>'' then
-  //begin
-  //  if FBackgroundImage<>nil then
-  //  begin
-  //    FRect.Top:=0;
-  //    FRect.Left:=0;
-  //    FRect.Width:=Width;
-  //    FRect.Height:=Height;
-  //    FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-  //  end;
-  //end
-  //else
-  //begin
-  //  with FBuffer.Canvas do
-  //  begin
-  //    Brush.Color := FColor;
-  //    Brush.Style := bsSolid;
-  //    FillRect(0, 0, Width, Height);
-  //  end;
-  //end;
-  FOffset:=0;
-  DrawTexts(FBuffer,FOffset);
-  Canvas.Draw(0,0,FBuffer)
+  //BackgroundRefresh(FBuffer); //刷新背景
+  //FOffset:=0;
+  //DrawTexts(FBuffer,FOffset);
+  //Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TCustomText.GetTableInfo(no:integer);
@@ -1079,7 +1091,7 @@ begin
     supy:=y;
     suby:=y+(Buffer.Canvas.TextHeight('国') div 2)-5;
     NewFontSize:=Buffer.Canvas.font.Size div 2;
-    Buffer.Canvas.Brush.Style := bsClear;    //透明文字
+    Buffer.Canvas.Brush.Style := bsClear;//透明文字
     if NewFontSize=0 then NewFontSize:=5;
     while i<=utf8length(str) do
     begin
@@ -1465,6 +1477,7 @@ begin
   FOffset := -1;
   FGapX:=0;
   FGapY:=0;
+  FBMSL:=0;
   FOldFontSize:=FBuffer.Canvas.Font.Size;
   FColor:=clWhite;
 end;
@@ -1477,11 +1490,17 @@ begin
   FLineList:=nil;
   if Assigned(FHyperLink) then
     FHyperLink:=nil;
+  if Assigned(FBackgroundImage) then
+    FBackgroundImage.Free;
+  if Assigned(FBookMark1) then
+    FBookMark1:=nil;
+  if Assigned(FBookMark2) then
+    FBookMark2:=nil;
+
   FLines.Free;
   img.Free;
   FBuffer.Free;
-  if Assigned(FBackgroundImage) then
-    FBackgroundImage.Free;
+
   inherited Destroy;
 end;
 
@@ -1696,7 +1715,7 @@ begin
   begin
     // 处理左键按下
     FisLeftButtonDown := True;
-    initialY := Y;
+    FinitialY := Y;
   end;
   inherited MouseDown(Button, Shift, X, Y);
 end;
@@ -1732,7 +1751,7 @@ begin
 
   if FisLeftButtonDown then
   begin
-    movedY := Y - initialY; // 计算Y轴上的移动距离
+    movedY := Y - FinitialY; // 计算Y轴上的移动距离
 
     if movedY > 0 then
     begin
