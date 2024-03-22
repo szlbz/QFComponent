@@ -70,9 +70,8 @@ unit QFComponent;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,
+  Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
   //ComponentEditors,
-  Dialogs, Printers,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
 type
@@ -120,7 +119,7 @@ type
     FLineSpacing:integer;//行距
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
-    isLeftButtonDown: Boolean;
+    FisLeftButtonDown: Boolean; //鼠标左键按下标识
     TTHNO:integer;
     FTS:integer;//表格数量
     FBackgroundImage:TImage;
@@ -198,10 +197,12 @@ type
 
   TQFRichView =  class(TCustomText)
   private
+    FRunone:Integer;
     initialY: Integer; // 用于存储鼠标按下时的初始位置
     procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
   protected
+    procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
     procedure MouseMove(Shift: TShiftState; X,Y: Integer); override;
@@ -819,29 +820,29 @@ end;
 
 procedure TCustomText.DrawScrollingText(Sender: TObject);
 begin
-  if trim(FBackImageFile)<>'' then
-  begin
-    if FBackgroundImage<>nil then
-    begin
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
-  end;
-  FOffset:=0;
-  DrawTexts(FBuffer,FOffset);
-  Canvas.Draw(0,0,FBuffer)
+  //if trim(FBackImageFile)<>'' then
+  //begin
+  //  if FBackgroundImage<>nil then
+  //  begin
+  //    FRect.Top:=0;
+  //    FRect.Left:=0;
+  //    FRect.Width:=Width;
+  //    FRect.Height:=Height;
+  //    FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
+  //  end;
+  //end
+  //else
+  //begin
+  //  with FBuffer.Canvas do
+  //  begin
+  //    Brush.Color := FColor;
+  //    Brush.Style := bsSolid;
+  //    FillRect(0, 0, Width, Height);
+  //  end;
+  //end;
+  //FOffset:=0;
+  //DrawTexts(FBuffer,FOffset);
+  //Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TCustomText.GetTableInfo(no:integer);
@@ -1049,7 +1050,7 @@ begin
   (pos('</>',str)>0)
   then
   begin
-    i:=0;
+    i:=1;
     oldColor:=Buffer.Canvas.font.Color;
     oldStyles:=Buffer.Canvas.font.Style;
     oldFontSize:=Buffer.Canvas.font.Size;
@@ -1408,7 +1409,7 @@ begin
   if ActiveLineIsURL then
   begin
     OpenURL(FLineList[FActiveLine].str);
-    isLeftButtonDown := False;
+    FisLeftButtonDown := False;
   end;
 end;
 
@@ -1647,6 +1648,7 @@ begin
 
   OnPaint := @DrawScrollingText;
   FStepSize := 10;
+  FRunone:=0;
 end;
 
 destructor TQFRichView.Destroy;
@@ -1716,7 +1718,7 @@ begin
   if Button = mbLeft then
   begin
     // 处理左键按下
-    isLeftButtonDown := True;
+    FisLeftButtonDown := True;
     initialY := Y;
   end;
   inherited MouseDown(Button, Shift, X, Y);
@@ -1727,7 +1729,7 @@ begin
   if Button = mbLeft then
   begin
     // 处理左键释放
-    isLeftButtonDown := False;
+    FisLeftButtonDown := False;
   end;
 end;
 
@@ -1746,7 +1748,7 @@ begin
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
     Cursor := crHandPoint;
 
-  if isLeftButtonDown then
+  if FisLeftButtonDown then
   begin
     movedY := Y - initialY; // 计算Y轴上的移动距离
 
@@ -1798,54 +1800,49 @@ begin
   end;
 end;
 
+procedure TQFRichView.DoOnChangeBounds;
+begin
+  inherited DoOnChangeBounds;
+  FRunone:=0;
+end;
+
 procedure TQFRichView.DrawScrollingText(Sender: TObject);
 begin
-  init;
-  if trim(FBackImageFile)<>'' then
+  if FRunone=0 then
   begin
-    if FBackgroundImage<>nil then
-    begin
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
+    FRunone:=1;
+    init;
+    FOffset:=0;
+    DrawTexts(FBuffer,FOffset);
+    Canvas.Draw(0,0,FBuffer)
   end;
-
-  FOffset:=0;
-  DrawTexts(FBuffer,FOffset);
-  Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TQFRichView.SavePicture(Files:string);
 var im:TImage;
   FCanvas: TBitmap;
-  ARect : TRect;
   oldFOffset:integer;
 begin
-  init;
   FCanvas:=TBitmap.Create;
   FCanvas.Height:=FTextHeigth;
   FCanvas.Width:=FBuffer.Width;
+  FRect.Width:=Width;
+  FRect.Height:=FTextHeigth;
+  FRect.Left:=0;
+  FRect.Top:=0;
   if trim(FBackImageFile)<>'' then
   begin
     if FBackgroundImage<>nil then
+      FCanvas.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
+    else
     begin
-      ARect.Width:=Width;
-      ARect.Height:=FTextHeigth;
-      ARect.Left:=0;
-      ARect.Top:=0;
-      FCanvas.Canvas.StretchDraw(ARect,FBackgroundImage.Picture.Bitmap);
+      with FCanvas.Canvas do
+      begin
+        Brush.Color := FColor;
+        Brush.Style := bsSolid;
+        FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+                          //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
+      end;
     end;
   end
   else
@@ -1854,7 +1851,7 @@ begin
     begin
       Brush.Color := FColor;
       Brush.Style := bsSolid;
-      FillRect(ARect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+      FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
                         //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
     end;
   end;
@@ -1868,6 +1865,7 @@ begin
   im.Free;
   FCanvas.Free;
   FOffset:=oldFOffset;
+  FRunone:=0;
 end;
 
 initialization
