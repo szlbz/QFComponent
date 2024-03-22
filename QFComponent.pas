@@ -150,6 +150,7 @@ type
     FColor:TColor;
     function ActiveLineIsURL: boolean;
     procedure Init;
+    procedure BackgroundRefresh(Buffer:TBitmap);
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
     procedure SetColor(const AValue: TColor);
@@ -201,7 +202,6 @@ type
 
   TQFRichView =  class(TCustomText)
   private
-    FRunone:Integer;
     initialY: Integer; // 用于存储鼠标按下时的初始位置
     procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
@@ -477,6 +477,43 @@ begin
   Result:=Buffer.Canvas.TextWidth(str);
 end;
 
+procedure TCustomText.BackgroundRefresh(Buffer:TBitmap);
+begin
+  if trim(FBackImageFile)<>'' then
+  begin
+    if  FileExists(FBackImageFile) then
+    begin
+      if FBackgroundImage=nil then
+      begin
+        FBackgroundImage:=TImage.Create(self);
+        FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
+      end;
+      FRect.Top:=0;
+      FRect.Left:=0;
+      FRect.Width:=Width;
+      FRect.Height:=Height;
+      Buffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
+    end
+    else
+    begin
+      with Buffer.Canvas do
+      begin
+        Brush.Color := FColor;
+        Brush.Style := bsSolid;
+        FillRect(0, 0, Width, Height);
+      end;
+    end;
+  end
+  else
+  begin
+    with Buffer.Canvas do
+    begin
+      Brush.Color := FColor;
+      Brush.Style := bsSolid;
+      FillRect(0, 0, Width, Height);
+    end;
+  end;
+end;
 
 procedure TCustomText.Init;
 var
@@ -798,44 +835,12 @@ begin
     FOffset := FBuffer.Height;
 
   freeandnil(Linetemp);
-  if trim(FBackImageFile)<>'' then
-  begin
-    if  FileExists(FBackImageFile) then
-    begin
-      if FBackgroundImage=nil then
-      begin
-        FBackgroundImage:=TImage.Create(self);
-        FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
-      end;
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end
-    else
-    begin
-      with FBuffer.Canvas do
-      begin
-        Brush.Color := FColor;
-        Brush.Style := bsSolid;
-        FillRect(0, 0, Width, Height);
-      end;
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
-  end;
+  BackgroundRefresh(FBuffer); //刷新背景
 end;
 
 procedure TCustomText.DrawScrollingText(Sender: TObject);
 begin
+  BackgroundRefresh(FBuffer); //刷新背景
   //if trim(FBackImageFile)<>'' then
   //begin
   //  if FBackgroundImage<>nil then
@@ -856,9 +861,9 @@ begin
   //    FillRect(0, 0, Width, Height);
   //  end;
   //end;
-  //FOffset:=0;
-  //DrawTexts(FBuffer,FOffset);
-  //Canvas.Draw(0,0,FBuffer)
+  FOffset:=0;
+  DrawTexts(FBuffer,FOffset);
+  Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TCustomText.GetTableInfo(no:integer);
@@ -1490,27 +1495,7 @@ begin
   FLines.Text:=QFRichEdit.RichEdit.Text;
 
   init;
-  if trim(FBackImageFile)<>'' then
-  begin
-    if FBackgroundImage<>nil then
-    begin
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
-  end;
-
+  BackgroundRefresh(FBuffer);//刷新背景
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
   QFRichEdit.Free;
@@ -1536,27 +1521,7 @@ begin
       FLines.LoadFromFile(files);
   end;
   init;
-  if trim(FBackImageFile)<>'' then
-  begin
-    if FBackgroundImage<>nil then
-    begin
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
-  end;
-
+  BackgroundRefresh(FBuffer);//刷新背景
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
 end;
@@ -1609,26 +1574,7 @@ begin
   else
   begin
     init;
-    if trim(FBackImageFile)<>'' then
-    begin
-      if FBackgroundImage<>nil then
-      begin
-        FRect.Top:=0;
-        FRect.Left:=0;
-        FRect.Width:=Width;
-        FRect.Height:=Height;
-        FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-      end;
-    end
-    else
-    begin
-      with FBuffer.Canvas do
-      begin
-        Brush.Color := FColor;
-        Brush.Style := bsSolid;
-        FillRect(0, 0, Width, Height);
-      end;
-    end;
+    BackgroundRefresh(FBuffer);//刷新背景
     FOffset:=0;
     DrawTexts(FBuffer,FOffset);
     Canvas.Draw(0,0,FBuffer)
@@ -1678,27 +1624,7 @@ begin
     end;
   end;
 
-  if trim(FBackImageFile)<>'' then
-  begin
-    if FBackgroundImage<>nil then
-    begin
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
-  end;
-
+  BackgroundRefresh(FBuffer);//刷新背景
   DrawTexts(FBuffer,0);
   if FOffset+FTextHeigth=0 then
     FOffset := FBuffer.Height;
@@ -1712,7 +1638,6 @@ begin
 
   OnPaint := @DrawScrollingText;
   FStepSize := 10;
-  FRunone:=0;
 end;
 
 destructor TQFRichView.Destroy;
@@ -1759,26 +1684,7 @@ begin
       end;
     end;
   end;
-  if trim(FBackImageFile)<>'' then
-  begin
-    if FBackgroundImage<>nil then
-    begin
-      FRect.Top:=0;
-      FRect.Left:=0;
-      FRect.Width:=Width;
-      FRect.Height:=Height;
-      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-    end;
-  end
-  else
-  begin
-    with FBuffer.Canvas do
-    begin
-      Brush.Color := FColor;
-      Brush.Style := bsSolid;
-      FillRect(0, 0, Width, Height);
-    end;
-  end;
+  BackgroundRefresh(FBuffer);//刷新背景
 
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
@@ -1856,26 +1762,7 @@ begin
       end;
     end;
 
-    if trim(FBackImageFile)<>'' then
-    begin
-      if FBackgroundImage<>nil then
-      begin
-        FRect.Top:=0;
-        FRect.Left:=0;
-        FRect.Width:=Width;
-        FRect.Height:=Height;
-        FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
-      end;
-    end
-    else
-    begin
-      with FBuffer.Canvas do
-      begin
-        Brush.Color := FColor;
-        Brush.Style := bsSolid;
-        FillRect(0, 0, Width, Height);
-      end;
-    end;
+    BackgroundRefresh(FBuffer);//刷新背景
 
     DrawTexts(FBuffer,0);
     Canvas.Draw(0,0,FBuffer);
@@ -1885,19 +1772,14 @@ end;
 procedure TQFRichView.DoOnChangeBounds;
 begin
   inherited DoOnChangeBounds;
-  FRunone:=0;
 end;
 
 procedure TQFRichView.DrawScrollingText(Sender: TObject);
 begin
-  if FRunone=0 then
-  begin
-    FRunone:=1;
-    init;
-    FOffset:=0;
-    DrawTexts(FBuffer,FOffset);
-    Canvas.Draw(0,0,FBuffer)
-  end;
+  init;
+  FOffset:=0;
+  DrawTexts(FBuffer,FOffset);
+  Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TQFRichView.SavePicture(Files:string);
@@ -1948,7 +1830,6 @@ begin
   im.Free;
   FCanvas.Free;
   FOffset:=oldFOffset;
-  FRunone:=0;
 end;
 
 initialization
