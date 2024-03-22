@@ -116,6 +116,7 @@ type
   TCustomText = class(TCustomControl)
   private
     FRect:TRect;
+    FMV:integer;
     FLineSpacing:integer;//行距
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
@@ -131,10 +132,8 @@ type
     FLineList:array of TLineType;
     FActive: boolean;
     FActiveLine: integer;
-    FActiveLineSave:integer;
     FBuffer: TBitmap;
     IMG: TImage;
-    FLineHeight: integer;
     FLines: TStrings;
     FOffset: integer;
     FStepSize: integer;
@@ -615,7 +614,6 @@ var
       if  FileExists(s) then
       begin
         IMG.Picture.LoadFromFile(s);
-        FLineHeight:=FLineHeight+IMG.Picture.Height;
       end;
     end;
     //超链接
@@ -629,7 +627,6 @@ var
       end
       else
         FLineList[i].FontColor := clBlue;
-      FActiveLineSave:=i;//超链接出现时的行数
     end;
   end;
 
@@ -721,7 +718,6 @@ begin
   Linetemp:=TStringList.Create;
   setlength(FLineList,FLines.Count);
   k:= FLines.Count;
-  FLineHeight:=0;
   TablePreprocessing;//表格预处理
 
   //根据控件宽度进行自动换行处理
@@ -767,8 +763,6 @@ begin
   end;
   //根据控件宽度进行自动换行处理
 
-  FActiveLineSave:=0;
-  FLineHeight:=0;//2024.3.10
   FLineList:=nil;
   setlength(FLineList,Linetemp.Count);
   Lineno:= Linetemp.Count;
@@ -783,7 +777,6 @@ begin
       //FBuffer.Canvas.Font.Style:=FLineList[i].FontStyle;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
-      FLineHeight:=FLineHeight+FLineList[i].LineHeight;
       if (pos('HTTP',s.ToUpper)>0) then
       begin
         FHyperLink[hls].URL:=s;//url
@@ -1364,7 +1357,7 @@ begin
         if tsno<FTS then
         begin
           inc(TsNo);
-          if (i<FActiveLineSave) and (TTHNO=-1) then
+          if TTHNO=-1 then
             TTHNO:=0;
         end;
       end;
@@ -1555,6 +1548,7 @@ begin
   FTimer := TTimer.Create(nil);
   FTimer.OnTimer:=@DoTimer;
   FTimer.Interval:=30;
+  FMV:=0;
 end;
 
 destructor TQFScrollingText.Destroy;
@@ -1565,6 +1559,7 @@ end;
 
 procedure TQFScrollingText.SetActive(const AValue: boolean);
 begin
+  FMV:=0;
   FActive := AValue;
   if FActive then
     Init;
@@ -1642,12 +1637,21 @@ var k:integer;
 begin
   if not Active then
     Exit;
-
+  inc(FMV);
   Dec(FOffset, FStepSize);
   for k:=0 to high(FHyperLink) do
   begin
     FHyperLink[k].hg1:=FHyperLink[k].hg1-FStepSize;
     FHyperLink[k].hg2:=FHyperLink[k].hg2-FStepSize;
+    if FActiveLine<>-1 then
+    begin
+      if fmv> abs(FHyperLink[k].hg1-FHyperLink[k].hg2) then
+      begin
+        fmv:=0;
+        Cursor := crDefault;
+        FActiveLine:=-1;
+      end;
+    end;
   end;
 
   if trim(FBackImageFile)<>'' then
