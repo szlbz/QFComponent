@@ -113,6 +113,13 @@ type
      hs:integer;
   end;
 
+  TQFBookMark = record
+     BookMark:string;
+     hs:integer;
+     hg1:integer;
+     hg2:integer;
+  end;
+
   TCustomText = class(TCustomControl)
   private
     FRect:TRect;
@@ -1483,11 +1490,25 @@ begin
   FLines.Text:=QFRichEdit.RichEdit.Text;
 
   init;
-  with FBuffer.Canvas do
+  if trim(FBackImageFile)<>'' then
   begin
-    Brush.Color := FColor;
-    Brush.Style := bsSolid;
-    FillRect(0, 0, Width, Height);
+    if FBackgroundImage<>nil then
+    begin
+      FRect.Top:=0;
+      FRect.Left:=0;
+      FRect.Width:=Width;
+      FRect.Height:=Height;
+      FBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
+    end;
+  end
+  else
+  begin
+    with FBuffer.Canvas do
+    begin
+      Brush.Color := FColor;
+      Brush.Style := bsSolid;
+      FillRect(0, 0, Width, Height);
+    end;
   end;
 
   DrawTexts(FBuffer,0);
@@ -1562,7 +1583,9 @@ begin
   FMV:=0;
   FActive := AValue;
   if FActive then
+  begin
     Init;
+  end;
   FTimer.Enabled:=Active;
 end;
 
@@ -1643,6 +1666,7 @@ begin
   begin
     FHyperLink[k].hg1:=FHyperLink[k].hg1-FStepSize;
     FHyperLink[k].hg2:=FHyperLink[k].hg2-FStepSize;
+    //选中URL滚动范围超出URL行高时，取消选中的URL行号及恢复鼠标状态
     if FActiveLine<>-1 then
     begin
       if fmv> abs(FHyperLink[k].hg1-FHyperLink[k].hg2) then
