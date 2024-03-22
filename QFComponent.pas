@@ -131,8 +131,6 @@ type
     FLineList:array of TLineType;
     FActive: boolean;
     FActiveLine: integer;
-    FActiveLineHeight1:integer;
-    FActiveLineHeight2:integer;
     FActiveLineSave:integer;
     FBuffer: TBitmap;
     IMG: TImage;
@@ -476,7 +474,7 @@ end;
 
 procedure TCustomText.Init;
 var
-  i,w,j,k,dc,rj:integer;
+  i,w,j,k,dc,rj,hls:integer;
   str:string;
   s,s1,textstyle:string;
   Linetemp: TStringList;
@@ -638,14 +636,20 @@ var
   procedure TablePreprocessing;
   var
     i,j,row,col,js,gw:integer;
-    no,k:integer;
+    no,k,hl:integer;
   begin
     //解析是否包含表格
     //解析有几个表格
     FTS:=0;
+    hl:=0;
     for i := 0 to FLines.Count-1 do
     begin
       s := Trim(FLines[i]);
+      if (pos('HTTP',s.ToUpper)>0) then
+      begin
+         inc(hl);
+      end
+      else
       if pos('|',s)>0 then
       begin
         if (pos('|',Trim(FLines[i+1]))=0) or
@@ -659,12 +663,19 @@ var
         end;
       end;
     end;
+    if hl>0 then
+    begin
+      if Assigned(FHyperLink) then
+        FHyperLink:=nil;
+      setlength(FHyperLink,hl);
+    end;
     setlength(FTablesl,FTS);//FTS--表格数量
     ////////////////////////////////
     col:=0;
     row:=0;
     js:=0;
     no:=0;
+    hl:=0;
     for i := 0 to FLines.Count-1 do
     begin
       s := Trim(FLines[i]);
@@ -756,13 +767,12 @@ begin
   end;
   //根据控件宽度进行自动换行处理
 
-  FActiveLineHeight1:=0;
-  FActiveLineHeight2:=0;
   FActiveLineSave:=0;
   FLineHeight:=0;//2024.3.10
   FLineList:=nil;
   setlength(FLineList,Linetemp.Count);
   Lineno:= Linetemp.Count;
+  hls:=0;
   for i := 0 to Linetemp.Count-1 do
   begin
     s := Linetemp[i];
@@ -774,6 +784,12 @@ begin
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
       FLineHeight:=FLineHeight+FLineList[i].LineHeight;
+      if (pos('HTTP',s.ToUpper)>0) then
+      begin
+        FHyperLink[hls].URL:=s;//url
+        FHyperLink[hls].hs:=i;//所有行数
+        inc(hls);
+      end;
     end;
   end;
   FBuffer.Width := Width;
@@ -1298,7 +1314,7 @@ var
   w,x,disptable: integer;
   s: string;
   tsno,addh:integer;
-  i: integer;
+  i,k: integer;
 begin
   disptable:=0;
   tsNo:=0;
@@ -1376,8 +1392,15 @@ begin
         DisplayText(Buffer,(Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].DispType='URL' then
       begin
-        FActiveLineHeight1:=y; //超链接出现时的高度
-        FActiveLineHeight2:=FActiveLineHeight1+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度
+        for k:=0 to high(FHyperLink) do
+        begin
+          if FHyperLink[k].hs=i then
+          begin
+             FHyperLink[k].hg1:=y;
+             FHyperLink[k].hg2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
+             Break;
+          end;
+        end;
       end;
       y:=y+ FLineList[i].LineHeight-FGapY*2+5;
     end;
@@ -1447,6 +1470,8 @@ begin
     FTable:=nil;
   if Assigned(FLineList) then
   FLineList:=nil;
+  if Assigned(FHyperLink) then
+    FHyperLink:=nil;
   FLines.Free;
   img.Free;
   FBuffer.Free;
@@ -1593,27 +1618,38 @@ begin
 end;
 
 procedure TQFScrollingText.MouseMove(Shift: TShiftState; X, Y: Integer);
+var k:integer;
 begin
   inherited MouseMove(Shift, X, Y);
 
-  if (Y>abs(FOffset+FActiveLineHeight1)) and (Y<abs(FOffset+FActiveLineHeight2)) then
-     FActiveLine := FActiveLineSave
-  else FActiveLine:= -1;
-
+  for k:=0 to high(FHyperLink) do
+  begin
+    if (y>abs(FOffset+FHyperLink[k].hg1)) and (y<abs(FOffset+FHyperLink[k].hg2)) then
+    begin
+      FActiveLine := FHyperLink[k].hs;
+      break;
+    end
+    else
+      FActiveLine:= -1;
+  end;
   Cursor := crDefault;
-
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
     Cursor := crHandPoint;
 end;
 
 procedure TQFScrollingText.DoTimer(Sender: TObject);
+var k:integer;
 begin
   if not Active then
     Exit;
 
   Dec(FOffset, FStepSize);
-  Dec(FActiveLineHeight1, FStepSize);
-  Dec(FActiveLineHeight2, FStepSize);
+  for k:=0 to high(FHyperLink) do
+  begin
+    FHyperLink[k].hg1:=FHyperLink[k].hg1-FStepSize;
+    FHyperLink[k].hg2:=FHyperLink[k].hg2-FStepSize;
+  end;
+
   if trim(FBackImageFile)<>'' then
   begin
     if FBackgroundImage<>nil then
@@ -1665,6 +1701,7 @@ begin
   end;
 end;
 procedure TQFRichView.WMMouseWheel(var Message: TLMMouseEvent);
+var k:integer;
 begin
   inherited WMMouseWheel(Message);
 
@@ -1675,8 +1712,11 @@ begin
     if abs(FOffset)<FTextHeigth-FBuffer.Height+FStepSize+35 then
     begin
       Dec(FOffset, FStepSize);
-      Dec(FActiveLineHeight1, FStepSize);
-      Dec(FActiveLineHeight2, FStepSize);
+      for k:=0 to high(FHyperLink) do
+      begin
+        FHyperLink[k].hg1:=FHyperLink[k].hg1-FStepSize;
+        FHyperLink[k].hg2:=FHyperLink[k].hg2-FStepSize;
+      end;
     end;
   end
   else
@@ -1684,8 +1724,11 @@ begin
     if FOffset<0 then
     begin
       FOffset:=FOffset+FStepSize;
-      FActiveLineHeight1:=FActiveLineHeight1+ FStepSize;
-      FActiveLineHeight2:=FActiveLineHeight2+ FStepSize;
+      for k:=0 to high(FHyperLink) do
+      begin
+        FHyperLink[k].hg1:=FHyperLink[k].hg1+FStepSize;
+        FHyperLink[k].hg2:=FHyperLink[k].hg2+FStepSize;
+      end;
     end;
   end;
   if trim(FBackImageFile)<>'' then
@@ -1736,15 +1779,20 @@ end;
 procedure TQFRichView.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   movedY: Integer;//存储鼠标移动的距离
+  k:integer;
 begin
   inherited MouseMove(Shift, X, Y);
-  if (Y>abs(FOffset+FActiveLineHeight1)) and (Y<abs(FOffset+FActiveLineHeight2)) then
-    FActiveLine := FActiveLineSave
-  else
-    FActiveLine:= -1;
-
+  for k:=0 to high(FHyperLink) do
+  begin
+    if (y>abs(FOffset+FHyperLink[k].hg1)) and (y<abs(FOffset+FHyperLink[k].hg2)) then
+    begin
+      FActiveLine := FHyperLink[k].hs;
+      break;
+    end
+    else
+      FActiveLine:= -1;
+  end;
   Cursor := crDefault;
-
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
     Cursor := crHandPoint;
 
@@ -1758,8 +1806,11 @@ begin
       if abs(FOffset)<(FTextHeigth-FBuffer.Height+35) then
       begin
         Dec(FOffset, abs(35));
-        Dec(FActiveLineHeight1, abs(35));
-        Dec(FActiveLineHeight2, abs(35));
+        for k:=0 to high(FHyperLink) do
+        begin
+          FHyperLink[k].hg1:=FHyperLink[k].hg1-35;
+          FHyperLink[k].hg2:=FHyperLink[k].hg2-35;
+        end;
       end;
     end
     else
@@ -1769,8 +1820,11 @@ begin
       if FOffset<0 then
       begin
         inc(FOffset, abs(35));
-        inc(FActiveLineHeight1, abs(35));
-        inc(FActiveLineHeight2, abs(35));
+        for k:=0 to high(FHyperLink) do
+        begin
+          FHyperLink[k].hg1:=FHyperLink[k].hg1+35;
+          FHyperLink[k].hg2:=FHyperLink[k].hg2+35;
+        end;
       end;
     end;
 
@@ -1823,6 +1877,7 @@ var im:TImage;
   FCanvas: TBitmap;
   oldFOffset:integer;
 begin
+  init;
   FCanvas:=TBitmap.Create;
   FCanvas.Height:=FTextHeigth;
   FCanvas.Width:=FBuffer.Width;
