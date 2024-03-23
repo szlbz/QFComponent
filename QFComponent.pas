@@ -91,6 +91,7 @@ type
   TCellType = record
      str:string[255];
      FontName:string[20];
+     bookmarkstr:string[7];
      FontStyle:byte;
      Color:TColor;
      Align:byte;
@@ -98,7 +99,7 @@ type
      Height:integer;
      ColSpan:integer;
      RowSpan:integer;
-     DispType:integer;//0--文字 1--图像
+     DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2
   end;
 
   TTableSL = record
@@ -263,7 +264,9 @@ begin
 end;
 
 procedure TCustomText.GetFontStyle(s:string;out CellType:TCellType);
+var s1:string;
 begin
+  CellType.bookmarkstr:='';
   CellType.DispType:=0;
   CellType.FontStyle:=0;
   CellType.Color:=clBlack;
@@ -346,6 +349,24 @@ begin
     s:=s.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.DispType:=1;
+  end;
+  if pos('<BM',s.ToUpper)>0 then
+  begin
+    s1:=copy(s,pos('<BM',s.ToUpper),(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)));
+    s1:=copy(s,pos(s1,s)+1+length(s1),length(s));
+    CellType.str:=s1;
+    CellType.DispType:=2;
+    s1:=copy(s,pos('<BM',s.ToUpper)+1,(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)-1));
+    CellType.bookmarkstr:=s1;
+  end;
+  if pos('[BM',s.ToUpper)>0 then
+  begin
+    s1:=copy(s,pos('[BM',s.ToUpper),(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)));
+    s1:=copy(s,pos(s1,s)+1+length(s1),length(s));
+    CellType.str:=s1;
+    CellType.DispType:=3;
+    s1:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
+    CellType.bookmarkstr:=s1;
   end;
 end;
 
@@ -1040,6 +1061,7 @@ begin
                 GetfontStyle(str,MyCellType);
                 FTable[row,col].str:= MyCellType.str;
                 FTable[row,col].DispType:= MyCellType.DispType;
+                FTable[row,col].bookmarkstr:= MyCellType.bookmarkstr;
                 FTable[row,col].Align:=MyCellType.Align;
                 FTable[row,col].Color:=MyCellType.Color;
                 FTable[row,col].FontStyle:=MyCellType.FontStyle;
@@ -1402,6 +1424,7 @@ end;
 
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var i,j,w,h,row,col:integer;
+    k:integer;
   x0,y0,x1,y1:integer;
   th:integer;//文字高度
   //:TRect;
@@ -1435,7 +1458,7 @@ begin
   begin
     for j:=0 to col-1 do
     begin
-      if FTable[i,j+1].DispType=0 then  //显示文字
+      if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2) or (FTable[i,j+1].DispType=3) then  //显示文字
       begin
         //设置字体属性
         if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
@@ -1469,6 +1492,33 @@ begin
            DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
         end;
       end;
+
+      if FTable[i,j+1].DispType=2 then //BOOKMARK1
+      begin
+        for k:=0 to high(FBookMark1) do
+        begin
+          if FBookMark1[k].BookMark=FTable[i,j+1].bookmarkstr then
+          begin
+             FBookMark1[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
+             FBookMark1[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
+             Break;
+          end;
+        end;
+      end
+      else
+      if FTable[i,j+1].DispType=3 then//BOOKMARK2
+      begin
+        for k:=0 to high(FBookMark2) do
+        begin
+          if FBookMark2[k].BookMark=FTable[i,j+1].bookmarkstr then
+          begin
+             FBookMark2[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
+             FBookMark2[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
+             Break;
+          end;
+        end;
+      end;
+
       if FTable[i,j+1].DispType=1 then  //显示图形
       begin
         x0:=FGapX+j*w+1;
