@@ -1,4 +1,4 @@
- **QFComponent for lazarus**   
+QFComponent for lazarus   
 秋风(QQ:315795176)开发的控件包,采用自定义的类富文本，集编辑、显示和导出图片等功能。  
 QFComponent 有2个控件：  
 1、TQFRichView：自定义的类富文本文字显示，类RichView控件；  
