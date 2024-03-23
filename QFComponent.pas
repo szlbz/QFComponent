@@ -126,7 +126,8 @@ type
   private
     FRect:TRect;
     FMV:integer;
-    FBMSL:integer;//书签数量
+    FBMSL1:integer;//书签数量
+    FBMSL2:integer;
     FLineSpacing:integer;//行距
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
@@ -169,6 +170,7 @@ type
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
     function Deleteidentification(i:integer;str:string;out j:integer):string;//删除标识
     function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
+    function ReplaceCharacters(str:string):string; //删除所有特殊符号
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out CellType:TCellType);
   protected
@@ -347,7 +349,8 @@ begin
   end;
 end;
 
-function ReplaceCharacters(str:string):string; //删除所有特殊符号
+function TCustomText.ReplaceCharacters(str:string):string; //删除所有特殊符号
+var i:integer;
 begin
   Result:=str;
   Result:=Result.Replace('<#>','',[rfReplaceAll, rfIgnoreCase]);
@@ -365,6 +368,22 @@ begin
   Result:=Result.Replace('<SUB>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
+  if Assigned(FBookMark1) then
+  begin
+    for i:=0 to High(FBookMark1) do
+    begin
+      Result:=Result.Replace('<BM'+(i+1).ToString+'>','',[rfReplaceAll, rfIgnoreCase]);
+      //Break;
+    end;
+  end;
+  if Assigned(FBookMark2) then
+  begin
+    for i:=0 to High(FBookMark2) do
+    begin
+      Result:=Result.Replace('[BM'+(i+1).ToString+']','',[rfReplaceAll, rfIgnoreCase]);
+      //Break;
+    end;
+  end;
 end;
 
 function TCustomText.FindMark1(str:string;out NewStr:string):Boolean;
@@ -399,7 +418,7 @@ end;
 
 function TCustomText.GetStringTextWidth(Buffer: TBitmap;str:string):integer;
 var
-  x,i:integer;
+  x,i,j:integer;
   s1,newstr:string;
   oldFontSize,NewFontSize:integer;
   oldStyles:TFontStyles;
@@ -432,6 +451,29 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
+      if Assigned(FBookMark1) then
+      begin
+        for j:=0 to High(FBookMark1) do
+        begin
+          if pos('<BM'+(j+1).ToString+'>',s1.ToUpper)>0 then
+          begin
+            i:=i+length('<BM'+(j+1).ToString+'>');
+            Break;
+          end;
+        end;
+      end;
+      if Assigned(FBookMark2) then
+      begin
+        for j:=0 to High(FBookMark2) do
+        begin
+          if pos('<BM'+(j+1).ToString+'>',s1.ToUpper)>0 then
+          begin
+            i:=i+length('[BM'+(j+1).ToString+']');
+            Break;
+          end;
+        end;
+      end;
+
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
       begin
@@ -746,13 +788,19 @@ var
     //解析有几个表格
     FTS:=0;
     hl:=0;
-    FBMSL:=0; //书签数量
+    FBMSL1:=0; //书签数量
+    FBMSL2:=0; //书签数量
     for i := 0 to FLines.Count-1 do
     begin
       s := Trim(FLines[i]);
+      if (pos('[BM',s.ToUpper)>0) and (pos(']',s.ToUpper)>0) then
+      begin
+        inc(FBMSL2);//书签数量
+      end
+      else
       if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
       begin
-        inc(FBMSL);//书签数量
+        inc(FBMSL1);//书签数量
       end
       else
       if (pos('HTTP',s.ToUpper)>0) then
@@ -779,14 +827,17 @@ var
         FHyperLink:=nil;
       setlength(FHyperLink,hl);
     end;
-    if FBMSL>0 then
+    if FBMSL1>0 then
     begin
       if Assigned(FBookMark1) then
         FBookMark1:=nil;
-      setlength(FBookMark1,FBMSL);
+      setlength(FBookMark1,FBMSL1);
+    end;
+    if FBMSL2>0 then
+    begin
       if Assigned(FBookMark2) then
         FBookMark2:=nil;
-      setlength(FBookMark2,FBMSL);
+      setlength(FBookMark2,FBMSL2);
     end;
     setlength(FTablesl,FTS);//FTS--表格数量
     ////////////////////////////////
@@ -898,7 +949,6 @@ begin
     begin
       preprocessing;
       FLineList[i].str:=s;
-      //FBuffer.Canvas.Font.Style:=FLineList[i].FontStyle;
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
 
@@ -1011,11 +1061,40 @@ begin
   end;
 end;
 
-//删除标识
+//删除标识(表格文字)
 function TCustomText.Deleteidentification(i:integer;str:string;out j:integer):string;
+var k:integer;
 begin
   Result:=utf8copy(str,i,1);
   j:=0;
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='B') and
+     (utf8copy(str,i+2,1).ToUpper='M') then
+  begin
+    for k:=i+2 to length(str) do
+    begin
+     if utf8copy(str,k,1)='>' then
+     begin
+       Result:='';
+       j:=k-i+1;
+       break;
+     end;
+    end;
+  end
+  else
+  if (Result='[') and (utf8copy(str,i+1,1).ToUpper='B') and
+     (utf8copy(str,i+2,1).ToUpper='M') then
+  begin
+    for k:=i+2 to length(str) do
+    begin
+     if utf8copy(str,k,1)=']' then
+     begin
+       Result:='';
+       j:=k-i+1;
+       break;
+     end;
+    end;
+  end
+  else
   if (Result='<') and (utf8copy(str,i+1,1).ToUpper='S') and
      (utf8copy(str,i+2,1).ToUpper='U') and
      (utf8copy(str,i+3,1).ToUpper='P') and
@@ -1122,8 +1201,8 @@ end;
 
 procedure TCustomText.DisplayText(Buffer: TBitmap;x,y:integer;str:string);
 var i:integer;
-  s1:string;
-  zwh,ywh:integer;
+  s1,newstr:string;
+  zwh,ywh,k:integer;
   oldFontSize,NewFontSize:integer;
   oldColor:TColor;
   oldStyles:TFontStyles;
@@ -1143,6 +1222,8 @@ begin
   (pos('<$>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
+  (FindMark1(str,newstr)) or
+  (FindMark2(str,newstr)) or
   (pos('</>',str)>0)
   then
   begin
@@ -1159,6 +1240,32 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='B') and
+         (utf8copy(str,i+2,1).ToUpper='M') then
+      begin
+        for k:=i+2 to length(str) do
+        begin
+          if utf8copy(str,k,1)='>' then
+          begin
+            i:=(k-i)+2;
+            break;
+          end;
+        end;
+      end
+      else
+      if (s1='[') and (utf8copy(str,i+1,1).ToUpper='B') and
+         (utf8copy(str,i+2,1).ToUpper='M') then
+      begin
+        for k:=i+2 to length(str) do
+        begin
+          if utf8copy(str,k,1)=']' then
+          begin
+            i:=(k-i)+2;
+            break;
+          end;
+        end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
       begin
@@ -1592,7 +1699,8 @@ begin
   FOffset := -1;
   FGapX:=0;
   FGapY:=0;
-  FBMSL:=0;
+  FBMSL1:=0;
+  FBMSL2:=0;
   FOldFontSize:=FBuffer.Canvas.Font.Size;
   FColor:=clWhite;
 end;
