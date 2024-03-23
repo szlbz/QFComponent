@@ -84,6 +84,8 @@ type
      LineHeight:integer;
      Align:integer;
      DispType:string;
+     BookMark1:string;
+     BookMark2:string;
   end;
 
   TCellType = record
@@ -108,16 +110,16 @@ type
 
   THyperLink = record
      URL:string;
-     hg1:integer;
-     hg2:integer;
+     y1:integer;
+     y2:integer;
      hs:integer;
   end;
 
   TQFBookMark = record
      BookMark:string;
      hs:integer;
-     hg1:integer;
-     hg2:integer;
+     y1:integer;
+     y2:integer;
   end;
 
   TCustomText = class(TCustomControl)
@@ -141,7 +143,9 @@ type
     FOldFontSize:integer;
     FLineList:array of TLineType;
     FActive: boolean;
-    FActiveLine: integer;
+    FActiveLine: integer; //URL
+    FBMActiveLine:integer;//书签
+    FBMActiveStr:string;
     FBuffer: TBitmap;
     IMG: TImage;
     FLines: TStrings;
@@ -157,6 +161,8 @@ type
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
     procedure SetColor(const AValue: TColor);
+    function FindMark1(str:string;out NewStr:string):Boolean;
+    function FindMark2(str:string;out NewStr:string):Boolean;
     function GetStringTextWidth(Buffer: TBitmap;str:string):integer;
     procedure DisplayText(Buffer: TBitmap;x,y:integer;str:string);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
@@ -361,10 +367,40 @@ begin
   Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
 end;
 
+function TCustomText.FindMark1(str:string;out NewStr:string):Boolean;
+var i:integer;
+begin
+  Result:=false;
+  for i:=0 to High(FBookMark1) do
+  begin
+    if pos('<BM'+(i+1).ToString+'>',str.ToUpper)>0 then
+    begin
+      NewStr:=str.Replace('<BM'+(i+1).ToString+'>','',[rfReplaceAll, rfIgnoreCase]);
+      Result:=true;
+      Break;
+    end;
+  end;
+end;
+
+function TCustomText.FindMark2(str:string;out NewStr:string):Boolean;
+var i:integer;
+begin
+  Result:=false;
+  for i:=0 to High(FBookMark2) do
+  begin
+    if pos('[BM'+(i+1).ToString+']',str.ToUpper)>0 then
+    begin
+      NewStr:=str.Replace('[BM'+(i+1).ToString+']','',[rfReplaceAll, rfIgnoreCase]);
+      Result:=true;
+      Break;
+    end;
+  end;
+end;
+
 function TCustomText.GetStringTextWidth(Buffer: TBitmap;str:string):integer;
 var
   x,i:integer;
-  s1:string;
+  s1,newstr:string;
   oldFontSize,NewFontSize:integer;
   oldStyles:TFontStyles;
 begin
@@ -383,6 +419,8 @@ begin
   (pos('<!>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
+  (FindMark1(str,newstr)) or
+  (FindMark2(str,newstr)) or
   (pos('</>',str)>0)
   then
   begin
@@ -399,52 +437,61 @@ begin
       begin
         Buffer.Canvas.font.Size:=NewFontSize;//上标
         i:=i+5;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
       begin
         Buffer.Canvas.font.Size:=NewFontSize;//下标
         i:=i+5;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
       begin
         Buffer.Canvas.font.Size:=oldFontSize;//取消上标
         i:=i+6;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
       begin
         Buffer.Canvas.font.Size:=oldFontSize;//取消下标
         i:=i+6;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsUnderline];//下划线
         i:=i+3;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsItalic];//斜体
         i:=i+3;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsStrikeOut];//删除线
         i:=i+3;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsBold];//加粗
         i:=i+3;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=oldStyles;//恢复原风格
         i:=i+3;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C') then
       begin
         if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then i:=i+4;
@@ -452,7 +499,8 @@ begin
         if (utf8copy(str,i+2,1)='3') and (utf8copy(str,i+3,1)='>') then i:=i+4;
         if (utf8copy(str,i+2,1)='4') and (utf8copy(str,i+3,1)='>') then i:=i+4;
         if (utf8copy(str,i+2,1)='5') and (utf8copy(str,i+3,1)='>') then i:=i+4;
-      end;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C')
          and (utf8copy(str,i+3,1)='>') then
       begin
@@ -467,7 +515,7 @@ begin
     Result:=x;
   end
   else
-  Result:=Buffer.Canvas.TextWidth(str);
+    Result:=Buffer.Canvas.TextWidth(str);
 end;
 
 procedure TCustomText.BackgroundRefresh(Buffer:TBitmap);
@@ -517,6 +565,7 @@ var
   Linetemp: TStringList;
 
   procedure preprocessing;
+  var newbmstr,nbms:string;
   begin
     FLineList[i].DispType:='';
     FLineList[i].FontSize:=FOldFontSize;
@@ -667,10 +716,24 @@ var
         FLineList[i].FontColor := clBlue;
     end
     else
-    if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
+    if (Pos('<BM', s.ToUpper)>0) then
     begin
-      FLineList[i].DispType:='BOOKMARK';
+      FindMark1(s,newbmstr);
+      nbms:=copy(s,pos('<BM',s.ToUpper)+1,(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)-1));
+      textstyle:=textstyle+'<'+nbms+'>';
+      s:=newbmstr;
+      FLineList[i].BookMark1:=nbms;
+      FLineList[i].DispType:='BOOKMARK1';
       FLineList[i].FontColor := clBlue;
+    end;
+    if (Pos('[BM', s.ToUpper)>0) then
+    begin
+      FindMark2(s,newbmstr);
+      nbms:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
+      textstyle:=textstyle+'['+nbms+']';
+      s:=newbmstr;
+      FLineList[i].BookMark2:=nbms;
+      FLineList[i].DispType:='BOOKMARK2';
     end;
   end;
 
@@ -846,16 +909,16 @@ begin
         inc(hls);
       end
       else
-      if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
+      if FLineList[i].DispType='BOOKMARK1' then
       begin
-         FBookMark1[kmsl1].BookMark:=s;
+         FBookMark1[kmsl1].BookMark:=FLineList[i].BookMark1;
          FBookMark1[kmsl1].hs:=i;//所在行数
          inc(kmsl1);
       end
       else
-      if (pos('[BM',s.ToUpper)>0) and (pos(']',s.ToUpper)>0) then
+      if FLineList[i].DispType='BOOKMARK2' then
       begin
-        FBookMark2[kmsl2].BookMark:=s;
+        FBookMark2[kmsl2].BookMark:=FLineList[i].BookMark2;
         FBookMark2[kmsl2].hs:=i;//所在行数
         inc(kmsl2);
       end;
@@ -1407,14 +1470,40 @@ begin
         DisplayText(Buffer,FGapX+(Buffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].Align=3 then //行居右
         DisplayText(Buffer,(Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
+      if FLineList[i].DispType='BOOKMARK1' then
+      begin
+        for k:=0 to high(FBookMark1) do
+        begin
+          if FBookMark1[k].hs=i then
+          begin
+             FBookMark1[k].y1:=y;
+             FBookMark1[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
+             Break;
+          end;
+        end;
+      end
+      else
+      if FLineList[i].DispType='BOOKMARK2' then
+      begin
+        for k:=0 to high(FBookMark2) do
+        begin
+          if FBookMark2[k].hs=i then
+          begin
+             FBookMark2[k].y1:=y;
+             FBookMark2[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
+             Break;
+          end;
+        end;
+      end
+      else
       if FLineList[i].DispType='URL' then
       begin
         for k:=0 to high(FHyperLink) do
         begin
           if FHyperLink[k].hs=i then
           begin
-             FHyperLink[k].hg1:=y;
-             FHyperLink[k].hg2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
+             FHyperLink[k].y1:=y;
+             FHyperLink[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
              Break;
           end;
         end;
@@ -1443,6 +1532,7 @@ end;
 
 procedure TCustomText.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
+var k:integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
 
@@ -1450,6 +1540,23 @@ begin
   begin
     OpenURL(FLineList[FActiveLine].str);
     FisLeftButtonDown := False;
+  end;
+  if FBMActiveStr<>'' then
+  begin
+      if Assigned(FBookMark2) then
+      begin
+        for k:=0 to high(FBookMark2) do
+        begin
+          if FBookMark2[k].BookMark=FBMActiveStr then
+          begin
+            BackgroundRefresh(FBuffer);//刷新背景
+            FOffset:=0;
+            DrawTexts(FBuffer,-FBookMark2[k].y1);//FOffset-FBookMark2[k].y1-FBuffer.Height);
+            Canvas.Draw(0,0,FBuffer);
+            break;
+          end;
+        end;
+      end;
   end;
 end;
 
@@ -1605,15 +1712,18 @@ var k:integer;
 begin
   inherited MouseMove(Shift, X, Y);
 
-  for k:=0 to high(FHyperLink) do
+  if Assigned(FHyperLink) then
   begin
-    if (y>abs(FOffset+FHyperLink[k].hg1)) and (y<abs(FOffset+FHyperLink[k].hg2)) then
+    for k:=0 to high(FHyperLink) do
     begin
-      FActiveLine := FHyperLink[k].hs;
-      break;
-    end
-    else
-      FActiveLine:= -1;
+      if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) then
+      begin
+        FActiveLine := FHyperLink[k].hs;
+        break;
+      end
+      else
+        FActiveLine:= -1;
+    end;
   end;
   Cursor := crDefault;
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
@@ -1627,18 +1737,21 @@ begin
     Exit;
   inc(FMV);
   Dec(FOffset, FStepSize);
-  for k:=0 to high(FHyperLink) do
+  if Assigned(FHyperLink) then
   begin
-    FHyperLink[k].hg1:=FHyperLink[k].hg1-FStepSize;
-    FHyperLink[k].hg2:=FHyperLink[k].hg2-FStepSize;
-    //选中URL滚动范围超出URL行高时，取消选中的URL行号及恢复鼠标状态
-    if FActiveLine<>-1 then
+    for k:=0 to high(FHyperLink) do
     begin
-      if fmv> abs(FHyperLink[k].hg1-FHyperLink[k].hg2) then
+      FHyperLink[k].y1:=FHyperLink[k].y1-FStepSize;
+      FHyperLink[k].y2:=FHyperLink[k].y2-FStepSize;
+      //选中URL滚动范围超出URL行高时，取消选中的URL行号及恢复鼠标状态
+      if FActiveLine<>-1 then
       begin
-        fmv:=0;
-        Cursor := crDefault;
-        FActiveLine:=-1;
+        if fmv> abs(FHyperLink[k].y1-FHyperLink[k].y2) then
+        begin
+          fmv:=0;
+          Cursor := crDefault;
+          FActiveLine:=-1;
+        end;
       end;
     end;
   end;
@@ -1678,16 +1791,36 @@ begin
   inherited WMMouseWheel(Message);
 
   FActiveLine:= -1;
+  FBMActiveStr:='';
   Cursor := crDefault;
   if Message.WheelDelta<0 then //up
   begin
     if abs(FOffset)<FTextHeigth-FBuffer.Height+FStepSize+35 then
     begin
       Dec(FOffset, FStepSize);
-      for k:=0 to high(FHyperLink) do
+      if Assigned(FHyperLink) then
       begin
-        FHyperLink[k].hg1:=FHyperLink[k].hg1-FStepSize;
-        FHyperLink[k].hg2:=FHyperLink[k].hg2-FStepSize;
+        for k:=0 to high(FHyperLink) do
+        begin
+          FHyperLink[k].y1:=FHyperLink[k].y1-FStepSize;
+          FHyperLink[k].y2:=FHyperLink[k].y2-FStepSize;
+        end;
+      end;
+      if Assigned(FBookMark1) then
+      begin
+        for k:=0 to high(FBookMark1) do
+        begin
+          FBookMark1[k].y1:=FBookMark1[k].y1-FStepSize;
+          FBookMark1[k].y2:=FBookMark1[k].y2-FStepSize;
+        end;
+      end;
+      if Assigned(FBookMark2) then
+      begin
+        for k:=0 to high(FBookMark2) do
+        begin
+          FBookMark2[k].y1:=FBookMark2[k].y1-FStepSize;
+          FBookMark2[k].y2:=FBookMark2[k].y2-FStepSize;
+        end;
       end;
     end;
   end
@@ -1696,10 +1829,29 @@ begin
     if FOffset<0 then
     begin
       FOffset:=FOffset+FStepSize;
-      for k:=0 to high(FHyperLink) do
+      if Assigned(FHyperLink) then
       begin
-        FHyperLink[k].hg1:=FHyperLink[k].hg1+FStepSize;
-        FHyperLink[k].hg2:=FHyperLink[k].hg2+FStepSize;
+        for k:=0 to high(FHyperLink) do
+        begin
+          FHyperLink[k].y1:=FHyperLink[k].y1+FStepSize;
+          FHyperLink[k].y2:=FHyperLink[k].y2+FStepSize;
+        end;
+      end;
+      if Assigned(FBookMark1) then
+      begin
+        for k:=0 to high(FBookMark1) do
+        begin
+          FBookMark1[k].y1:=FBookMark1[k].y1+FStepSize;
+          FBookMark1[k].y2:=FBookMark1[k].y2+FStepSize;
+        end;
+      end;
+      if Assigned(FBookMark2) then
+      begin
+        for k:=0 to high(FBookMark2) do
+        begin
+          FBookMark2[k].y1:=FBookMark2[k].y1+FStepSize;
+          FBookMark2[k].y2:=FBookMark2[k].y2+FStepSize;
+        end;
       end;
     end;
   end;
@@ -1735,18 +1887,42 @@ var
   k:integer;
 begin
   inherited MouseMove(Shift, X, Y);
-  for k:=0 to high(FHyperLink) do
+  if Assigned(FHyperLink) then
   begin
-    if (y>abs(FOffset+FHyperLink[k].hg1)) and (y<abs(FOffset+FHyperLink[k].hg2)) then
+    for k:=0 to high(FHyperLink) do
     begin
-      FActiveLine := FHyperLink[k].hs;
-      break;
-    end
-    else
-      FActiveLine:= -1;
+      if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) then
+      begin
+        FActiveLine := FHyperLink[k].hs;
+        break;
+      end
+      else
+        FActiveLine:= -1;
+    end;
   end;
+  if Assigned(FBookMark1) then
+  begin
+    for k:=0 to high(FBookMark1) do
+    begin
+      if (y>abs(FOffset+FBookMark1[k].y1)) and (y<abs(FOffset+FBookMark1[k].y2)) then
+      begin
+        FBMActiveLine := FBookMark1[k].hs;
+        FBMActiveStr := FBookMark1[k].BookMark;
+        break;
+      end
+      else
+      begin
+        FBMActiveStr:= '';
+        FBMActiveLine:= -1;
+      end;
+    end;
+  end;
+
   Cursor := crDefault;
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
+    Cursor := crHandPoint;
+
+  if (FBMActiveLine >= 0) and (FBMActiveLine < Lineno) then
     Cursor := crHandPoint;
 
   if FisLeftButtonDown then
@@ -1759,10 +1935,29 @@ begin
       if abs(FOffset)<(FTextHeigth-FBuffer.Height+35) then
       begin
         Dec(FOffset, abs(35));
-        for k:=0 to high(FHyperLink) do
+        if Assigned(FHyperLink) then
         begin
-          FHyperLink[k].hg1:=FHyperLink[k].hg1-35;
-          FHyperLink[k].hg2:=FHyperLink[k].hg2-35;
+          for k:=0 to high(FHyperLink) do
+          begin
+            FHyperLink[k].y1:=FHyperLink[k].y1-35;
+            FHyperLink[k].y2:=FHyperLink[k].y2-35;
+          end;
+        end;
+        if Assigned(FBookMark1) then
+        begin
+          for k:=0 to high(FBookMark1) do
+          begin
+            FBookMark1[k].y1:=FBookMark1[k].y1-35;
+            FBookMark1[k].y2:=FBookMark1[k].y2-35;
+          end;
+        end;
+        if Assigned(FBookMark2) then
+        begin
+          for k:=0 to high(FBookMark2) do
+          begin
+            FBookMark2[k].y1:=FBookMark2[k].y1-35;
+            FBookMark2[k].y2:=FBookMark2[k].y2-35;
+          end;
         end;
       end;
     end
@@ -1773,10 +1968,29 @@ begin
       if FOffset<0 then
       begin
         inc(FOffset, abs(35));
-        for k:=0 to high(FHyperLink) do
+        if Assigned(FHyperLink) then
         begin
-          FHyperLink[k].hg1:=FHyperLink[k].hg1+35;
-          FHyperLink[k].hg2:=FHyperLink[k].hg2+35;
+          for k:=0 to high(FHyperLink) do
+          begin
+            FHyperLink[k].y1:=FHyperLink[k].y1+35;
+            FHyperLink[k].y2:=FHyperLink[k].y2+35;
+          end;
+        end;
+        if Assigned(FBookMark1) then
+        begin
+          for k:=0 to high(FBookMark1) do
+          begin
+            FBookMark1[k].y1:=FBookMark1[k].y1+35;
+            FBookMark1[k].y2:=FBookMark1[k].y2+35;
+          end;
+        end;
+        if Assigned(FBookMark2) then
+        begin
+          for k:=0 to high(FBookMark2) do
+          begin
+            FBookMark2[k].y1:=FBookMark2[k].y1+35;
+            FBookMark2[k].y2:=FBookMark2[k].y2+35;
+          end;
         end;
       end;
     end;
