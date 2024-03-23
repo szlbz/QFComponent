@@ -1532,7 +1532,7 @@ end;
 
 procedure TCustomText.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
-var k:integer;
+var k,k1,oldy1,oldy2:integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
 
@@ -1541,7 +1541,7 @@ begin
     OpenURL(FLineList[FActiveLine].str);
     FisLeftButtonDown := False;
   end;
-  if FBMActiveStr<>'' then
+  if FBMActiveStr<>'' then //跳转到指定书签的位置
   begin
       if Assigned(FBookMark2) then
       begin
@@ -1551,8 +1551,16 @@ begin
           begin
             BackgroundRefresh(FBuffer);//刷新背景
             FOffset:=0;
-            DrawTexts(FBuffer,-FBookMark2[k].y1);//FOffset-FBookMark2[k].y1-FBuffer.Height);
+            oldy1:=FBookMark2[k].y1;
+            oldy2:=FBookMark2[k].y2;
+            DrawTexts(FBuffer,-FBookMark2[k].y1);
             Canvas.Draw(0,0,FBuffer);
+            FOffset:=-oldy1;
+            for k1:=0 to high(FBookMark2) do
+            begin
+              FBookMark2[k1].y1:=-oldy1;
+              FBookMark2[k1].y2:=-oldy2;
+            end;
             break;
           end;
         end;
@@ -1887,7 +1895,7 @@ var
   k:integer;
 begin
   inherited MouseMove(Shift, X, Y);
-  if Assigned(FHyperLink) then
+  if Assigned(FHyperLink) then   //URL
   begin
     for k:=0 to high(FHyperLink) do
     begin
@@ -1900,7 +1908,7 @@ begin
         FActiveLine:= -1;
     end;
   end;
-  if Assigned(FBookMark1) then
+  if Assigned(FBookMark1) then  //书签
   begin
     for k:=0 to high(FBookMark1) do
     begin
@@ -1919,9 +1927,11 @@ begin
   end;
 
   Cursor := crDefault;
+  //URL
   if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
     Cursor := crHandPoint;
 
+  //书签
   if (FBMActiveLine >= 0) and (FBMActiveLine < Lineno) then
     Cursor := crHandPoint;
 
