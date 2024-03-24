@@ -119,11 +119,13 @@ type
   TQFBookMark = record
      BookMark:string;
      hs:integer;
+     x1:integer;
+     x2:integer;
      y1:integer;
      y2:integer;
   end;
 
-  TCustomText = class(TCustomControl)
+  TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
     FRect:TRect;
     FMV:integer;
@@ -1499,9 +1501,11 @@ begin
         begin
           if FBookMark1[k].BookMark=FTable[i,j+1].bookmarkstr then
           begin
-             FBookMark1[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
-             FBookMark1[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
-             Break;
+            FBookMark1[k].x1:=x1;
+            FBookMark1[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
+            FBookMark1[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
+            FBookMark1[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
+            Break;
           end;
         end;
       end
@@ -1512,13 +1516,13 @@ begin
         begin
           if FBookMark2[k].BookMark=FTable[i,j+1].bookmarkstr then
           begin
-             FBookMark2[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
-             FBookMark2[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
-             Break;
+            FBookMark2[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
+            FBookMark2[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
+            Break;
           end;
         end;
-      end;
-
+      end
+      else
       if FTable[i,j+1].DispType=1 then  //显示图形
       begin
         x0:=FGapX+j*w+1;
@@ -1622,20 +1626,23 @@ begin
       Buffer.Canvas.Font.Color:=FLineList[i].FontColor;
       w:=GetStringTextWidth(Buffer,FLineList[i].str);
       if FLineList[i].Align=1 then //行居左
-        DisplayText(Buffer,FGapX, FOffset + y+FGapY, FLineList[i].str);
+        x:=FGapX;
       if FLineList[i].Align=2 then //行居中
-        DisplayText(Buffer,FGapX+(Buffer.Width - w) div 2, FOffset + y+FGapY, FLineList[i].str);
+        x:=FGapX+(Buffer.Width - w) div 2;
       if FLineList[i].Align=3 then //行居右
-        DisplayText(Buffer,(Buffer.Width - w)-FGapX, FOffset + y+FGapY, FLineList[i].str);
+        x:=(Buffer.Width - w)-FGapX;
+      DisplayText(Buffer,x, FOffset + y+FGapY, FLineList[i].str);
       if FLineList[i].DispType='BOOKMARK1' then
       begin
         for k:=0 to high(FBookMark1) do
         begin
           if FBookMark1[k].hs=i then
           begin
-             FBookMark1[k].y1:=y;
-             FBookMark1[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
-             Break;
+            FBookMark1[k].x1:=x;
+            FBookMark1[k].x2:=x+Buffer.Canvas.TextWidth(FLineList[i].str);
+            FBookMark1[k].y1:=y;
+            FBookMark1[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
+            Break;
           end;
         end;
       end
@@ -1646,9 +1653,9 @@ begin
         begin
           if FBookMark2[k].hs=i then
           begin
-             FBookMark2[k].y1:=y;
-             FBookMark2[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
-             Break;
+            FBookMark2[k].y1:=y;
+            FBookMark2[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
+            Break;
           end;
         end;
       end
@@ -2070,7 +2077,8 @@ begin
   begin
     for k:=0 to high(FBookMark1) do
     begin
-      if (y>abs(FOffset+FBookMark1[k].y1)) and (y<abs(FOffset+FBookMark1[k].y2)) then
+      if (y>abs(FOffset+FBookMark1[k].y1)) and (y<abs(FOffset+FBookMark1[k].y2)) and
+         (x>FBookMark1[k].x1) and (x<FBookMark1[k].x2) then
       begin
         FBMActiveLine := FBookMark1[k].hs;
         FBMActiveStr := FBookMark1[k].BookMark;
