@@ -111,6 +111,8 @@ type
 
   THyperLink = record
      URL:string;
+     x1:integer;
+     x2:integer;
      y1:integer;
      y2:integer;
      hs:integer;
@@ -1666,9 +1668,11 @@ begin
         begin
           if FHyperLink[k].hs=i then
           begin
-             FHyperLink[k].y1:=y;
-             FHyperLink[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
-             Break;
+            FHyperLink[k].x1:=x;
+            FHyperLink[k].x2:=x+Buffer.Canvas.TextWidth(FLineList[i].str);
+            FHyperLink[k].y1:=y;
+            FHyperLink[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
+            Break;
           end;
         end;
       end;
@@ -2064,7 +2068,8 @@ begin
   begin
     for k:=0 to high(FHyperLink) do
     begin
-      if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) then
+      if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) and
+         (x>FHyperLink[k].x1) and (x<FHyperLink[k].x2) then
       begin
         FActiveLine := FHyperLink[k].hs;
         break;
