@@ -83,7 +83,8 @@ type
      FontSize:integer;
      LineHeight:integer;
      Align:integer;
-     DispType:string;
+     URL:string;
+     DispType:string[10];
      BookMark1:string;
      BookMark2:string;
   end;
@@ -111,6 +112,7 @@ type
 
   THyperLink = record
      URL:string;
+     Color:TColor;
      x1:integer;
      x2:integer;
      y1:integer;
@@ -120,6 +122,7 @@ type
 
   TQFBookMark = record
      BookMark:string;
+     Color:TColor;
      hs:integer;
      x1:integer;
      x2:integer;
@@ -231,6 +234,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SavePicture(Files:string);
+    procedure PrintPicture;
   published
     property StepSize: integer read FStepSize write FStepSize;
   end;
@@ -269,6 +273,8 @@ end;
 
 procedure TCustomText.GetFontStyle(s:string;out CellType:TCellType);
 var s1:string;
+  hlkstr:string;
+  hlk:integer;
 begin
   CellType.bookmarkstr:='';
   CellType.DispType:=0;
@@ -372,6 +378,20 @@ begin
     s1:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
     CellType.bookmarkstr:=s1;
   end;
+  if (pos('<HLK>',s.ToUpper)>0) and (pos('</HLK>',s.ToUpper)>0) then
+  begin
+    hlkstr:=s;
+    hlk:=pos('<HLK>',s.ToUpper)+5;
+    hlkstr:=copy(s,hlk,pos('</HLK>',s.ToUpper)-hlk);
+    CellType.str:=hlkstr;
+    CellType.DispType:=4;
+  end
+  else
+  if (pos('HTTP://',s.ToUpper)>0) or (pos('HTTPS://',s.ToUpper)>0) then
+  begin
+    CellType.str:=s;
+    CellType.DispType:=4;
+  end;
 end;
 
 function TCustomText.ReplaceCharacters(str:string):string; //删除所有特殊符号
@@ -389,6 +409,8 @@ begin
   Result:=Result.Replace('<C4>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<C5>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('<HLK>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</HLK>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUB>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUP>','',[rfReplaceAll, rfIgnoreCase]);
@@ -454,6 +476,8 @@ begin
   (pos('<C3>',str.ToUpper)>0) or
   (pos('<C4>',str.ToUpper)>0) or
   (pos('<C5>',str.ToUpper)>0) or
+  (pos('<HLK>',str.ToUpper)>0) or
+  (pos('</HLK>',str.ToUpper)>0) or
   (pos('<SUP>',str.ToUpper)>0) or
   (pos('<SUB>',str.ToUpper)>0) or
   (pos('</SUP>',str.ToUpper)>0) or
@@ -499,6 +523,18 @@ begin
         end;
       end;
 
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
+         and (utf8copy(str,i+3,1).ToUpper='K') and (utf8copy(str,i+4,1)='>') then
+      begin
+        i:=i+5;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='H')
+         and (utf8copy(str,i+3,1).ToUpper='L') and (utf8copy(str,i+4,1)='K') and (utf8copy(str,i+5,1)='>') then
+      begin
+        i:=i+6;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
       begin
@@ -630,9 +666,11 @@ var
   str:string;
   s,s1,textstyle:string;
   Linetemp: TStringList;
-
+  hlk:integer;
   procedure preprocessing;
   var newbmstr,nbms:string;
+    hlkstr:string;
+    hlk:integer;
   begin
     FLineList[i].DispType:='';
     FLineList[i].FontSize:=FOldFontSize;
@@ -771,8 +809,15 @@ var
       end;
     end;
     //超链接
-    if (Pos('HTTP://', s.ToUpper) = 1) or (Pos('HTTPS://', s.ToUpper) = 1) then
+    if (Pos('HTTP://', s.ToUpper) >= 1) or (Pos('HTTPS://', s.ToUpper) >= 1) then
     begin
+      hlkstr:=s;
+      if pos('<HLK>',s.ToUpper)>0 then
+      begin
+        hlk:=pos('<HLK>',s.ToUpper)+5;
+        hlkstr:=copy(s,hlk,pos('</HLK>',s.ToUpper)-hlk);
+      end;
+      FLineList[i].url:=hlkstr;
       FLineList[i].DispType:='URL';
       if i = FActiveLine then
       begin
@@ -828,7 +873,7 @@ var
         inc(FBMSL1);//书签数量
       end
       else
-      if (pos('HTTP',s.ToUpper)>0) then
+      if (pos('HTTP',s.ToUpper)>0) then //URL数量
       begin
          inc(hl);
       end
@@ -977,9 +1022,9 @@ begin
       FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
 
-      if (pos('HTTP',s.ToUpper)>0) then
+      if FLineList[i].DispType='URL' then
       begin
-        FHyperLink[hls].URL:=s;//url
+        FHyperLink[hls].URL:= FLineList[i].url;
         FHyperLink[hls].hs:=i;//所在行数
         inc(hls);
       end
@@ -1121,6 +1166,25 @@ begin
     end;
   end
   else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='H') and   //HLK超链接
+     (utf8copy(str,i+2,1).ToUpper='L') and
+     (utf8copy(str,i+3,1).ToUpper='K') and
+     (utf8copy(str,i+4,1)='>') then
+  begin
+    Result:='';
+    j:=5;
+  end
+  else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='/') and
+     (utf8copy(str,i+2,1).ToUpper='H') and
+     (utf8copy(str,i+3,1).ToUpper='L') and
+     (utf8copy(str,i+4,1).ToUpper='K') and
+     (utf8copy(str,i+5,1)='>') then
+  begin
+    Result:='';
+    j:=6;
+  end
+  else
   if (Result='<') and (utf8copy(str,i+1,1).ToUpper='S') and
      (utf8copy(str,i+2,1).ToUpper='U') and
      (utf8copy(str,i+3,1).ToUpper='P') and
@@ -1239,6 +1303,8 @@ begin
   (pos('<C3>',str.ToUpper)>0) or
   (pos('<C4>',str.ToUpper)>0) or
   (pos('<C5>',str.ToUpper)>0) or
+  (pos('<HLK>',str.ToUpper)>0) or
+  (pos('</HLK>',str.ToUpper)>0) or
   (pos('<SUP>',str.ToUpper)>0) or
   (pos('<SUB>',str.ToUpper)>0) or
   (pos('</SUP>',str.ToUpper)>0) or
@@ -1266,7 +1332,7 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='B') and
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='B') and //书签目录
          (utf8copy(str,i+2,1).ToUpper='M') then
       begin
         for k:=i+2 to length(str) do
@@ -1279,7 +1345,7 @@ begin
         end;
       end
       else
-      if (s1='[') and (utf8copy(str,i+1,1).ToUpper='B') and
+      if (s1='[') and (utf8copy(str,i+1,1).ToUpper='B') and//书签
          (utf8copy(str,i+2,1).ToUpper='M') then
       begin
         for k:=i+2 to length(str) do
@@ -1462,7 +1528,8 @@ begin
   begin
     for j:=0 to col-1 do
     begin
-      if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2) or (FTable[i,j+1].DispType=3) then  //显示文字
+      if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2)
+         or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
       begin
         //设置字体属性
         if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
@@ -1470,7 +1537,8 @@ begin
         if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
         if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
         if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
-        Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+        if FTable[i,j+1].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
+        else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
         //设置字体属性
 
         x0:=FGapX+j*w;
@@ -1497,6 +1565,21 @@ begin
         end;
       end;
 
+      if FTable[i,j+1].DispType=4 then //URL
+      begin
+        for k:=0 to high(FHyperLink) do
+        begin
+          if FHyperLink[k].url=FTable[i,j+1].str then
+          begin
+            FHyperLink[k].x1:=x1;
+            FHyperLink[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
+            FHyperLink[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
+            FHyperLink[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
+            Break;
+          end;
+        end;
+      end
+      else
       if FTable[i,j+1].DispType=2 then //BOOKMARK1
       begin
         for k:=0 to high(FBookMark1) do
@@ -1505,8 +1588,8 @@ begin
           begin
             FBookMark1[k].x1:=x1;
             FBookMark1[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
-            FBookMark1[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
-            FBookMark1[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
+            FBookMark1[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
+            FBookMark1[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
             Break;
           end;
         end;
@@ -1685,7 +1768,7 @@ end;
 function TCustomText.ActiveLineIsURL: boolean;
 begin
   if (FActiveLine > 0) and (FActiveLine < Lineno) then
-    Result := (Pos('http://', FLineList[FActiveLine].str) = 1) or (Pos('https://', FLineList[FActiveLine].str) = 1)
+    Result := (Pos('http://', FLineList[FActiveLine].str) >= 1) or (Pos('https://', FLineList[FActiveLine].str) >= 1)
   else
     Result := False;
 end;
@@ -1706,7 +1789,7 @@ begin
 
   if ActiveLineIsURL then
   begin
-    OpenURL(FLineList[FActiveLine].str);
+    OpenURL(FLineList[FActiveLine].URL);
     FisLeftButtonDown := False;
   end;
   if FBMActiveStr<>'' then //跳转到指定书签的位置
@@ -2244,6 +2327,56 @@ begin
   im.Free;
   FCanvas.Free;
   FOffset:=oldFOffset;
+end;
+
+procedure TQFRichView.PrintPicture;
+var im:TImage;
+  FCanvas: TPrinterCanvas;//TBitmap;
+  oldFOffset:integer;
+begin
+  init;
+  //FCanvas:=TPrinterCanvas.Create(nil);
+  //FCanvas.p .PageHeight:=FTextHeigth;
+  //FCanvas.PageWidth:=FBuffer.Width;
+  //FRect.Width:=Width;
+  //FRect.Height:=FTextHeigth;
+  //FRect.Left:=0;
+  //FRect.Top:=0;
+  //if trim(FBackImageFile)<>'' then
+  //begin
+  //  if FBackgroundImage<>nil then
+  //    FCanvas.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
+  //  else
+  //  begin
+  //    with FCanvas.Canvas do
+  //    begin
+  //      Brush.Color := FColor;
+  //      Brush.Style := bsSolid;
+  //      FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+  //                        //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
+  //    end;
+  //  end;
+  //end
+  //else
+  //begin
+  //  with FCanvas.Canvas do
+  //  begin
+  //    Brush.Color := FColor;
+  //    Brush.Style := bsSolid;
+  //    FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+  //                      //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
+  //  end;
+  //end;
+  //oldFOffset:=FOffset;
+  //FOffset:=0;
+  //DrawTexts(FCanvas,0);
+  //
+  //im:=TImage.Create(nil);
+  //im.Picture.Jpeg.Assign(FCanvas);
+  //im.Picture.SaveToFile(Files);
+  //im.Free;
+  //FCanvas.Free;
+  //FOffset:=oldFOffset;
 end;
 
 initialization
