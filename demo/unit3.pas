@@ -16,6 +16,7 @@ type
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
+    Button4: TButton;
     CheckBox1: TCheckBox;
     ColorBox1: TColorBox;
     Label1: TLabel;
@@ -24,6 +25,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -66,6 +68,11 @@ end;
 procedure TForm1.Button3Click(Sender: TObject);
 begin
   QFRichView1.SavePicture('QFRichView_demo.jpg');
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+begin
+  QFRichView1.PrintPicture;
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);

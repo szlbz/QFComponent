@@ -59,14 +59,8 @@
       <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
-    <CodeGeneration>
-      <TargetCPU Value="loongarch64"/>
-      <TargetOS Value="linux"/>
-    </CodeGeneration>
     <Linking>
       <Debugging>
-        <GenerateDebugInfo Value="False"/>
-        <RunWithoutDebug Value="True"/>
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
       <Options>

@@ -2,17 +2,17 @@ object Form1: TForm1
   Left = 397
   Height = 766
   Top = 36
-  Width = 973
+  Width = 1106
   Caption = 'QFRichView Demo'
   ClientHeight = 766
-  ClientWidth = 973
+  ClientWidth = 1106
   DesignTimePPI = 144
   OnCreate = FormCreate
   object QFRichView1: TQFRichView
     Left = 8
     Height = 444
     Top = 360
-    Width = 958
+    Width = 1091
     Anchors = [akTop, akLeft, akRight, akBottom]
     LineSpacing = 0
     Lines.Strings = (
@@ -91,7 +91,7 @@ object Form1: TForm1
     Left = 8
     Height = 298
     Top = 8
-    Width = 958
+    Width = 1091
     Anchors = [akTop, akLeft, akRight]
     LineSpacing = 0
     Lines.Strings = (
@@ -187,7 +187,7 @@ object Form1: TForm1
     OnClick = Button3Click
   end
   object CheckBox1: TCheckBox
-    Left = 507
+    Left = 635
     Height = 28
     Top = 319
     Width = 97
@@ -196,7 +196,7 @@ object Form1: TForm1
     OnClick = CheckBox1Click
   end
   object ColorBox1: TColorBox
-    Left = 759
+    Left = 887
     Height = 26
     Top = 314
     Width = 206
@@ -206,11 +206,20 @@ object Form1: TForm1
   end
   object Label1: TLabel
     AnchorSideRight.Control = ColorBox1
-    Left = 649
+    Left = 777
     Height = 24
     Top = 314
     Width = 108
     BorderSpacing.Right = 2
     Caption = '设置背景颜色'
+  end
+  object Button4: TButton
+    Left = 491
+    Height = 38
+    Top = 314
+    Width = 113
+    Caption = '打印'
+    TabOrder = 7
+    OnClick = Button4Click
   end
 end
