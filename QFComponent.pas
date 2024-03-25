@@ -1,12 +1,14 @@
 {*******************************************************}
 {                                                       }
-{         支持Lazarus及windows、linux等平台             }
-{          x86_64/aarch64/lonngarch64等CPU              }
+{                自定义的类富文本控件                   }
+{                    TQFRichView                        }
+{                  TQFScrollingText                     }
 {                                                       }
-{                    类富文本控件                       }
-{                 QFRichView 0.5                        }
+{          支持Lazarus及windows、linux等平台            }
+{           x86_64/aarch64/lonngarch64等CPU             }
 {                                                       }
-{    Copyright(c) 2024-2024 秋风(QQ315795176) 出品      }
+{               Copyright(c) 2024-2024                  }
+{              秋风(QQ315795176)原创出品                }
 {                                                       }
 {                 All rights reserved                   }
 {                   保留所有权利                        }
@@ -72,7 +74,6 @@ interface
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
   OSPrinters,
-  //printers4lazarus,
   //ComponentEditors,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
@@ -2405,6 +2406,7 @@ begin
   oldFOffset:=FOffset;
   FOffset:=0;
   DrawTexts(FCanvas,0);
+
   MyPrinter := Printer; // 获取打印机对象
   MyPrinter.BeginDoc;
   try
