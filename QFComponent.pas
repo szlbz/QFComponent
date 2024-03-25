@@ -1297,7 +1297,7 @@ var i:integer;
   s1,newstr:string;
   zwh,ywh,k:integer;
   oldFontSize,NewFontSize:integer;
-  oldColor,oldColorhlk:TColor;
+  oldColor:TColor;
   oldStyles:TFontStyles;
   oldy,supy,suby:integer;
 begin
@@ -1324,7 +1324,6 @@ begin
   begin
     i:=1;
     oldColor:=Buffer.Canvas.font.Color;
-    oldColorhlk:=oldColor;
     oldStyles:=Buffer.Canvas.font.Style;
     oldFontSize:=Buffer.Canvas.font.Size;
     oldy:=y;
