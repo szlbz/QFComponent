@@ -816,16 +816,19 @@ var
       begin
         hlk:=pos('<HLK>',s.ToUpper)+5;
         hlkstr:=copy(s,hlk,pos('</HLK>',s.ToUpper)-hlk);
-      end;
-      FLineList[i].url:=hlkstr;
-      FLineList[i].DispType:='URL';
-      if i = FActiveLine then
-      begin
-        FLineList[i].FontStyle := 4;//fsUnderline;
-        FLineList[i].FontColor := clRed;
       end
       else
         FLineList[i].FontColor := clBlue;
+
+      FLineList[i].url:=hlkstr;
+      FLineList[i].DispType:='URL';
+      //if i = FActiveLine then
+      //begin
+      //  FLineList[i].FontStyle := 4;//fsUnderline;
+      //  FLineList[i].FontColor := clRed;
+      //end
+      //else
+      //  FLineList[i].FontColor := clBlue;
     end
     else
     if (Pos('<BM', s.ToUpper)>0) then
@@ -1294,7 +1297,7 @@ var i:integer;
   s1,newstr:string;
   zwh,ywh,k:integer;
   oldFontSize,NewFontSize:integer;
-  oldColor:TColor;
+  oldColor,oldColorhlk:TColor;
   oldStyles:TFontStyles;
   oldy,supy,suby:integer;
 begin
@@ -1321,6 +1324,7 @@ begin
   begin
     i:=1;
     oldColor:=Buffer.Canvas.font.Color;
+    oldColorhlk:=oldColor;
     oldStyles:=Buffer.Canvas.font.Style;
     oldFontSize:=Buffer.Canvas.font.Size;
     oldy:=y;
@@ -1332,6 +1336,21 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
+        and (utf8copy(str,i+3,1).ToUpper='K') and (utf8copy(str,i+4,1)='>') then
+      begin
+         i:=i+5;
+         Buffer.Canvas.font.Color:=clBlue;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='H')
+        and (utf8copy(str,i+3,1).ToUpper='L') and (utf8copy(str,i+4,1).ToUpper='K')
+        and (utf8copy(str,i+5,1)='>') then
+      begin
+         i:=i+6;
+         Buffer.Canvas.font.Color:=oldColor;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='B') and //书签目录
          (utf8copy(str,i+2,1).ToUpper='M') then
       begin
@@ -1639,6 +1658,8 @@ procedure TCustomText.DrawTexts(Buffer: TBitmap;y:integer);
 var
   w,x,disptable: integer;
   s: string;
+  urlpos1,urlpos2:integer;
+  urlposStr,urlstr:string;
   tsno,addh:integer;
   i,k: integer;
 begin
@@ -1751,8 +1772,20 @@ begin
         begin
           if FHyperLink[k].hs=i then
           begin
-            FHyperLink[k].x1:=x;
-            FHyperLink[k].x2:=x+Buffer.Canvas.TextWidth(FLineList[i].str);
+            if pos('<hlk>',FLineList[i].str)>0 then
+            begin
+              urlpos1:=utf8pos('<HLK>',FLineList[i].str.ToUpper);
+              urlpos2:=utf8pos('</HLK>',FLineList[i].str.ToUpper);
+              urlposStr:=utf8copy(FLineList[i].str,1,urlpos1-1);
+              urlstr:=utf8copy(FLineList[i].str,urlpos1+5,urlpos2-urlpos1-5);
+              FHyperLink[k].x1:=x+Buffer.Canvas.TextWidth(urlposStr);
+              FHyperLink[k].x2:=FHyperLink[k].x1+Buffer.Canvas.TextWidth(urlstr);// +Buffer.Canvas.TextWidth(FLineList[i].str);
+            end
+            else
+            begin
+              FHyperLink[k].x1:=x;
+              FHyperLink[k].x2:=x+Buffer.Canvas.TextWidth(FLineList[i].str);
+            end;
             FHyperLink[k].y1:=y;
             FHyperLink[k].y2:=y+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
             Break;
