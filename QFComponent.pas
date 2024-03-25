@@ -71,6 +71,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
+  OSPrinters,
+  //printers4lazarus,
   //ComponentEditors,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
@@ -2292,7 +2294,6 @@ begin
     end;
 
     BackgroundRefresh(FBuffer);//刷新背景
-
     DrawTexts(FBuffer,0);
     Canvas.Draw(0,0,FBuffer);
   end;
@@ -2312,7 +2313,8 @@ begin
 end;
 
 procedure TQFRichView.SavePicture(Files:string);
-var im:TImage;
+var
+  im:TImage;
   FCanvas: TBitmap;
   oldFOffset:integer;
 begin
@@ -2362,53 +2364,61 @@ begin
 end;
 
 procedure TQFRichView.PrintPicture;
-var im:TImage;
-  FCanvas: TPrinterCanvas;//TBitmap;
+var
+  im:TImage;
+  FCanvas: TBitmap;
   oldFOffset:integer;
+  MyPrinter: TPrinter;
 begin
   init;
-  //FCanvas:=TPrinterCanvas.Create(nil);
-  //FCanvas.p .PageHeight:=FTextHeigth;
-  //FCanvas.PageWidth:=FBuffer.Width;
-  //FRect.Width:=Width;
-  //FRect.Height:=FTextHeigth;
-  //FRect.Left:=0;
-  //FRect.Top:=0;
-  //if trim(FBackImageFile)<>'' then
-  //begin
-  //  if FBackgroundImage<>nil then
-  //    FCanvas.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
-  //  else
-  //  begin
-  //    with FCanvas.Canvas do
-  //    begin
-  //      Brush.Color := FColor;
-  //      Brush.Style := bsSolid;
-  //      FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
-  //                        //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
-  //    end;
-  //  end;
-  //end
-  //else
-  //begin
-  //  with FCanvas.Canvas do
-  //  begin
-  //    Brush.Color := FColor;
-  //    Brush.Style := bsSolid;
-  //    FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
-  //                      //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
-  //  end;
-  //end;
-  //oldFOffset:=FOffset;
-  //FOffset:=0;
-  //DrawTexts(FCanvas,0);
-  //
-  //im:=TImage.Create(nil);
-  //im.Picture.Jpeg.Assign(FCanvas);
-  //im.Picture.SaveToFile(Files);
-  //im.Free;
-  //FCanvas.Free;
-  //FOffset:=oldFOffset;
+  FCanvas:=TBitmap.Create;
+  FCanvas.Height:=FTextHeigth;
+  FCanvas.Width:=FBuffer.Width;
+  FRect.Width:=Width;
+  FRect.Height:=FTextHeigth;
+  FRect.Left:=0;
+  FRect.Top:=0;
+  if trim(FBackImageFile)<>'' then
+  begin
+    if FBackgroundImage<>nil then
+      FCanvas.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
+    else
+    begin
+      with FCanvas.Canvas do
+      begin
+        Brush.Color := FColor;
+        Brush.Style := bsSolid;
+        FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+                          //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
+      end;
+    end;
+  end
+  else
+  begin
+    with FCanvas.Canvas do
+    begin
+      Brush.Color := FColor;
+      Brush.Style := bsSolid;
+      FillRect(FRect);  //保存图片时只能使用FillRect(ARect)才能有设定的背景色;
+                        //不能用 FillRect(0, 0, Width, Height)，否则背景色是黑色的
+    end;
+  end;
+  oldFOffset:=FOffset;
+  FOffset:=0;
+  DrawTexts(FCanvas,0);
+  MyPrinter := Printer; // 获取打印机对象
+  MyPrinter.BeginDoc;
+  try
+    MyPrinter.Canvas.CopyRect( // 将位图内容复制到打印机画布上
+      Classes.Rect(0, 0, MyPrinter.PaperSize.Width, MyPrinter.PaperSize.Height),
+      FCanvas.Canvas, Classes.Rect(0, 0, FCanvas.Width, FCanvas.Height)
+    );
+  finally
+    MyPrinter.EndDoc; // 结束文档
+  end;
+  FCanvas.Free;
+  FOffset:=oldFOffset;
+
 end;
 
 initialization
