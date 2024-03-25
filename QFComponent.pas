@@ -2410,7 +2410,8 @@ begin
   MyPrinter.BeginDoc;
   try
     MyPrinter.Canvas.CopyRect( // 将位图内容复制到打印机画布上
-      Classes.Rect(0, 0, MyPrinter.PaperSize.Width, MyPrinter.PaperSize.Height),
+      Classes.Rect(0, 0, MyPrinter.PaperSize.PaperRect.WorkRect.Width, MyPrinter.PaperSize.PaperRect.WorkRect.Height),
+      //Classes.Rect(0, 0, MyPrinter.PaperSize.Width, MyPrinter.PaperSize.Height),
       FCanvas.Canvas, Classes.Rect(0, 0, FCanvas.Width, FCanvas.Height)
     );
   finally
