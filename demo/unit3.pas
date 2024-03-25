@@ -72,7 +72,7 @@ end;
 
 procedure TForm1.Button4Click(Sender: TObject);
 begin
-  QFRichView1.PrintPicture;
+  QFRichView1.Print;
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);

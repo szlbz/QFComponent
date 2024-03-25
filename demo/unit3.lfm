@@ -8,6 +8,7 @@ object Form1: TForm1
   ClientWidth = 1106
   DesignTimePPI = 144
   OnCreate = FormCreate
+  LCLVersion = '3.0.0.3'
   object QFRichView1: TQFRichView
     Left = 8
     Height = 444
