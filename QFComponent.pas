@@ -236,7 +236,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SavePicture(Files:string);
-    procedure PrintPicture;
+    procedure Print;
   published
     property StepSize: integer read FStepSize write FStepSize;
   end;
@@ -2363,9 +2363,8 @@ begin
   FOffset:=oldFOffset;
 end;
 
-procedure TQFRichView.PrintPicture;
+procedure TQFRichView.Print;
 var
-  im:TImage;
   FCanvas: TBitmap;
   oldFOffset:integer;
   MyPrinter: TPrinter;
@@ -2410,16 +2409,20 @@ begin
   MyPrinter.BeginDoc;
   try
     MyPrinter.Canvas.CopyRect( // 将位图内容复制到打印机画布上
-      Classes.Rect(0, 0, MyPrinter.PaperSize.PaperRect.WorkRect.Width, MyPrinter.PaperSize.PaperRect.WorkRect.Height),
+      Classes.Rect(
+      0,
+      0,
+      MyPrinter.PaperSize.PaperRect.WorkRect.Width, //页可打印宽度
+      MyPrinter.PaperSize.PaperRect.WorkRect.Height),//页可打印高度
       //Classes.Rect(0, 0, MyPrinter.PaperSize.Width, MyPrinter.PaperSize.Height),
       FCanvas.Canvas, Classes.Rect(0, 0, FCanvas.Width, FCanvas.Height)
     );
   finally
     MyPrinter.EndDoc; // 结束文档
   end;
+
   FCanvas.Free;
   FOffset:=oldFOffset;
-
 end;
 
 initialization
