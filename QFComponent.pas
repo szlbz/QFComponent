@@ -73,7 +73,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
-  OSPrinters,StdCtrls,
+  OSPrinters,
   //ComponentEditors,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
@@ -137,8 +137,6 @@ type
   private
     FRect:TRect;
     FMV:integer;
-    FBMSL1:integer;//书签数量
-    FBMSL2:integer;
     FLineSpacing:integer;//行距
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
@@ -168,7 +166,9 @@ type
     FGapY:integer;
     FColor:TColor;
     function ActiveLineIsURL: boolean;
-    procedure Init;
+    function TextPreprocessing(i:integer;str:string;out textstyle:string):string; //文字类预处理
+    procedure TablePreprocessing; //表格类预处理
+    procedure Init(Buffer:TBitmap);
     procedure BackgroundRefresh(Buffer:TBitmap);
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
@@ -262,14 +262,14 @@ begin
   if (AValue <> nil) then
   begin
     FLines.Assign(AValue);
-    Init;
+    Init(FBuffer);
   end;
 end;
 
 procedure TCustomText.SetColor(const AValue: TColor);
 begin
   FColor:=AValue;
-  Init;
+  Init(FBuffer);
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer)
 end;
@@ -503,7 +503,7 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
-      if Assigned(FBookMark1) then
+      if Assigned(FBookMark1) then   //书签1
       begin
         for j:=0 to High(FBookMark1) do
         begin
@@ -514,7 +514,7 @@ begin
           end;
         end;
       end;
-      if Assigned(FBookMark2) then
+      if Assigned(FBookMark2) then    //书签2
       begin
         for j:=0 to High(FBookMark2) do
         begin
@@ -662,311 +662,310 @@ begin
   end;
 end;
 
-procedure TCustomText.Init;
-var
-  i,w,j,k,dc,rj,hls:integer;
-  kmsl1,kmsl2:integer;
-  str:string;
-  s,s1,textstyle:string;
-  Linetemp: TStringList;
+function TCustomText.TextPreprocessing(i:integer;str:string;out textstyle:string):string;
+var newbmstr,nbms:string;
+  hlkstr:string;
   hlk:integer;
-  procedure preprocessing;
-  var newbmstr,nbms:string;
-    hlkstr:string;
-    hlk:integer;
+begin
+  Result:=str;
+  textstyle:='';
+  FLineList[i].DispType:='';
+  FLineList[i].FontSize:=FOldFontSize;
+  FLineList[i].Align :=1;
+  FLineList[i].FontStyle:=0;
+  //行对齐模式
+  if pos('[L]',str.ToUpper)>0 then
   begin
-    FLineList[i].DispType:='';
-    FLineList[i].FontSize:=FOldFontSize;
-    FLineList[i].Align :=1;
-    FLineList[i].FontStyle:=0;
-    //行对齐模式
-    if pos('[L]',s.ToUpper)>0 then
+   textstyle:=textstyle+'[L]';
+   str:=str.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+   FLineList[i].Align :=1;
+  end;
+  if pos('[C]',str.ToUpper)>0 then
+  begin
+   textstyle:=textstyle+'[C]';
+   str:=str.Replace('[C]','',[rfReplaceAll,rfIgnoreCase]);
+   FLineList[i].Align :=2;
+  end;
+  if pos('[R]',str.ToUpper)>0 then
+  begin
+   textstyle:=textstyle+'[R]';
+   str:=str.Replace('[R]','',[rfReplaceAll,rfIgnoreCase]);
+   FLineList[i].Align :=3;
+  end;
+  //字体风格
+  if pos('[#]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[#]';
+    str:=str.Replace('[#]','',[rfReplaceAll,rfIgnoreCase]);
+    FLineList[i].FontStyle :=1;// fsBold;
+  end;
+  if pos('[@]',str)>0 then
+  begin
+    textstyle:=textstyle+'[@]';
+    str:=str.Replace('[@]','',[rfReplaceAll,rfIgnoreCase]);
+    FLineList[i].FontStyle :=2;// fsStrikeOut;
+  end;
+  if pos('[$]',str)>0 then
+  begin
+    textstyle:=textstyle+'[$]';
+    str:=str.Replace('[$]','',[rfReplaceAll,rfIgnoreCase]);
+    FLineList[i].FontStyle :=3;// fsItalic;
+  end;
+  if pos('[!]',str)>0 then
+  begin
+    textstyle:=textstyle+'[!]';
+    str:=str.Replace('[!]','',[rfReplaceAll,rfIgnoreCase]);
+    FLineList[i].FontStyle :=4;// fsUnderline;
+  end;
+  //字体颜色
+  if pos('[C1]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[C1]';
+     str:=str.Replace('[C1]','',[rfReplaceAll,rfIgnoreCase]);
+     FLineList[i].FontColor := clBlack;
+  end;
+  if pos('[C2]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[C2]';
+     str:=str.Replace('[C2]','',[rfReplaceAll,rfIgnoreCase]);
+     FLineList[i].FontColor := clRed;
+  end;
+  if pos('[C3]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[C3]';
+     str:=str.Replace('[C3]','',[rfReplaceAll,rfIgnoreCase]);
+     FLineList[i].FontColor := clYellow;
+  end;
+  if pos('[C4]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[C4]';
+     str:=str.Replace('[C4]','',[rfReplaceAll,rfIgnoreCase]);
+     FLineList[i].FontColor := clGreen;
+  end;
+  if pos('[C5]',str.ToUpper)>0 then
+  begin
+     textstyle:=textstyle+'[C5]';
+     str:=str.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);
+     FLineList[i].FontColor := clBlue;
+  end;
+  //字体尺寸
+  if pos('[S1]',str.ToUpper)>0 then
+  begin
+    str:=str.Replace('[S1]','',[rfReplaceAll,rfIgnoreCase]);
+    textstyle:=textstyle+'[S1]';
+    FLineList[i].FontSize := 9
+  end;
+  if pos('[S2]',str.ToUpper)>0 then
+  begin
+    str:=str.Replace('[S2]','',[rfReplaceAll,rfIgnoreCase]);
+    textstyle:=textstyle+'[S2]';
+    FLineList[i].FontSize := 12
+  end;
+  if pos('[S3]',str.ToUpper)>0 then
+  begin
+    str:=str.Replace('[S3]','',[rfReplaceAll,rfIgnoreCase]);
+    textstyle:=textstyle+'[S3]';
+    FLineList[i].FontSize := 14
+  end;
+  if pos('[S4]',str.ToUpper)>0 then
+  begin
+    str:=str.Replace('[S4]','',[rfReplaceAll,rfIgnoreCase]);
+    textstyle:=textstyle+'[S4]';
+    FLineList[i].FontSize := 16
+  end;
+  if pos('[S5]',str.ToUpper)>0 then
+  begin
+    str:=str.Replace('[S5]','',[rfReplaceAll,rfIgnoreCase]);
+    textstyle:=textstyle+'[S5]';
+    FLineList[i].FontSize := 18;
+  end;
+  //分割线
+  if (pos('[LINE]',str.ToUpper)>0) or (pos('***',str.ToUpper)>0) or
+     (pos('___',str.ToUpper)>0) or (pos('---',str.ToUpper)>0) then
+  begin
+    textstyle:=textstyle+'[LINE]';
+    FLineList[i].DispType:='LINE';
+    str:=str.Replace('[LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+  end;
+  //双分割线
+  if pos('[2LINE]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[2LINE]';
+    FLineList[i].DispType:='2LINE';
+    str:=str.Replace('[2LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+  end;
+  //图像
+  if pos('[IMG]',str.ToUpper)>0 then
+  begin
+    textstyle:=textstyle+'[IMG]';
+    FLineList[i].DispType:='IMG';
+    str:=str.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    if  FileExists(str) then
     begin
-     textstyle:=textstyle+'[L]';
-     s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-     FLineList[i].Align :=1;
+      IMG.Picture.LoadFromFile(str);
     end;
-    if pos('[C]',s.ToUpper)>0 then
+  end;
+  //超链接
+  if (Pos('HTTP://', str.ToUpper) >= 1) or (Pos('HTTPS://', str.ToUpper) >= 1) then
+  begin
+    hlkstr:=str;
+    if pos('<HLK>',str.ToUpper)>0 then
     begin
-     textstyle:=textstyle+'[C]';
-     s:=s.Replace('[C]','',[rfReplaceAll,rfIgnoreCase]);
-     FLineList[i].Align :=2;
-    end;
-    if pos('[R]',s.ToUpper)>0 then
-    begin
-     textstyle:=textstyle+'[R]';
-     s:=s.Replace('[R]','',[rfReplaceAll,rfIgnoreCase]);
-     FLineList[i].Align :=3;
-    end;
-    //字体风格
-    if pos('[#]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[#]';
-      s:=s.Replace('[#]','',[rfReplaceAll,rfIgnoreCase]);
-      FLineList[i].FontStyle :=1;// fsBold;
-    end;
-    if pos('[@]',s)>0 then
-    begin
-      textstyle:=textstyle+'[@]';
-      s:=s.Replace('[@]','',[rfReplaceAll,rfIgnoreCase]);
-      FLineList[i].FontStyle :=2;// fsStrikeOut;
-    end;
-    if pos('[$]',s)>0 then
-    begin
-      textstyle:=textstyle+'[$]';
-      s:=s.Replace('[$]','',[rfReplaceAll,rfIgnoreCase]);
-      FLineList[i].FontStyle :=3;// fsItalic;
-    end;
-    if pos('[!]',s)>0 then
-    begin
-      textstyle:=textstyle+'[!]';
-      s:=s.Replace('[!]','',[rfReplaceAll,rfIgnoreCase]);
-      FLineList[i].FontStyle :=4;// fsUnderline;
-    end;
-    //字体颜色
-    if pos('[C1]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[C1]';
-       s:=s.Replace('[C1]','',[rfReplaceAll,rfIgnoreCase]);
-       FLineList[i].FontColor := clBlack;
-    end;
-    if pos('[C2]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[C2]';
-       s:=s.Replace('[C2]','',[rfReplaceAll,rfIgnoreCase]);
-       FLineList[i].FontColor := clRed;
-    end;
-    if pos('[C3]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[C3]';
-       s:=s.Replace('[C3]','',[rfReplaceAll,rfIgnoreCase]);
-       FLineList[i].FontColor := clYellow;
-    end;
-    if pos('[C4]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[C4]';
-       s:=s.Replace('[C4]','',[rfReplaceAll,rfIgnoreCase]);
-       FLineList[i].FontColor := clGreen;
-    end;
-    if pos('[C5]',s.ToUpper)>0 then
-    begin
-       textstyle:=textstyle+'[C5]';
-       s:=s.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);
-       FLineList[i].FontColor := clBlue;
-    end;
-    //字体尺寸
-    if pos('[S1]',s.ToUpper)>0 then
-    begin
-      s:=s.Replace('[S1]','',[rfReplaceAll,rfIgnoreCase]);
-      textstyle:=textstyle+'[S1]';
-      FLineList[i].FontSize := 9
-    end;
-    if pos('[S2]',s.ToUpper)>0 then
-    begin
-      s:=s.Replace('[S2]','',[rfReplaceAll,rfIgnoreCase]);
-      textstyle:=textstyle+'[S2]';
-      FLineList[i].FontSize := 12
-    end;
-    if pos('[S3]',s.ToUpper)>0 then
-    begin
-      s:=s.Replace('[S3]','',[rfReplaceAll,rfIgnoreCase]);
-      textstyle:=textstyle+'[S3]';
-      FLineList[i].FontSize := 14
-    end;
-    if pos('[S4]',s.ToUpper)>0 then
-    begin
-      s:=s.Replace('[S4]','',[rfReplaceAll,rfIgnoreCase]);
-      textstyle:=textstyle+'[S4]';
-      FLineList[i].FontSize := 16
-    end;
-    if pos('[S5]',s.ToUpper)>0 then
-    begin
-      s:=s.Replace('[S5]','',[rfReplaceAll,rfIgnoreCase]);
-      textstyle:=textstyle+'[S5]';
-      FLineList[i].FontSize := 18;
-    end;
-    //分割线
-    if (pos('[LINE]',s.ToUpper)>0) or (pos('***',s.ToUpper)>0) or
-       (pos('___',s.ToUpper)>0) or (pos('---',s.ToUpper)>0) then
-    begin
-      textstyle:=textstyle+'[LINE]';
-      FLineList[i].DispType:='LINE';
-      s:=s.Replace('[LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    end;
-    //双分割线
-    if pos('[2LINE]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[2LINE]';
-      FLineList[i].DispType:='2LINE';
-      s:=s.Replace('[2LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    end;
-    //图像
-    if pos('[IMG]',s.ToUpper)>0 then
-    begin
-      textstyle:=textstyle+'[IMG]';
-      FLineList[i].DispType:='IMG';
-      s:=s.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-      if  FileExists(s) then
-      begin
-        IMG.Picture.LoadFromFile(s);
-      end;
-    end;
-    //超链接
-    if (Pos('HTTP://', s.ToUpper) >= 1) or (Pos('HTTPS://', s.ToUpper) >= 1) then
-    begin
-      hlkstr:=s;
-      if pos('<HLK>',s.ToUpper)>0 then
-      begin
-        hlk:=pos('<HLK>',s.ToUpper)+5;
-        hlkstr:=copy(s,hlk,pos('</HLK>',s.ToUpper)-hlk);
-      end
-      else
-        FLineList[i].FontColor := clBlue;
-
-      FLineList[i].url:=hlkstr;
-      FLineList[i].DispType:='URL';
-      //if i = FActiveLine then
-      //begin
-      //  FLineList[i].FontStyle := 4;//fsUnderline;
-      //  FLineList[i].FontColor := clRed;
-      //end
-      //else
-      //  FLineList[i].FontColor := clBlue;
+      hlk:=pos('<HLK>',str.ToUpper)+5;
+      hlkstr:=copy(str,hlk,pos('</HLK>',str.ToUpper)-hlk);
     end
     else
-    if (Pos('<BM', s.ToUpper)>0) then
-    begin
-      FindMark1(s,newbmstr);
-      nbms:=copy(s,pos('<BM',s.ToUpper)+1,(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)-1));
-      textstyle:=textstyle+'<'+nbms+'>';
-      s:=newbmstr;
-      FLineList[i].BookMark1:=nbms;
-      FLineList[i].DispType:='BOOKMARK1';
       FLineList[i].FontColor := clBlue;
-    end;
-    if (Pos('[BM', s.ToUpper)>0) then
-    begin
-      FindMark2(s,newbmstr);
-      nbms:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
-      textstyle:=textstyle+'['+nbms+']';
-      s:=newbmstr;
-      FLineList[i].BookMark2:=nbms;
-      FLineList[i].DispType:='BOOKMARK2';
-    end;
-  end;
 
-  procedure TablePreprocessing;
-  var
-    i,j,row,col,js,gw:integer;
-    no,k,hl:integer;
+    FLineList[i].url:=hlkstr;
+    FLineList[i].DispType:='URL';
+  end
+  else
+  if (Pos('<BM', str.ToUpper)>0) then
   begin
-    //解析是否包含表格
-    //解析有几个表格
-    FTS:=0;
-    hl:=0;
-    FBMSL1:=0; //书签数量
-    FBMSL2:=0; //书签数量
-    for i := 0 to FLines.Count-1 do
+    FindMark1(str,newbmstr);
+    nbms:=copy(str,pos('<BM',str.ToUpper)+1,(pos('>',str.ToUpper)-pos('<BM',str.ToUpper)-1));
+    textstyle:=textstyle+'<'+nbms+'>';
+    str:=newbmstr;
+    FLineList[i].BookMark1:=nbms;
+    FLineList[i].DispType:='BOOKMARK1';
+    FLineList[i].FontColor := clBlue;
+  end;
+  if (Pos('[BM', str.ToUpper)>0) then
+  begin
+    FindMark2(str,newbmstr);
+    nbms:=copy(str,pos('[BM',str.ToUpper)+1,(pos(']',str.ToUpper)-pos('[BM',str.ToUpper)-1));
+    textstyle:=textstyle+'['+nbms+']';
+    str:=newbmstr;
+    FLineList[i].BookMark2:=nbms;
+    FLineList[i].DispType:='BOOKMARK2';
+  end;
+  Result:=str;
+end;
+
+procedure TCustomText.TablePreprocessing;
+var
+  i,j,row,col,js,gw:integer;
+  no,k,hl:integer;
+  str:string;
+  FBMSL1:integer;//书签数量
+  FBMSL2:integer;
+begin
+  //解析是否包含表格
+  //解析有几个表格
+  FTS:=0;
+  hl:=0;
+  FBMSL1:=0; //书签数量
+  FBMSL2:=0; //书签数量
+  for i := 0 to FLines.Count-1 do
+  begin
+    str := Trim(FLines[i]);
+    if (pos('[BM',str.ToUpper)>0) and (pos(']',str.ToUpper)>0) then
     begin
-      s := Trim(FLines[i]);
-      if (pos('[BM',s.ToUpper)>0) and (pos(']',s.ToUpper)>0) then
+      inc(FBMSL2);//书签数量
+    end
+    else
+    if (pos('<BM',str.ToUpper)>0) and (pos('>',str.ToUpper)>0) then
+    begin
+      inc(FBMSL1);//书签数量
+    end
+    else
+    if (pos('HTTP',str.ToUpper)>0) then //URL数量
+    begin
+       inc(hl);
+    end
+    else
+    if pos('|',str)>0 then
+    begin
+      if (pos('|',Trim(FLines[i+1]))=0) or
+         (
+         (pos('|',Trim(FLines[i+1]))>0) and
+         (pos('|',Trim(FLines[i+2]))>0) and
+         (pos('-',Trim(FLines[i+2]))>0)
+         ) then //表格最后一行
       begin
-        inc(FBMSL2);//书签数量
-      end
-      else
-      if (pos('<BM',s.ToUpper)>0) and (pos('>',s.ToUpper)>0) then
-      begin
-        inc(FBMSL1);//书签数量
-      end
-      else
-      if (pos('HTTP',s.ToUpper)>0) then //URL数量
-      begin
-         inc(hl);
-      end
-      else
-      if pos('|',s)>0 then
-      begin
-        if (pos('|',Trim(FLines[i+1]))=0) or
-           (
-           (pos('|',Trim(FLines[i+1]))>0) and
-           (pos('|',Trim(FLines[i+2]))>0) and
-           (pos('-',Trim(FLines[i+2]))>0)
-           ) then //表格最后一行
-        begin
-          inc(FTS);
-        end;
+        inc(FTS);
       end;
     end;
-    if hl>0 then
+  end;
+  if hl>0 then
+  begin
+    if Assigned(FHyperLink) then
+      FHyperLink:=nil;
+    setlength(FHyperLink,hl);
+  end;
+  if FBMSL1>0 then
+  begin
+    if Assigned(FBookMark1) then
+      FBookMark1:=nil;
+    setlength(FBookMark1,FBMSL1);
+  end;
+  if FBMSL2>0 then
+  begin
+    if Assigned(FBookMark2) then
+      FBookMark2:=nil;
+    setlength(FBookMark2,FBMSL2);
+  end;
+  setlength(FTablesl,FTS);//FTS--表格数量
+  ////////////////////////////////
+  col:=0;
+  row:=0;
+  js:=0;
+  no:=0;
+  hl:=0;
+  for i := 0 to FLines.Count-1 do
+  begin
+    str := Trim(FLines[i]);
+    if pos('|',str)>0 then
     begin
-      if Assigned(FHyperLink) then
-        FHyperLink:=nil;
-      setlength(FHyperLink,hl);
-    end;
-    if FBMSL1>0 then
-    begin
-      if Assigned(FBookMark1) then
-        FBookMark1:=nil;
-      setlength(FBookMark1,FBMSL1);
-    end;
-    if FBMSL2>0 then
-    begin
-      if Assigned(FBookMark2) then
-        FBookMark2:=nil;
-      setlength(FBookMark2,FBMSL2);
-    end;
-    setlength(FTablesl,FTS);//FTS--表格数量
-    ////////////////////////////////
-    col:=0;
-    row:=0;
-    js:=0;
-    no:=0;
-    hl:=0;
-    for i := 0 to FLines.Count-1 do
-    begin
-      s := Trim(FLines[i]);
-      if pos('|',s)>0 then
+      for j:=0 to utf8length(str) do
       begin
-        for j:=0 to utf8length(s) do
+        if utf8copy(str,j,1)='|' then  //表格
         begin
-          if utf8copy(s,j,1)='|' then  //表格
+          if js=0 then
           begin
-            if js=0 then
-            begin
-              inc(row);
-              js:=1;
-            end;
-            if row=1 then
-            begin
-              inc(col);
-              FTablesl[no].hs1:=i;//开始行数
-            end;
+            inc(row);
+            js:=1;
+          end;
+          if row=1 then
+          begin
+            inc(col);
+            FTablesl[no].hs1:=i;//开始行数
           end;
         end;
-        if (pos('|',Trim(FLines[i+1]))=0) or
-           (
-           (pos('|',Trim(FLines[i+1]))>0) and
-           (pos('|',Trim(FLines[i+2]))>0) and
-           (pos('-',Trim(FLines[i+2]))>0)
-           ) then //表格最后一行
-        begin
-          FTablesl[no].row:=row;//行数
-          FTablesl[no].col:=col;//列数
-          FTablesl[no].hs2:=i;//结束行数
-          inc(no);
-          row:=0;
-          col:=0;
-          js:=0;
-        end;
       end;
-      js:=0;
+      if (pos('|',Trim(FLines[i+1]))=0) or
+         (
+         (pos('|',Trim(FLines[i+1]))>0) and
+         (pos('|',Trim(FLines[i+2]))>0) and
+         (pos('-',Trim(FLines[i+2]))>0)
+         ) then //表格最后一行
+      begin
+        FTablesl[no].row:=row;//行数
+        FTablesl[no].col:=col;//列数
+        FTablesl[no].hs2:=i;//结束行数
+        inc(no);
+        row:=0;
+        col:=0;
+        js:=0;
+      end;
     end;
+    js:=0;
   end;
+end;
+
+procedure TCustomText.Init(Buffer:TBitmap);
+var
+  i,w,j,k,rj,hls:integer;
+  bmsl1,bmsl2:integer;
+  s,s1,textstyle:string;
+  Linetemp: TStringList;
 begin
   Lineno:=0;
   Linetemp:=TStringList.Create;
   setlength(FLineList,FLines.Count);
   k:= FLines.Count;
+
   TablePreprocessing;//表格预处理
 
   //根据控件宽度进行自动换行处理
@@ -977,9 +976,9 @@ begin
     rj:=0;
     if Length(s) > 0 then
     begin
-      preprocessing;
-      FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      w:=FBuffer.Canvas.TextWidth(ReplaceCharacters(s));
+      s:=TextPreprocessing(i,s,textstyle);
+      Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
+      w:=Buffer.Canvas.TextWidth(ReplaceCharacters(s));
       if w>Width then //换行
       begin
          s1:='';
@@ -988,7 +987,7 @@ begin
          while j<= utf8length(s) do
          begin
            s1:=s1+utf8copy(s,j,1);
-           if FBuffer.Canvas.TextWidth(ReplaceCharacters(s1)+Deleteidentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
+           if Buffer.Canvas.TextWidth(ReplaceCharacters(s1)+Deleteidentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
            begin
              if Deleteidentification(j,s,rj)=''then
                s1:=s1+utf8copy(s,j+1,rj);//3);
@@ -1016,17 +1015,17 @@ begin
   setlength(FLineList,Linetemp.Count);
   Lineno:= Linetemp.Count;
   hls:=0;
-  kmsl1:=0;
-  kmsl2:=0;
+  bmsl1:=0;//BM
+  bmsl2:=0;
   for i := 0 to Linetemp.Count-1 do
   begin
     s := Linetemp[i];
     if Length(s) > 0 then
     begin
-      preprocessing;
+      s:=TextPreprocessing(i,s,textstyle);
       FLineList[i].str:=s;
-      FBuffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      FLineList[i].LineHeight:=FBuffer.Canvas.TextHeight(s)+FLineSpacing;
+      Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
+      FLineList[i].LineHeight:=Buffer.Canvas.TextHeight(s)+FLineSpacing;
 
       if FLineList[i].DispType='URL' then
       begin
@@ -1037,26 +1036,26 @@ begin
       else
       if FLineList[i].DispType='BOOKMARK1' then
       begin
-         FBookMark1[kmsl1].BookMark:=FLineList[i].BookMark1;
-         FBookMark1[kmsl1].hs:=i;//所在行数
-         inc(kmsl1);
+         FBookMark1[bmsl1].BookMark:=FLineList[i].BookMark1;
+         FBookMark1[bmsl1].hs:=i;//所在行数
+         inc(bmsl1);
       end
       else
       if FLineList[i].DispType='BOOKMARK2' then
       begin
-        FBookMark2[kmsl2].BookMark:=FLineList[i].BookMark2;
-        FBookMark2[kmsl2].hs:=i;//所在行数
-        inc(kmsl2);
+        FBookMark2[bmsl2].BookMark:=FLineList[i].BookMark2;
+        FBookMark2[bmsl2].hs:=i;//所在行数
+        inc(bmsl2);
       end;
     end;
   end;
-  FBuffer.Width := Width;
-  FBuffer.Height := Height;
+  Buffer.Width := Width;
+  Buffer.Height := Height;
   if FOffset = -1 then
-    FOffset := FBuffer.Height;
+    FOffset := Buffer.Height;
 
   freeandnil(Linetemp);
-  BackgroundRefresh(FBuffer); //刷新背景
+  BackgroundRefresh(Buffer); //刷新背景
 end;
 
 procedure TCustomText.DrawScrollingText(Sender: TObject);
@@ -1813,7 +1812,7 @@ begin
   inherited DoOnChangeBounds;
 
   TTHNO:=-1;
-  Init;
+  Init(FBuffer);
 end;
 
 procedure TCustomText.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -1888,8 +1887,6 @@ begin
   FOffset := -1;
   FGapX:=0;
   FGapY:=0;
-  FBMSL1:=0;
-  FBMSL2:=0;
   FOldFontSize:=FBuffer.Canvas.Font.Size;
   FColor:=clWhite;
 end;
@@ -1924,7 +1921,7 @@ begin
   QFRichEdit.ShowModal;
   FLines.Text:=QFRichEdit.RichEdit.Text;
 
-  init;
+  Init(FBuffer);
   BackgroundRefresh(FBuffer);//刷新背景
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
@@ -1950,7 +1947,7 @@ begin
     if  FileExists(files) then
       FLines.LoadFromFile(files);
   end;
-  init;
+  Init(FBuffer);
   BackgroundRefresh(FBuffer);//刷新背景
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
@@ -1979,7 +1976,7 @@ begin
   FActive := AValue;
   if FActive then
   begin
-    Init;
+    Init(FBuffer);
   end;
   FTimer.Enabled:=Active;
 end;
@@ -1991,7 +1988,7 @@ begin
     if FActive then
       FTimer.Enabled:=false;
     FLines.Assign(AValue);
-    Init;
+    Init(FBuffer);
     if FActive then
       FTimer.Enabled:=FActive;
   end;
@@ -2003,7 +2000,7 @@ begin
     Canvas.Draw(0,0,FBuffer)
   else
   begin
-    init;
+    Init(FBuffer);
     BackgroundRefresh(FBuffer);//刷新背景
     FOffset:=0;
     DrawTexts(FBuffer,FOffset);
@@ -2086,7 +2083,7 @@ begin
   if (AValue <> nil) then
   begin
     FLines.Assign(AValue);
-    Init;
+    Init(FBuffer);
   end;
 end;
 procedure TQFRichView.WMMouseWheel(var Message: TLMMouseEvent);
@@ -2317,7 +2314,7 @@ end;
 
 procedure TQFRichView.DrawScrollingText(Sender: TObject);
 begin
-  init;
+  Init(FBuffer);
   FOffset:=0;
   DrawTexts(FBuffer,FOffset);
   Canvas.Draw(0,0,FBuffer)
@@ -2326,13 +2323,14 @@ end;
 procedure TQFRichView.SavePicture(Files:string);
 var
   im:TImage;
-  FCanvas: TBitmap;
+  SaveBuffer: TBitmap;
   oldFOffset:integer;
 begin
-  init;
-  FCanvas:=TBitmap.Create;
-  FCanvas.Height:=FTextHeigth;
-  FCanvas.Width:=FBuffer.Width;
+  SaveBuffer:=TBitmap.Create;
+  SaveBuffer.Height:=FTextHeigth;
+  SaveBuffer.Width:=FBuffer.Width;
+
+  Init(FBuffer);
   FRect.Width:=Width;
   FRect.Height:=FTextHeigth;
   FRect.Left:=0;
@@ -2340,10 +2338,10 @@ begin
   if trim(FBackImageFile)<>'' then
   begin
     if FBackgroundImage<>nil then
-      FCanvas.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
+      SaveBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
     else
     begin
-      with FCanvas.Canvas do
+      with SaveBuffer.Canvas do
       begin
         Brush.Color := FColor;
         Brush.Style := bsSolid;
@@ -2354,7 +2352,7 @@ begin
   end
   else
   begin
-    with FCanvas.Canvas do
+    with SaveBuffer.Canvas do
     begin
       Brush.Color := FColor;
       Brush.Style := bsSolid;
@@ -2364,37 +2362,43 @@ begin
   end;
   oldFOffset:=FOffset;
   FOffset:=0;
-  DrawTexts(FCanvas,0);
+  DrawTexts(SaveBuffer,0);
 
   im:=TImage.Create(nil);
-  im.Picture.Jpeg.Assign(FCanvas);
+  im.Picture.Jpeg.Assign(SaveBuffer);
   im.Picture.SaveToFile(Files);
   im.Free;
-  FCanvas.Free;
+
+  SaveBuffer.Free;
   FOffset:=oldFOffset;
 end;
 
 procedure TQFRichView.Print;
 var
-  FCanvas: TBitmap;
+  PrintBuffer: TBitmap;
   oldFOffset:integer;
   MyPrinter: TPrinter;
 begin
-  init;
-  FCanvas:=TBitmap.Create;
-  FCanvas.Height:=FTextHeigth;
-  FCanvas.Width:=FBuffer.Width;
-  FRect.Width:=Width;
-  FRect.Height:=FTextHeigth;
+  Init(FBuffer);
+
+  MyPrinter := Printer; // 获取打印机对象
+
+  PrintBuffer:=TBitmap.Create;
+  PrintBuffer.Height:=MyPrinter.PaperSize.PaperRect.WorkRect.Height;//FTextHeigth;
+  PrintBuffer.Width:=MyPrinter.PaperSize.PaperRect.WorkRect.Width;//FBuffer.Width;
+
+
+  FRect.Width:=MyPrinter.PaperSize.PaperRect.WorkRect.Width;//Width;
+  FRect.Height:=MyPrinter.PaperSize.PaperRect.WorkRect.Height;//FTextHeigth;
   FRect.Left:=0;
   FRect.Top:=0;
   if trim(FBackImageFile)<>'' then
   begin
     if FBackgroundImage<>nil then
-      FCanvas.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
+      PrintBuffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap)
     else
     begin
-      with FCanvas.Canvas do
+      with PrintBuffer.Canvas do
       begin
         Brush.Color := FColor;
         Brush.Style := bsSolid;
@@ -2405,7 +2409,7 @@ begin
   end
   else
   begin
-    with FCanvas.Canvas do
+    with PrintBuffer.Canvas do
     begin
       Brush.Color := FColor;
       Brush.Style := bsSolid;
@@ -2415,9 +2419,8 @@ begin
   end;
   oldFOffset:=FOffset;
   FOffset:=0;
-  DrawTexts(FCanvas,0);
+  DrawTexts(PrintBuffer,0);
 
-  MyPrinter := Printer; // 获取打印机对象
   MyPrinter.BeginDoc;
   try
     MyPrinter.Canvas.CopyRect( // 将位图内容复制到打印机画布上
@@ -2427,13 +2430,13 @@ begin
       MyPrinter.PaperSize.PaperRect.WorkRect.Width, //页可打印宽度
       MyPrinter.PaperSize.PaperRect.WorkRect.Height),//页可打印高度
       //Classes.Rect(0, 0, MyPrinter.PaperSize.Width, MyPrinter.PaperSize.Height),
-      FCanvas.Canvas, Classes.Rect(0, 0, FCanvas.Width, FCanvas.Height)
+      PrintBuffer.Canvas, Classes.Rect(0, 0, PrintBuffer.Width, PrintBuffer.Height)
     );
   finally
     MyPrinter.EndDoc; // 结束文档
   end;
 
-  FCanvas.Free;
+  PrintBuffer.Free;
   FOffset:=oldFOffset;
 end;
 
