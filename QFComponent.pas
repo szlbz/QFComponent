@@ -73,7 +73,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
-  OSPrinters,
+  OSPrinters,StdCtrls,
   //ComponentEditors,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
@@ -1831,6 +1831,8 @@ begin
   begin
       if Assigned(FBookMark2) then
       begin
+        oldy1:=0;
+        oldy2:=0;
         for k:=0 to high(FBookMark2) do
         begin
           if FBookMark2[k].BookMark=FBMActiveStr then
@@ -1848,6 +1850,14 @@ begin
               FBookMark2[k1].y2:=-oldy2;
             end;
             break;
+          end;
+        end;
+        if Assigned(FHyperLink) then
+        begin
+          for k:=0 to high(FHyperLink) do
+          begin
+            FHyperLink[k].y1:=FHyperLink[k].y1+oldy1;
+            FHyperLink[k].y2:=FHyperLink[k].y2+oldy1;
           end;
         end;
       end;
@@ -1898,7 +1908,6 @@ begin
     FBookMark1:=nil;
   if Assigned(FBookMark2) then
     FBookMark2:=nil;
-
   FLines.Free;
   img.Free;
   FBuffer.Free;
@@ -2164,6 +2173,7 @@ begin
     FisLeftButtonDown := True;
     FinitialY := Y;
   end;
+
   inherited MouseDown(Button, Shift, X, Y);
 end;
 
