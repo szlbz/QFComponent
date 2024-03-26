@@ -6,18 +6,18 @@ https://www.cnblogs.com/qiufeng2014/p/18058856
 QFComponent 有2个控件：  
 1、TQFRichView：自定义的类富文本文字显示，类RichView控件，这个控件特别适合作为使用说明等用途，比用html或pdf都灵活且特别是跨平台使用；  
 2、TQFScrollingText：滚动内容采用自定义的类富文本文字显示的滚动显示控件；  
-
+*****
 下载：  
 https://github.com/szlbz/QFComponent.git  
 https://gitee.com/szlbz/qfcomponent/  
-
+*****
 说明：  
 1、控件的文字显示渲染等核心功能是秋风独立原创编写的。  
 2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor界面及代码  
 3、滚动控件的滚动部分参考了lazarus about的算法。  
-
+*****
 控件功能慢慢添加中!  
-
+*****
 更新说明：  
 2024.03.25  
 1、增加简单的打印功能  
@@ -43,7 +43,7 @@ https://gitee.com/szlbz/qfcomponent/
 修正打开链接的Bug及修正滚动到最后的衔接Bug.  
 2024.03.19  
 增加表格单元格插入图片功能  
-
+*****
 使用以下特定符号定义文字（行）的属性：  
 [img]本地图像文件名称  
 [!]下划线  
