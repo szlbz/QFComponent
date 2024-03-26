@@ -82,6 +82,7 @@ https://gitee.com/szlbz/qfcomponent/
 可在windows和linux使用，已在龙芯电脑实测可用。  
 TQFRichView控件支持鼠标中键滚动及按鼠标左键然后上下移动鼠标实现快速滚动。  
 2024.03.09  
+*****
 ![截图1](%E6%88%AA%E5%9B%BE.png)  
 ![截图2](%E6%88%AA%E5%9B%BE2.png)  
 ![截图3](%E6%88%AA%E5%9B%BE3.png)  
