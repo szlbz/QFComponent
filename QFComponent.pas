@@ -87,6 +87,7 @@ type
      LineHeight:integer;
      Align:integer;
      URL:string;
+     URLStr:string;
      DispType:string[10];
      BookMark1:string;
      BookMark2:string;
@@ -95,6 +96,7 @@ type
   TCellType = record
      str:string[255];
      FontName:string[20];
+     URL:string[200];
      bookmarkstr:string[7];
      FontStyle:byte;
      Color:TColor;
@@ -115,6 +117,7 @@ type
 
   THyperLink = record
      URL:string;
+     URLStr:string;
      Color:TColor;
      x1:integer;
      x2:integer;
@@ -165,10 +168,10 @@ type
     FGapX:integer;
     FGapY:integer;
     FColor:TColor;
+    procedure Init(Buffer:TBitmap);
     function ActiveLineIsURL: boolean;
     function TextPreprocessing(i:integer;str:string;out textstyle:string):string; //文字类预处理
     procedure TablePreprocessing; //表格类预处理
-    procedure Init(Buffer:TBitmap);
     procedure BackgroundRefresh(Buffer:TBitmap);
     procedure DrawScrollingText(Sender: TObject);
     procedure SetLines(const AValue: TStrings);
@@ -176,14 +179,14 @@ type
     function FindMark1(str:string;out NewStr:string):Boolean;
     function FindMark2(str:string;out NewStr:string):Boolean;
     function GetStringTextWidth(Buffer: TBitmap;str:string):integer;
-    procedure DisplayText(Buffer: TBitmap;x,y:integer;str:string);
-    procedure DrawTexts(Buffer: TBitmap;y:integer);
+    procedure DisplayChar(Buffer: TBitmap;x,y:integer;str:string); //显示字符
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
     function Deleteidentification(i:integer;str:string;out j:integer):string;//删除标识
     function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
     function ReplaceCharacters(str:string):string; //删除所有特殊符号
     procedure GetTableInfo(no:integer);
     procedure GetFontStyle(s:string;out CellType:TCellType);
+    procedure DrawTexts(Buffer: TBitmap;y:integer);
   protected
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
@@ -277,7 +280,9 @@ end;
 procedure TCustomText.GetFontStyle(s:string;out CellType:TCellType);
 var s1:string;
   hlkstr:string;
-  hlk:integer;
+  url:string;
+  urldisptext:string;
+  hlk,i:integer;
 begin
   CellType.bookmarkstr:='';
   CellType.DispType:=0;
@@ -386,7 +391,15 @@ begin
     hlkstr:=s;
     hlk:=pos('<HLK>',s.ToUpper)+5;
     hlkstr:=copy(s,hlk,pos('</HLK>',s.ToUpper)-hlk);
-    CellType.str:=hlkstr;
+    if utf8copy(hlkstr,1,1)='(' then
+    begin
+      url:='';
+      i:=utf8pos(')',hlkstr);
+      urldisptext:=utf8copy(hlkstr,2,i-2);
+      url:=utf8copy(hlkstr,i+1,utf8length(hlkstr));
+    end;
+    CellType.url:=url;
+    CellType.str:=urldisptext;
     CellType.DispType:=4;
   end
   else
@@ -398,7 +411,9 @@ begin
 end;
 
 function TCustomText.ReplaceCharacters(str:string):string; //删除所有特殊符号
-var i:integer;
+var
+  i,hlk:integer;
+  hlkstr,tmp1,tmp2,tmp3:string;
 begin
   Result:=str;
   Result:=Result.Replace('<#>','',[rfReplaceAll, rfIgnoreCase]);
@@ -665,11 +680,14 @@ end;
 function TCustomText.TextPreprocessing(i:integer;str:string;out textstyle:string):string;
 var newbmstr,nbms:string;
   hlkstr:string;
+  tmp1,tmp2,tmp3:string;
   hlk:integer;
 begin
   Result:=str;
   textstyle:='';
   FLineList[i].DispType:='';
+  FLineList[i].URLStr:='';
+  FLineList[i].URL:='';
   FLineList[i].FontSize:=FOldFontSize;
   FLineList[i].Align :=1;
   FLineList[i].FontStyle:=0;
@@ -809,10 +827,22 @@ begin
   if (Pos('HTTP://', str.ToUpper) >= 1) or (Pos('HTTPS://', str.ToUpper) >= 1) then
   begin
     hlkstr:=str;
-    if pos('<HLK>',str.ToUpper)>0 then
+    if utf8pos('<HLK>',str.ToUpper)>0 then
     begin
-      hlk:=pos('<HLK>',str.ToUpper)+5;
-      hlkstr:=copy(str,hlk,pos('</HLK>',str.ToUpper)-hlk);
+      hlk:=utf8pos('<HLK>',str.ToUpper)+5;
+      hlkstr:=utf8copy(str,hlk,utf8pos('</HLK>',str.ToUpper)-hlk);
+      tmp1:='';
+      tmp2:='';
+      tmp3:='';
+      if (utf8pos('(',hlkstr)>0) and (utf8pos(')',hlkstr)>0) then
+      begin
+        hlkstr:=utf8copy(hlkstr,utf8pos(')',hlkstr)+1,utf8length(hlkstr));
+        FLineList[i].URLStr:=utf8copy(str,utf8pos('(',str)+1,utf8pos(')',str)-utf8pos('(',str)-1);
+        tmp1:=utf8copy(str,1,utf8pos('<HLK>',str.ToUpper)-1);
+        tmp2:=FLineList[i].URLStr;
+        tmp3:=utf8copy(str,utf8pos('</HLK>',str.ToUpper)+6,utf8length(str));
+        str:=tmp1+'<HLK>'+tmp2+'</HLK>'+tmp3;
+      end;
     end
     else
       FLineList[i].FontColor := clBlue;
@@ -969,6 +999,7 @@ begin
   TablePreprocessing;//表格预处理
 
   //根据控件宽度进行自动换行处理
+  hls:=0;
   for i := 0 to FLines.Count-1 do
   begin
     s := FLines[i];
@@ -979,6 +1010,13 @@ begin
       s:=TextPreprocessing(i,s,textstyle);
       Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
       w:=Buffer.Canvas.TextWidth(ReplaceCharacters(s));
+      if FLineList[i].DispType='URL' then
+      begin
+        FHyperLink[hls].URL:= FLineList[i].url;
+        FHyperLink[hls].URLStr:= FLineList[i].URLStr;
+        //FHyperLink[hls].hs:=i;//所在行数
+        inc(hls);
+      end;
       if w>Width then //换行
       begin
          s1:='';
@@ -990,14 +1028,14 @@ begin
            if Buffer.Canvas.TextWidth(ReplaceCharacters(s1)+Deleteidentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
            begin
              if Deleteidentification(j,s,rj)=''then
-               s1:=s1+utf8copy(s,j+1,rj);//3);
+               s1:=s1+utf8copy(s,j+1,rj);
              Linetemp.Add(textstyle+s1);
              s1:='';
            end;
            if Deleteidentification(j,s,rj)='' then
            begin
-             s1:=s1+utf8copy(s,j+1,rj);//3);
-             j:=j+rj+1;//4;
+             s1:=s1+utf8copy(s,j+1,rj);
+             j:=j+rj+1;
            end
            else
              inc(j);
@@ -1027,10 +1065,12 @@ begin
       Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
       FLineList[i].LineHeight:=Buffer.Canvas.TextHeight(s)+FLineSpacing;
 
-      if FLineList[i].DispType='URL' then
+      //if FLineList[i].DispType='URL' then
+      if utf8pos('<HLK>',FLineList[i].str.ToUpper)>0 then
       begin
-        FHyperLink[hls].URL:= FLineList[i].url;
+        //FHyperLink[hls].URL:= FLineList[i].url;
         FHyperLink[hls].hs:=i;//所在行数
+        FLineList[i].URL:=FHyperLink[hls].URL;
         inc(hls);
       end
       else
@@ -1114,6 +1154,7 @@ begin
               begin
                 GetfontStyle(str,MyCellType);
                 FTable[row,col].str:= MyCellType.str;
+                FTable[row,col].URL:= MyCellType.URL;
                 FTable[row,col].DispType:= MyCellType.DispType;
                 FTable[row,col].bookmarkstr:= MyCellType.bookmarkstr;
                 FTable[row,col].Align:=MyCellType.Align;
@@ -1294,9 +1335,9 @@ begin
   end;
 end;
 
-procedure TCustomText.DisplayText(Buffer: TBitmap;x,y:integer;str:string);
+procedure TCustomText.DisplayChar(Buffer: TBitmap;x,y:integer;str:string);
 var i:integer;
-  s1,newstr:string;
+  DStr:string;
   zwh,ywh,k:integer;
   oldFontSize,NewFontSize:integer;
   oldColor:TColor;
@@ -1319,8 +1360,8 @@ begin
   (pos('<$>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
-  (FindMark1(str,newstr)) or
-  (FindMark2(str,newstr)) or
+  (FindMark1(str,DStr)) or
+  (FindMark2(str,DStr)) or
   (pos('</>',str)>0)
   then
   begin
@@ -1336,15 +1377,15 @@ begin
     if NewFontSize=0 then NewFontSize:=5;
     while i<=utf8length(str) do
     begin
-      s1:=utf8copy(str,i,1);
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
+      DStr:=utf8copy(str,i,1);
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
         and (utf8copy(str,i+3,1).ToUpper='K') and (utf8copy(str,i+4,1)='>') then
       begin
          i:=i+5;
          Buffer.Canvas.font.Color:=clBlue;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='H')
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='H')
         and (utf8copy(str,i+3,1).ToUpper='L') and (utf8copy(str,i+4,1).ToUpper='K')
         and (utf8copy(str,i+5,1)='>') then
       begin
@@ -1352,7 +1393,7 @@ begin
          Buffer.Canvas.font.Color:=oldColor;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='B') and //书签目录
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='B') and //<BMxx>书签目录
          (utf8copy(str,i+2,1).ToUpper='M') then
       begin
         for k:=i+2 to length(str) do
@@ -1365,7 +1406,7 @@ begin
         end;
       end
       else
-      if (s1='[') and (utf8copy(str,i+1,1).ToUpper='B') and//书签
+      if (DStr='[') and (utf8copy(str,i+1,1).ToUpper='B') and//[BMxx]书签
          (utf8copy(str,i+2,1).ToUpper='M') then
       begin
         for k:=i+2 to length(str) do
@@ -1378,7 +1419,7 @@ begin
         end;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='P') and (utf8copy(str,i+4,1)='>') then
       begin
         Buffer.Canvas.font.Size:=NewFontSize;//上标
@@ -1386,7 +1427,7 @@ begin
         i:=i+5;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='S') and (utf8copy(str,i+2,1).ToUpper='U')
          and (utf8copy(str,i+3,1).ToUpper='B') and (utf8copy(str,i+4,1)='>') then
       begin
         Buffer.Canvas.font.Size:=NewFontSize;//下标
@@ -1394,7 +1435,7 @@ begin
         i:=i+5;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='P') and (utf8copy(str,i+5,1)='>') then
       begin
@@ -1403,7 +1444,7 @@ begin
         i:=i+6;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='/')  and (utf8copy(str,i+2,1).ToUpper='S')
          and (utf8copy(str,i+3,1).ToUpper='U')
          and (utf8copy(str,i+4,1).ToUpper='B') and (utf8copy(str,i+5,1)='>') then
       begin
@@ -1412,37 +1453,37 @@ begin
         i:=i+6;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
+      if (DStr='<') and (utf8copy(str,i+1,1)='$') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsItalic];//斜体
         i:=i+3;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
+      if (DStr='<') and (utf8copy(str,i+1,1)='!') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsUnderline];//下划线
         i:=i+3;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
+      if (DStr='<') and (utf8copy(str,i+1,1)='@') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsStrikeOut];//删除线
         i:=i+3;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
+      if (DStr='<') and (utf8copy(str,i+1,1)='#') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=[fsBold];//加粗
         i:=i+3;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
+      if (DStr='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1)='>') then
       begin
         Buffer.Canvas.font.Style:=oldStyles;//恢复原风格
         i:=i+3;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C') then
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='C') then
       begin
         if (utf8copy(str,i+2,1)='1') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clBlack;
         if (utf8copy(str,i+2,1)='2') and (utf8copy(str,i+3,1)='>') then Buffer.Canvas.font.Color:=clRed;
@@ -1452,7 +1493,7 @@ begin
         i:=i+4;
       end
       else
-      if (s1='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C') and (utf8copy(str,i+3,1)='>') then
+      if (DStr='<') and (utf8copy(str,i+1,1)='/') and (utf8copy(str,i+2,1).ToUpper='C') and (utf8copy(str,i+3,1)='>') then
       begin
         Buffer.Canvas.font.Color:=oldColor;
         i:=i+4;
@@ -1460,18 +1501,18 @@ begin
       else
       begin
         ywh:=0;
-        if s1<>'' then
+        if DStr<>'' then
         begin
-          if ord(s1[1])<127 then
+          if ord(DStr[1])<127 then
           begin
-            ywh:=Buffer.Canvas.TextHeight(s1);
+            ywh:=Buffer.Canvas.TextHeight(DStr);
             zwh:=Buffer.Canvas.TextHeight('国');
             if ywh<>zwh then ywh:=abs(zwh-ywh) div 2
             else ywh:=0;
           end;
         end;
-        Buffer.Canvas.TextOut(x, y+ywh, s1);//在linux中文和英文显示高度有差别
-        x:=x+Buffer.Canvas.TextWidth(s1);
+        Buffer.Canvas.TextOut(x, y+ywh, DStr);//在linux中文和英文显示高度有差别
+        x:=x+Buffer.Canvas.TextWidth(DStr);
         inc(i);
       end;
     end;
@@ -1482,12 +1523,12 @@ end;
 
 //将超过单元格宽度的字符串截断
 function TCustomText.TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
-var w1,rj,i:integer;
-    tmp:string;
+var w1,i,j:integer;
+    tmp,repstr:string;
 begin
    Result:=str;
    tmp:='';
-   rj:=0;
+   j:=0;
    w1:=Buffer.Canvas.TextWidth(ReplaceCharacters(str))+5;
    if w1>fbwidth then
    begin
@@ -1496,15 +1537,16 @@ begin
       while i<= utf8length(str) do
       begin
         tmp:=tmp+utf8copy(str,i,1);
-        if Buffer.Canvas.TextWidth(ReplaceCharacters(tmp)+Deleteidentification(i,str,rj))+5>fbwidth then //跳过特定符号
+        repstr:=Deleteidentification(i,str,j);
+        if Buffer.Canvas.TextWidth(ReplaceCharacters(tmp)+repstr)+5>fbwidth then //跳过特定符号
         begin
           Result:=tmp;
           Break;
         end;
-        if Deleteidentification(i,str,rj)='' then
+        if repstr='' then
         begin
-          tmp:=tmp+utf8copy(str,i+1,rj);
-          i:=i+rj+1;
+          tmp:=tmp+utf8copy(str,i+1,j);
+          i:=i+j+1;
         end
         else
           inc(i);
@@ -1513,11 +1555,11 @@ begin
 end;
 
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
-var i,j,w,h,row,col:integer;
-    k:integer;
+var
+  i,j,w,h,row,col:integer;
+  k:integer;
   x0,y0,x1,y1:integer;
   th:integer;//文字高度
-  //:TRect;
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
@@ -1575,21 +1617,21 @@ begin
           y0:=FOffset + y+FGapY+i*h+abs(h- th) div 2;//垂直居中
           Buffer.Canvas.Font.Style:=[fsBold];
           Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-          DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
+          DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
         end
         else
         if i>1 then //跳过第2行--第2行定义单元格的对齐格式
         begin
            y0:=FOffset + y+FGapY+(i-1)*h+abs(h- th) div 2;//垂直居中
-           DisplayText(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
+           DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
         end;
       end;
 
-      if FTable[i,j+1].DispType=4 then //URL
+      if FTable[i,j+1].DispType=4 then //确定URL在表格的位置
       begin
         for k:=0 to high(FHyperLink) do
         begin
-          if FHyperLink[k].url=FTable[i,j+1].str then
+          if FHyperLink[k].url=FTable[i,j+1].URL then// .str then
           begin
             FHyperLink[k].x1:=x1;
             FHyperLink[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
@@ -1645,7 +1687,7 @@ begin
         else
         begin
           //没找到图像文件
-          DisplayText(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
+          DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
         end;
       end;
     end;
@@ -1738,7 +1780,10 @@ begin
         x:=FGapX+(Buffer.Width - w) div 2;
       if FLineList[i].Align=3 then //行居右
         x:=(Buffer.Width - w)-FGapX;
-      DisplayText(Buffer,x, FOffset + y+FGapY, FLineList[i].str);
+
+      //在指定的位置显示字符串
+      DisplayChar(Buffer,x, FOffset + y+FGapY, FLineList[i].str);
+
       if FLineList[i].DispType='BOOKMARK1' then
       begin
         for k:=0 to high(FBookMark1) do
@@ -1767,20 +1812,20 @@ begin
         end;
       end
       else
-      if FLineList[i].DispType='URL' then
+      if FLineList[i].URL<>'' then
       begin
         for k:=0 to high(FHyperLink) do
         begin
-          if FHyperLink[k].hs=i then
+          if FHyperLink[k].URL=FLineList[i].URL then
           begin
-            if pos('<hlk>',FLineList[i].str)>0 then
+            if pos('<HLK>',FLineList[i].str.ToUpper)>0 then
             begin
               urlpos1:=utf8pos('<HLK>',FLineList[i].str.ToUpper);
               urlpos2:=utf8pos('</HLK>',FLineList[i].str.ToUpper);
               urlposStr:=utf8copy(FLineList[i].str,1,urlpos1-1);
               urlstr:=utf8copy(FLineList[i].str,urlpos1+5,urlpos2-urlpos1-5);
               FHyperLink[k].x1:=x+Buffer.Canvas.TextWidth(urlposStr);
-              FHyperLink[k].x2:=FHyperLink[k].x1+Buffer.Canvas.TextWidth(urlstr);// +Buffer.Canvas.TextWidth(FLineList[i].str);
+              FHyperLink[k].x2:=FHyperLink[k].x1+Buffer.Canvas.TextWidth(urlstr);
             end
             else
             begin
@@ -1802,7 +1847,8 @@ end;
 function TCustomText.ActiveLineIsURL: boolean;
 begin
   if (FActiveLine > 0) and (FActiveLine < Lineno) then
-    Result := (Pos('http://', FLineList[FActiveLine].str) >= 1) or (Pos('https://', FLineList[FActiveLine].str) >= 1)
+   //Result := (Pos('http://', FLineList[FActiveLine].str) >= 1) or (Pos('https://', FLineList[FActiveLine].str) >= 1)
+    Result := (Pos('http://', FLineList[FActiveLine].URL) >= 1) or (Pos('https://', FLineList[FActiveLine].URL) >= 1)
   else
     Result := False;
 end;
