@@ -19,7 +19,7 @@ object Form1: TForm1
       '[s5][c2]测试QF<C1>R</C><!>ich<#>V</>iew<C5>使用</C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
       '[s5][c2]测试QF<C1>RichView<C5><@>使用</></C>说明测试[c]'
       '[2line][c2]'
-      'https://zjj.szgcjc.cn/login'
+      '<hlk>(文心一言)https://yiyan.baidu.com/</hlk>'
       '<bm1>书签目录测试1'
       '<bm2>书签目录测试2'
       '<bm3>书签目录测试3'
