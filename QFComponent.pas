@@ -845,8 +845,11 @@ begin
       end;
     end
     else
-      FLineList[i].FontColor := clBlue;
+    begin
+      str:='<HLK>'+str+'</HLK>';
+    end;
 
+    FLineList[i].FontColor := clBlue;
     FLineList[i].url:=hlkstr;
     FLineList[i].DispType:='URL';
   end
@@ -2063,7 +2066,8 @@ begin
   begin
     for k:=0 to high(FHyperLink) do
     begin
-      if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) then
+      if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) and
+         (x>FHyperLink[k].x1) and (x<FHyperLink[k].x2) then
       begin
         FActiveLine := FHyperLink[k].hs;
         break;
