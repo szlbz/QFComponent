@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ComCtrls,
   StdCtrls, ExtCtrls, Tools,SetFontSize,SetFontColor,SetTable,SetImage,
-  StrUtils, Clipbrd, LazFileUtils, LCLIntf,ComponentEditors;
+  SetHyeperLink,
+  StrUtils, Clipbrd, LazFileUtils, LCLIntf,ComponentEditors,lazutf8;
 
 type
 
@@ -15,9 +16,10 @@ type
 
   //TQFRichEditorCE = class(TComponentEditor)
 
-  TQFRichEditor = class(TForm)//TComponent)
+  TQFRichEditor = class(TForm)//(TComponentEditorDesigner)//TComponent)
     Bevel1: TBevel;
     cmdHLine1: TToolButton;
+    cmdHyperlink: TToolButton;
     FindDialog1: TFindDialog;
     ImageList1: TImageList;
     MainMenu1: TMainMenu;
@@ -169,7 +171,6 @@ type
     procedure mnuSuperscriptClick(Sender: TObject);
     procedure mnuTableClick(Sender: TObject);
     procedure mnuUndoClick(Sender: TObject);
-    procedure mnuAboutClick(Sender: TObject);
     procedure mnuCutClick(Sender: TObject);
     procedure mnuExitClick(Sender: TObject);
     procedure mnuNewClick(Sender: TObject);
@@ -211,8 +212,8 @@ type
   const
     DefaultDateTimeFrmt = 'yyyy-mm-dd hh:mm:ss';
   public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
+    //constructor Create(AOwner: TComponent);
+    //destructor Destroy;
   end;
 
 var
@@ -228,22 +229,22 @@ implementation
 
 { TQFRichEditor }
 
-constructor TQFRichEditor.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
+//constructor TQFRichEditor.Create(AOwner: TComponent);
+//begin
+  //inherited Create(AOwner);
 
   //RichEdit:=TMemo.Create(AOwner);
   //AOwner:=Parent;
-   Parent :=TWinControl(aOwner);
+   //Parent :=TWinControl(aOwner);
 
-end;
+//end;
 
-destructor TQFRichEditor.Destroy;
-begin
+//destructor TQFRichEditor.Destroy;
+//begin
   //RichEdit.Free;
 
-  inherited Destroy;
-end;
+  //inherited Destroy;
+//end;
 
 procedure TQFRichEditor.FileReadIonlyMsg;
 begin
@@ -313,46 +314,53 @@ function SearchMemo(Memo: TMemo; const SearchString: string;
 var
   Buffer, P: PChar;
   Size: word;
-
+  str:string;
 begin
   Result := False;
   if Length(SearchString) = 0 then
     Exit;
 
-  Size := Memo.GetTextLen;
-
-  if (Size = 0) then
-    Exit;
-
-  Buffer := SysUtils.StrAlloc(Size + 1);
-
-  try
-    Memo.GetTextBuf(Buffer, Size + 1);
-
-    if frDown in Options then
-      P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength, SearchString, [soDown])
-    else
-      P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength, SearchString, []);
-
-    if (frMatchCase in Options) then
-      P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength,
-        SearchString, [soMatchCase]);
-
-    if (frWholeWord in Options) then
-
-      P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength,
-        SearchString, [soWholeWord]);
-
-    if P <> nil then
-    begin
-      Memo.SelStart := P - Buffer;
-      Memo.SelLength := Length(SearchString);
-      Result := True;
-    end;
-  finally
-    SysUtils.StrDispose(Buffer);
+  //Size := Memo.GetTextLen;
+  //
+  //if (Size = 0) then
+  //  Exit;
+  //
+  //Buffer := SysUtils.StrAlloc(Size + 1);
+  //
+  //try
+  //  Memo.GetTextBuf(Buffer, Size + 1);
+  //
+  //  if frDown in Options then
+  //    P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength, SearchString, [soDown])
+  //  else
+  //    P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength, SearchString, []);
+  //
+  //  if (frMatchCase in Options) then
+  //    P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength,
+  //      SearchString, [soMatchCase]);
+  //
+  //  if (frWholeWord in Options) then
+  //
+  //    P := SearchBuf(Buffer, Size, Memo.SelStart, Memo.SelLength,
+  //      SearchString, [soWholeWord]);
+  //
+  //  if P <> nil then
+  //  begin
+  //    //Memo.Lines.IndexOf(SearchString);
+  //    Memo.SelStart := P - Buffer;
+  //    Memo.SelLength := utf8Length(SearchString);
+  //    Result := True;
+  //  end;
+  //finally
+  //  SysUtils.StrDispose(Buffer);
+  //end;
+  str:=Memo.SelText;
+  if UTF8Pos(SearchString, Memo.Text)>0 then
+  begin
+    Memo.SelStart := UTF8Pos(SearchString, memo.Text)-1;
+    Memo.SelLength := utf8Length(SearchString);
+    Result := True;
   end;
-
   Memo.SetFocus;
 end;
 
@@ -944,21 +952,23 @@ begin
 end;
 
 procedure TQFRichEditor.mnuHyperlinkClick(Sender: TObject);
-//var
-  //frm: TfrmHyeperLink;
+var
+  frm: TfrmHyeperLink;
 begin
-  //frm := TfrmHyeperLink.Create(self);
+  frm := TfrmHyeperLink.Create(nil);
   Tools.ButtonPress := 0;
-  //frmHyeperLink.ShowModal;
+  frm.ShowModal;
 
   if Tools.ButtonPress = 1 then
   begin
-    RichEdit.SelText := '[' + Tools.LinkUrl + '](' + Tools.LinkUrl +
-      ' "' + Tools.LinkDesc + '")' + sLineBreak;
+    if trim(Tools.LinkDesc)<>'' then
+      RichEdit.SelText := '<hlk>(' + Tools.LinkDesc+')'+ Tools.LinkUrl + '</hlk>'
+    else
+      RichEdit.SelText := '<hlk>' + Tools.LinkUrl + '</hlk>';
   end;
 
   RichEdit.SetFocus;
-  //frm.Free;
+  frm.Free;
 end;
 
 procedure TQFRichEditor.mnuImageClick(Sender: TObject);
@@ -1136,15 +1146,6 @@ begin
   RichEdit.SetFocus;
 end;
 
-procedure TQFRichEditor.mnuAboutClick(Sender: TObject);
-//var
-  //frm: TfrmAbout;
-begin
-  //frm := TfrmAbout.Create(self);
-  //frm.ShowModal;
-  //frm.Free;
-end;
-
 procedure TQFRichEditor.mnuCutClick(Sender: TObject);
 begin
   RichEdit.CutToClipboard;
@@ -1242,6 +1243,7 @@ end;
 
 procedure TQFRichEditor.mnuSaveClick(Sender: TObject);
 begin
+  RichEdit.WordWrap:=false;
   if FileExists(m_OpenFile) then
   begin
     RichEdit.Lines.SaveToFile(m_OpenFile);
@@ -1251,7 +1253,7 @@ begin
   begin
     mnuSaveAsClick(Sender);
   end;
-
+  RichEdit.WordWrap:=mnuWordwrap.Checked;
   UpdateStatusBar;
 end;
 

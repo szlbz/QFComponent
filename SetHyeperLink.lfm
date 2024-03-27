@@ -1,0 +1,55 @@
+object frmHyeperLink: TfrmHyeperLink
+  Left = 723
+  Height = 273
+  Top = 449
+  Width = 534
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = '插入超链接'
+  ClientHeight = 273
+  ClientWidth = 534
+  DesignTimePPI = 144
+  Position = poMainFormCenter
+  object lblLinkDesc: TLabeledEdit
+    Left = 16
+    Height = 32
+    Top = 48
+    Width = 496
+    EditLabel.Height = 24
+    EditLabel.Width = 496
+    EditLabel.Caption = '网址描述:'
+    EditLabel.ParentColor = False
+    TabOrder = 1
+  end
+  object lblLinkUrl: TLabeledEdit
+    Left = 16
+    Height = 32
+    Top = 160
+    Width = 496
+    EditLabel.Height = 24
+    EditLabel.Width = 496
+    EditLabel.Caption = '网址:'
+    EditLabel.ParentColor = False
+    TabOrder = 2
+    Text = 'http://'
+  end
+  object cmdInsert: TButton
+    Left = 280
+    Height = 38
+    Top = 216
+    Width = 113
+    Caption = '插入'
+    Default = True
+    TabOrder = 0
+    OnClick = cmdInsertClick
+  end
+  object cmdClose: TButton
+    Left = 399
+    Height = 38
+    Top = 216
+    Width = 113
+    Caption = '关闭'
+    TabOrder = 3
+    OnClick = cmdCloseClick
+  end
+end

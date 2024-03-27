@@ -8,7 +8,8 @@ unit QFComponentPack;
 interface
 
 uses
-  QFComponent, LazarusPackageIntf;
+  QFComponent, QFRichEdit, setfontcolor, SetFontSize, SetImage, SetTable, 
+  Tools, LazarusPackageIntf;
 
 implementation
 

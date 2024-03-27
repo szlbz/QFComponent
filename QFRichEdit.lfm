@@ -1,24 +1,25 @@
 object QFRichEditor: TQFRichEditor
   Left = -11
-  Height = 1081
+  Height = 1305
   Top = -11
-  Width = 1236
+  Width = 1324
   AllowDropFiles = True
   Caption = 'QFRichEditor'
-  ClientHeight = 1077
-  ClientWidth = 1236
+  ClientHeight = 1305
+  ClientWidth = 1324
   DesignTimePPI = 144
   Menu = MainMenu1
   OnClose = FormClose
   OnCreate = FormCreate
   OnDropFiles = FormDropFiles
   Position = poScreenCenter
+  LCLVersion = '3.0.0.3'
   WindowState = wsMaximized
   object StatusBar1: TStatusBar
     Left = 0
     Height = 34
-    Top = 1043
-    Width = 1236
+    Top = 1267
+    Width = 1324
     Panels = <    
       item
         Width = 400
@@ -32,7 +33,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 36
     Top = 0
-    Width = 1236
+    Width = 1324
     Caption = 'ToolBar1'
     Images = ImageList1
     TabOrder = 1
@@ -68,7 +69,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton4: TToolButton
       Left = 106
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton4'
       Style = tbsDivider
@@ -85,7 +86,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton7: TToolButton
       Left = 146
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton7'
       Style = tbsDivider
@@ -102,7 +103,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton10: TToolButton
       Left = 186
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton10'
       Style = tbsDivider
@@ -139,7 +140,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton14: TToolButton
       Left = 331
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton14'
       Style = tbsDivider
@@ -166,7 +167,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton23: TToolButton
       Left = 597
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton23'
       Style = tbsDivider
@@ -213,7 +214,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton3: TToolButton
       Left = 406
-      Height = 33
+      Height = 8
       Top = 2
       Caption = 'ToolButton3'
       Style = tbsSeparator
@@ -229,7 +230,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton2: TToolButton
       Left = 449
-      Height = 33
+      Height = 8
       Top = 2
       Caption = 'ToolButton2'
       Style = tbsSeparator
@@ -244,12 +245,22 @@ object QFRichEditor: TQFRichEditor
       ParentShowHint = False
       ShowHint = True
     end
+    object cmdHyperlink: TToolButton
+      Left = 602
+      Hint = 'Hyperlink'
+      Top = 2
+      Caption = 'cmdHyperlink'
+      ImageIndex = 15
+      OnClick = cmdHyperlinkClick
+      ParentShowHint = False
+      ShowHint = True
+    end
   end
   object RichEdit: TMemo
     Left = 0
-    Height = 999
+    Height = 1223
     Top = 44
-    Width = 1236
+    Width = 1324
     Align = alClient
     Color = clWhite
     Font.CharSet = ANSI_CHARSET
@@ -271,7 +282,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 8
     Top = 36
-    Width = 1236
+    Width = 1324
     Align = alTop
     Shape = bsTopLine
   end
@@ -515,7 +526,6 @@ object QFRichEditor: TQFRichEditor
       Caption = '&Help'
       object mnuAbout: TMenuItem
         Caption = '&About'
-        OnClick = mnuAboutClick
       end
     end
   end
