@@ -100,4 +100,17 @@ object frmTable: TfrmTable
     Width = 155
     Caption = '表格第1行为标题行'
   end
+  object lblCells1: TLabeledEdit
+    Left = 208
+    Height = 32
+    Top = 208
+    Width = 304
+    EditLabel.Height = 24
+    EditLabel.Width = 304
+    EditLabel.Caption = '行高:'
+    EditLabel.ParentColor = False
+    TabOrder = 6
+    Text = '10'
+    OnChange = lblCellsChange
+  end
 end

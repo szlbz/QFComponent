@@ -18,6 +18,7 @@ type
     cboCellAlign: TComboBox;
     Label1: TLabel;
     Label2: TLabel;
+    lblCells1: TLabeledEdit;
     lblRows: TLabeledEdit;
     lblCells: TLabeledEdit;
     StringGrid1: TStringGrid;
@@ -134,7 +135,7 @@ begin
   end;
 
   //Store the table code.
-  Tools.TableCode := sLineBreak+sHeader + sRow + sLineBreak;
+  Tools.TableCode := sLineBreak+'<ROWH='+lblCells1.Text+'>'+sHeader + sRow + sLineBreak;
 
   sCells := '';
   sAlign := '';
