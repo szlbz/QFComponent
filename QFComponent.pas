@@ -2262,6 +2262,7 @@ var
   k:integer;
 begin
   inherited MouseMove(Shift, X, Y);
+
   if Assigned(FHyperLink) then   //URL
   begin
     for k:=0 to high(FHyperLink) do
@@ -2522,40 +2523,11 @@ begin
 end;
 
 procedure TQFRichView.PageFooter;
-var
-  oldTextHeigth:integer;
-  k:integer;
 begin
   Init(FBuffer);
-  FOffset:=-(FTextHeigth-FBuffer.Height);
-  oldTextHeigth:=FTextHeigth;
+  FOffset:=-(FTextHeigth-FBuffer.Height+70);
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
-  FTextHeigth:=oldTextHeigth;
-  if Assigned(FHyperLink) then
-  begin
-    for k:=0 to high(FHyperLink) do
-    begin
-      FHyperLink[k].y1:=FHyperLink[k].y1+FTextHeigth-FBuffer.Height;
-      FHyperLink[k].y2:=FHyperLink[k].y2+FTextHeigth-FBuffer.Height;
-    end;
-  end;
-  if Assigned(FBookMark1) then
-  begin
-    for k:=0 to high(FBookMark1) do
-    begin
-      FBookMark1[k].y1:=FBookMark1[k].y1+FTextHeigth-FBuffer.Height;
-      FBookMark1[k].y2:=FBookMark1[k].y2+FTextHeigth-FBuffer.Height;
-    end;
-  end;
-  if Assigned(FBookMark2) then
-  begin
-    for k:=0 to high(FBookMark2) do
-    begin
-      FBookMark2[k].y1:=FBookMark2[k].y1+FTextHeigth-FBuffer.Height;
-      FBookMark2[k].y2:=FBookMark2[k].y2+FTextHeigth-FBuffer.Height;
-    end;
-  end;
 end;
 
 initialization
