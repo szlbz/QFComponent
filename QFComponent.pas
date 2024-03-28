@@ -113,6 +113,7 @@ type
      hs2:integer;
      row:integer;
      col:integer;
+     Height:integer;
   end;
 
   THyperLink = record
@@ -141,7 +142,6 @@ type
     FRect:TRect;
     FMV:integer;
     FLineSpacing:integer;//行距
-    FTableRowHeigth:integer;//表格行高
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
     FisLeftButtonDown: Boolean; //鼠标左键按下标识
@@ -242,8 +242,8 @@ type
     destructor Destroy; override;
     procedure SavePicture(Files:string);
     procedure Print;
-    procedure PageHeader;
-    procedure PageFooter;
+    procedure PageHeader; //跳到页头
+    procedure PageFooter; //跳到页尾
   published
     property StepSize: integer read FStepSize write FStepSize;
   end;
@@ -886,6 +886,9 @@ var
   str:string;
   FBMSL1:integer;//书签数量
   FBMSL2:integer;
+  rh:integer;//行高
+  i1,i2,e:integer;
+  strsub:string;
 begin
   //解析是否包含表格
   //解析有几个表格
@@ -952,6 +955,13 @@ begin
   for i := 0 to FLines.Count-1 do
   begin
     str := Trim(FLines[i]);
+    i1:=utf8pos('<ROWH=',str.ToUpper);
+    if i1>0 then
+    begin
+      i2:=utf8pos('>',str.ToUpper);
+      strsub:=utf8copy(str,i1+6,i2-i1-6);
+      val(strsub,rh,e);
+    end;
     if pos('|',str)>0 then
     begin
       for j:=0 to utf8length(str) do
@@ -980,7 +990,9 @@ begin
         FTablesl[no].row:=row;//行数
         FTablesl[no].col:=col;//列数
         FTablesl[no].hs2:=i;//结束行数
+        FTablesl[no].Height:=rh;
         inc(no);
+        rh:=0;
         row:=0;
         col:=0;
         js:=0;
@@ -1565,13 +1577,16 @@ var
   i,j,w,h,row,col:integer;
   k:integer;
   x0,y0,x1,y1:integer;
+  TableRowHeigth:integer;
   th:integer;//文字高度
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
+  TableRowHeigth:=FTablesl[Index].Height;
   Buffer.Canvas.Font.Style:=[fsBold];
   th:= Buffer.Canvas.TextHeight('国');
   h:=round(th*1.5); //表格行高
+  if TableRowHeigth>h then h:=TableRowHeigth;
   w:=(Buffer.Width-FGapX*2) div col; //单元格宽
   Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
   for i:=0 to row-1 do  //画横线
