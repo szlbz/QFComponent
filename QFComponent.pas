@@ -2197,6 +2197,7 @@ end;
 procedure TQFRichView.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 var
   k,k1,oldy1,oldy2:integer;
+  oldTextHeigth:integer;
 begin
   if Button = mbLeft then
   begin
@@ -2217,11 +2218,13 @@ begin
           begin
             BackgroundRefresh(FBuffer);//刷新背景
             FOffset:=0;
+            oldTextHeigth:=FTextHeigth;
             oldy1:=FBookMark2[k].y1;
             oldy2:=FBookMark2[k].y2;
             DrawTexts(FBuffer,-FBookMark2[k].y1);
             Canvas.Draw(0,0,FBuffer);
             FOffset:=-oldy1;
+            FTextHeigth:=oldTextHeigth;
             for k1:=0 to high(FBookMark2) do
             begin
               FBookMark2[k1].y1:=-oldy1;
@@ -2525,8 +2528,9 @@ var
 begin
   Init(FBuffer);
   FOffset:=0;
+  FOffset:=-(FTextHeigth-FBuffer.Height);
   oldTextHeigth:=FTextHeigth;
-  DrawTexts(FBuffer,-(FTextHeigth-FBuffer.Height));
+  DrawTexts(FBuffer,0);//-(FTextHeigth-FBuffer.Height));
   Canvas.Draw(0,0,FBuffer);
   FTextHeigth:=oldTextHeigth;
   FOffset:=-(FTextHeigth-FBuffer.Height);
