@@ -141,6 +141,7 @@ type
     FRect:TRect;
     FMV:integer;
     FLineSpacing:integer;//行距
+    FTableRowHeigth:integer;//表格行高
     FTextHeigth:integer;
     //FQFRE:TQFRichEditor;
     FisLeftButtonDown: Boolean; //鼠标左键按下标识
@@ -241,6 +242,8 @@ type
     destructor Destroy; override;
     procedure SavePicture(Files:string);
     procedure Print;
+    procedure PageHeader;
+    procedure PageFooter;
   published
     property StepSize: integer read FStepSize write FStepSize;
   end;
@@ -1866,7 +1869,6 @@ end;
 
 procedure TCustomText.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
-var k,k1,oldy1,oldy2:integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
 
@@ -1874,41 +1876,6 @@ begin
   begin
     OpenURL(FLineList[FActiveLine].URL);
     FisLeftButtonDown := False;
-  end;
-  if FBMActiveStr<>'' then //跳转到指定书签的位置
-  begin
-      if Assigned(FBookMark2) then
-      begin
-        oldy1:=0;
-        oldy2:=0;
-        for k:=0 to high(FBookMark2) do
-        begin
-          if FBookMark2[k].BookMark=FBMActiveStr then
-          begin
-            BackgroundRefresh(FBuffer);//刷新背景
-            FOffset:=0;
-            oldy1:=FBookMark2[k].y1;
-            oldy2:=FBookMark2[k].y2;
-            DrawTexts(FBuffer,-FBookMark2[k].y1);
-            Canvas.Draw(0,0,FBuffer);
-            FOffset:=-oldy1;
-            for k1:=0 to high(FBookMark2) do
-            begin
-              FBookMark2[k1].y1:=-oldy1;
-              FBookMark2[k1].y2:=-oldy2;
-            end;
-            break;
-          end;
-        end;
-        if Assigned(FHyperLink) then
-        begin
-          for k:=0 to high(FHyperLink) do
-          begin
-            FHyperLink[k].y1:=FHyperLink[k].y1+oldy1;
-            FHyperLink[k].y2:=FHyperLink[k].y2+oldy1;
-          end;
-        end;
-      end;
   end;
 end;
 
@@ -2213,12 +2180,50 @@ begin
 end;
 
 procedure TQFRichView.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
+var
+  k,k1,oldy1,oldy2:integer;
 begin
   if Button = mbLeft then
   begin
     // 处理左键按下
     FisLeftButtonDown := True;
     FinitialY := Y;
+  end;
+
+  if FBMActiveStr<>'' then //跳转到指定书签的位置
+  begin
+      if Assigned(FBookMark2) then
+      begin
+        oldy1:=0;
+        oldy2:=0;
+        for k:=0 to high(FBookMark2) do
+        begin
+          if FBookMark2[k].BookMark=FBMActiveStr then
+          begin
+            BackgroundRefresh(FBuffer);//刷新背景
+            FOffset:=0;
+            oldy1:=FBookMark2[k].y1;
+            oldy2:=FBookMark2[k].y2;
+            DrawTexts(FBuffer,-FBookMark2[k].y1);
+            Canvas.Draw(0,0,FBuffer);
+            FOffset:=-oldy1;
+            for k1:=0 to high(FBookMark2) do
+            begin
+              FBookMark2[k1].y1:=-oldy1;
+              FBookMark2[k1].y2:=-oldy2;
+            end;
+            break;
+          end;
+        end;
+        if Assigned(FHyperLink) then
+        begin
+          for k:=0 to high(FHyperLink) do
+          begin
+            FHyperLink[k].y1:=FHyperLink[k].y1+oldy1;
+            FHyperLink[k].y2:=FHyperLink[k].y2+oldy1;
+          end;
+        end;
+      end;
   end;
 
   inherited MouseDown(Button, Shift, X, Y);
@@ -2488,6 +2493,52 @@ begin
 
   PrintBuffer.Free;
   FOffset:=oldFOffset;
+end;
+
+procedure TQFRichView.PageHeader;
+begin
+  Init(FBuffer);
+  FOffset:=0;
+  DrawTexts(FBuffer,FOffset);
+  Canvas.Draw(0,0,FBuffer)
+end;
+
+procedure TQFRichView.PageFooter;
+var
+  oldTextHeigth:integer;
+  k:integer;
+begin
+  Init(FBuffer);
+  FOffset:=0;
+  oldTextHeigth:=FTextHeigth;
+  DrawTexts(FBuffer,-(FTextHeigth-FBuffer.Height));
+  Canvas.Draw(0,0,FBuffer);
+  FTextHeigth:=oldTextHeigth;
+  FOffset:=-(FTextHeigth-FBuffer.Height);
+  if Assigned(FHyperLink) then
+  begin
+    for k:=0 to high(FHyperLink) do
+    begin
+      FHyperLink[k].y1:=FHyperLink[k].y1+FTextHeigth-FBuffer.Height;
+      FHyperLink[k].y2:=FHyperLink[k].y2+FTextHeigth-FBuffer.Height;
+    end;
+  end;
+  if Assigned(FBookMark1) then
+  begin
+    for k:=0 to high(FBookMark1) do
+    begin
+      FBookMark1[k].y1:=FBookMark1[k].y1+FTextHeigth-FBuffer.Height;
+      FBookMark1[k].y2:=FBookMark1[k].y2+FTextHeigth-FBuffer.Height;
+    end;
+  end;
+  if Assigned(FBookMark2) then
+  begin
+    for k:=0 to high(FBookMark2) do
+    begin
+      FBookMark2[k].y1:=FBookMark2[k].y1+FTextHeigth-FBuffer.Height;
+      FBookMark2[k].y2:=FBookMark2[k].y2+FTextHeigth-FBuffer.Height;
+    end;
+  end;
 end;
 
 initialization
