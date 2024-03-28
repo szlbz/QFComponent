@@ -2527,13 +2527,11 @@ var
   k:integer;
 begin
   Init(FBuffer);
-  FOffset:=0;
   FOffset:=-(FTextHeigth-FBuffer.Height);
   oldTextHeigth:=FTextHeigth;
-  DrawTexts(FBuffer,0);//-(FTextHeigth-FBuffer.Height));
+  DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
   FTextHeigth:=oldTextHeigth;
-  FOffset:=-(FTextHeigth-FBuffer.Height);
   if Assigned(FHyperLink) then
   begin
     for k:=0 to high(FHyperLink) do
