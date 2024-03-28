@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, DB, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  ColorBox, QFComponent;
+  ColorBox, ComCtrls, QFComponent;
 
 type
 
@@ -17,18 +17,29 @@ type
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
+    Button5: TButton;
+    Button6: TButton;
     CheckBox1: TCheckBox;
     ColorBox1: TColorBox;
     Label1: TLabel;
+    PageControl1: TPageControl;
+    Panel1: TPanel;
+    Panel2: TPanel;
     QFRichView1: TQFRichView;
     ScrollingText1: TQFScrollingText;
+    TabControl1: TTabControl;
+    TabSheet1: TTabSheet;
+    TabSheet2: TTabSheet;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
+    procedure Button5Click(Sender: TObject);
+    procedure Button6Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure TabControl1Change(Sender: TObject);
     //procedure UniQuery1nameGetText(Sender: TField; var aText: string;
     //  DisplayText: Boolean);
   private
@@ -50,9 +61,23 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin
   QFRichView1.BackImagefile:='bg.jpg';
   ScrollingText1.BackImagefile:='bg.jpg';
+  TabSheet2.Visible:=true;
   //UniConnection1.SpecificOptions.Values['SQL Server.Provider']:='prDirect';// .Add('SQL Server.Provider=prDirect');
   //UniConnection1.Connected:=true;
   //UniQuery1.Active:=true;
+end;
+
+procedure TForm1.TabControl1Change(Sender: TObject);
+begin
+  if TabControl1.TabIndex=0 then
+  begin
+    PageControl1.TabIndex:=0;
+  end
+  else if TabControl1.TabIndex=1 then
+  begin
+    PageControl1.TabIndex:=1;
+  end;
+
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
@@ -73,6 +98,16 @@ end;
 procedure TForm1.Button4Click(Sender: TObject);
 begin
   QFRichView1.Print;
+end;
+
+procedure TForm1.Button5Click(Sender: TObject);
+begin
+  QFRichView1.PageHeader;
+end;
+
+procedure TForm1.Button6Click(Sender: TObject);
+begin
+  QFRichView1.PageFooter;
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);

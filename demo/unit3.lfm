@@ -7,220 +7,294 @@ object Form1: TForm1
   ClientHeight = 766
   ClientWidth = 1106
   DesignTimePPI = 144
+  Font.Height = -18
   OnCreate = FormCreate
-  object QFRichView1: TQFRichView
-    Left = 8
-    Height = 444
-    Top = 360
-    Width = 1091
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    LineSpacing = 0
-    Lines.Strings = (
-      '[s5][c2]测试QF<C1>R</C><!>ich<#>V</>iew<C5>使用</C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
-      '[s5][c2]测试QF<C1>RichView<C5><@>使用</></C>说明测试[c]'
-      '[2line][c2]'
-      '<hlk>(文心一言)https://yiyan.baidu.com/</hlk>'
-      '<bm1>书签目录测试1'
-      '<bm2>书签目录测试2'
-      '<bm3>书签目录测试3'
-      '[s2]以下为<C2>markdown</C><sup>格式</sup>的表格：'
-      '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
-      '|:-:|:-|-:|:-:|:-|'
-      '|秋风1|[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-      '|秋风2|检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
-      '|[c2]秋风3|检测中心3|南山建工村3|383233647|[img]3.png|'
-      '|秋风4|检测中心4|南山建工村4|483233646|<hlk>(盒子论坛)http://bbs.2ccc.com/</hlk>|'
-      '|秋风5|检测中心5|南山建工村5|583233645||'
-      '|姓名|[#][C2]单位|办公地址|'
-      '|:-:|:-:|:-:|'
-      '|秋风6|[bm4]检测中心1|南山建工村1|'
-      '|秋风7|检测中心2|[#][c4]南山建工村2|'
-      '|[c2]秋风8|检测中心3|南山建工村3|'
-      '|秋风9|检测中心4|南山建工村4|'
-      '|秋风10|检测中心5|南山建工村5|'
-      '<hlk>(博客园)http://www.cnblogs.com/</hlk>'
-      '以下<sub>是</sub>显<sup>示</sup>图片：'
-      '[img]demo.bmp'
-      '[!]下划线'
-      '[@]删除线'
-      '[#]粗体'
-      '[$]斜体'
-      '[L]行居左'
-      '[C]行居中'
-      '[R]行居右'
-      '[C1]黑色'
-      '[C2]红色'
-      '[C3]黄色'
-      '[C4]绿色'
-      '[C5]蓝色'
-      '[S1]字体尺寸9'
-      '[S2]字体尺寸12'
-      '[S3]字体尺寸14'
-      '[S4]字体尺寸16'
-      '[S5]字体尺寸18'
-      '[IMG]--BMP图像'
-      '[s1]'
-      '[bm1]'
-      '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
-      '|:-:|:-|-:|:-:|:-|'
-      '|秋风6|检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-      '|秋风7|检测中心2|[#][c4]南山建工村2|283233648||'
-      '|[c2]秋风8|检测中心3|南山建工村3|383233647||'
-      '|秋风9|检测中心4|南山建工村4|483233646||'
-      '|秋风10|检测中心5|南山建工村5|583233645||'
-      ''
-      '[bm2]以下是范例：'
-      '[line][c4]'
-      '[!][C2][S3]QFRichView下划线'
-      '[@][C5][S5]删除线[R]'
-      '[img]2.bmp'
-      '[S3][#][C4]粗体'
-      '[img]3.png'
-      '    因为同样是<hlk>(盒子论坛关于本控件的贴子)https://bbs.2ccc.com/topic.asp?topicid=691009</hlk><C3>酷睿i5</C>系列，所以Intel酷睿<C2>i5 14490F和酷睿i5 14400(F)</C>一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz'
-      '[$][S4]斜体[bm3]'
-      '<hlk>(秋风的博客)http://www.cnblogs.com/qiufeng2014/</hlk>'
-      '[C2]    因为同样是酷睿i5系列，所以Intel酷睿i5 14490F和酷睿i5 14400(F)一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz，性能核全核频率高出了300MHz，'
+  object PageControl1: TPageControl
+    Left = 0
+    Height = 734
+    Top = 32
+    Width = 1106
+    ActivePage = TabSheet1
+    Align = alClient
+    ShowTabs = False
+    Style = tsButtons
+    TabIndex = 0
+    TabOrder = 0
+    object TabSheet1: TTabSheet
+      Caption = 'QFRichView Demo'
+      ClientHeight = 726
+      ClientWidth = 1098
+      object Panel1: TPanel
+        Left = 0
+        Height = 75
+        Top = 0
+        Width = 1098
+        Align = alTop
+        ClientHeight = 75
+        ClientWidth = 1098
+        TabOrder = 0
+        object Button1: TButton
+          Left = 8
+          Height = 38
+          Top = 13
+          Width = 152
+          Caption = '编辑QFRich'
+          TabOrder = 0
+          OnClick = Button1Click
+        end
+        object Button2: TButton
+          Left = 176
+          Height = 38
+          Top = 13
+          Width = 176
+          Caption = '打开QFRich文件'
+          TabOrder = 1
+          OnClick = Button2Click
+        end
+        object Button3: TButton
+          Left = 361
+          Height = 38
+          Top = 13
+          Width = 113
+          Caption = '导出图片'
+          TabOrder = 2
+          OnClick = Button3Click
+        end
+        object Button4: TButton
+          Left = 484
+          Height = 38
+          Top = 13
+          Width = 85
+          Caption = '打印'
+          TabOrder = 3
+          OnClick = Button4Click
+        end
+        object ColorBox1: TColorBox
+          Left = 887
+          Height = 26
+          Top = 18
+          Width = 206
+          ItemHeight = 20
+          OnChange = ColorBox1Change
+          TabOrder = 4
+        end
+        object Label1: TLabel
+          Left = 777
+          Height = 24
+          Top = 20
+          Width = 108
+          BorderSpacing.Right = 2
+          Caption = '设置背景颜色'
+        end
+        object Button5: TButton
+          Left = 577
+          Height = 38
+          Top = 13
+          Width = 89
+          Caption = '页首'
+          TabOrder = 5
+          OnClick = Button5Click
+        end
+        object Button6: TButton
+          Left = 673
+          Height = 38
+          Top = 13
+          Width = 89
+          Caption = '页尾'
+          TabOrder = 6
+          OnClick = Button6Click
+        end
+      end
+      object QFRichView1: TQFRichView
+        Left = 0
+        Height = 651
+        Top = 75
+        Width = 1098
+        Align = alClient
+        LineSpacing = 0
+        Lines.Strings = (
+          '[s5][c2]测试QF<C1>R</C><!>ich<#>V</>iew<C5>使用</C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+          '[s5][c2]测试QF<C1>RichView<C5><@>使用</></C>说明测试[c]'
+          '[2line][c2]'
+          '<hlk>(文心一言)https://yiyan.baidu.com/</hlk>'
+          '<bm1>书签目录测试1'
+          '<bm2>书签目录测试2'
+          '<bm3>书签目录测试3'
+          '[s2]以下为<C2>markdown</C><sup>格式</sup>的表格：'
+          '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
+          '|:-:|:-|-:|:-:|:-|'
+          '|秋风1|[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
+          '|秋风2|检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
+          '|[c2]秋风3|检测中心3|南山建工村3|383233647|[img]3.png|'
+          '|秋风4|检测中心4|南山建工村4|483233646|<hlk>(盒子论坛)http://bbs.2ccc.com/</hlk>|'
+          '|秋风5|检测中心5|南山建工村5|583233645||'
+          '|姓名|[#][C2]单位|办公地址|'
+          '|:-:|:-:|:-:|'
+          '|秋风6|[bm4]检测中心1|南山建工村1|'
+          '|秋风7|检测中心2|[#][c4]南山建工村2|'
+          '|[c2]秋风8|检测中心3|南山建工村3|'
+          '|秋风9|检测中心4|南山建工村4|'
+          '|秋风10|检测中心5|南山建工村5|'
+          '<hlk>(博客园)http://www.cnblogs.com/</hlk>'
+          '以下<sub>是</sub>显<sup>示</sup>图片：'
+          '[img]demo.bmp'
+          '[!]下划线'
+          '[@]删除线'
+          '[#]粗体'
+          '[$]斜体'
+          '[L]行居左'
+          '[C]行居中'
+          '[R]行居右'
+          '[C1]黑色'
+          '[C2]红色'
+          '[C3]黄色'
+          '[C4]绿色'
+          '[C5]蓝色'
+          '[S1]字体尺寸9'
+          '[S2]字体尺寸12'
+          '[S3]字体尺寸14'
+          '[S4]字体尺寸16'
+          '[S5]字体尺寸18'
+          '[IMG]--BMP图像'
+          '[s1]'
+          '[bm1]'
+          '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
+          '|:-:|:-|-:|:-:|:-|'
+          '|秋风6|检测中心1|南山建工村1|183233649|2030年13月33日入职|'
+          '|秋风7|检测中心2|[#][c4]南山建工村2|283233648||'
+          '|[c2]秋风8|检测中心3|南山建工村3|383233647||'
+          '|秋风9|检测中心4|南山建工村4|483233646||'
+          '|秋风10|检测中心5|南山建工村5|583233645||'
+          ''
+          '[bm2]以下是范例：'
+          '[line][c4]'
+          '[!][C2][S3]QFRichView下划线'
+          '[@][C5][S5]删除线[R]'
+          '[img]2.bmp'
+          '[S3][#][C4]粗体'
+          '[img]3.png'
+          '    因为同样是<hlk>(盒子论坛关于本控件的贴子)https://bbs.2ccc.com/topic.asp?topicid=691009</hlk><C3>酷睿i5</C>系列，所以Intel酷睿<C2>i5 14490F和酷睿i5 14400(F)</C>一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz'
+          '[$][S4]斜体[bm3]'
+          '<hlk>(秋风的博客)http://www.cnblogs.com/qiufeng2014/</hlk>'
+          '[C2]    因为同样是酷睿i5系列，所以Intel酷睿i5 14490F和酷睿i5 14400(F)一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz，性能核全核频率高出了300MHz，'
+        )
+        GapX = 10
+        GapY = 0
+        Color = clCream
+        BackImageFile = 'bj.jpg'
+        StepSize = 15
+      end
+    end
+    object TabSheet2: TTabSheet
+      Caption = 'QFScrollingText Demo'
+      ClientHeight = 726
+      ClientWidth = 1098
+      object ScrollingText1: TQFScrollingText
+        Left = 0
+        Height = 651
+        Top = 75
+        Width = 1098
+        Align = alClient
+        Anchors = [akTop, akLeft, akRight]
+        LineSpacing = 0
+        Lines.Strings = (
+          '[s5][c2]QFScrollingText<C5>使用</C><C4>说</C>明[c]'
+          '[2line][c2]'
+          '[s2]以下为markdown<sup>格式</sup>的表格：'
+          '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
+          '|:-:|:-|-:|:-:|:-|'
+          '|秋风1|[$][c2]检测中心1|南山建工村1|183233649|2030年13月33日入职|'
+          '|秋风2|检测中心2|[#][c4]南山建工村2|283233648||'
+          '|[c2]秋风3|检测中心3|南山建工村3|383233647||'
+          '|秋风4|检测中心4|南山建工村4|483233646||'
+          '|秋风5|检测中心5|南山建工村5|583233645||'
+          '|姓名|[#][C2]单位|办公地址|'
+          '|:-:|:-:|:-:|'
+          '|秋风6|检测中心1|南山建工村1|'
+          '|秋风7|检测中心2|[#][c4]南山建工村2|'
+          '|[c2]秋风8|检测中心3|南山建工村3|'
+          '|秋风9|检测中心4|南山建工村4|'
+          '|秋风10|检测中心5|南山建工村5|'
+          'http://www.cnblogs.com'
+          '以下是显示图片：'
+          '[img]demo.bmp'
+          '[!]下划线'
+          '[@]删除线'
+          '[#]粗体'
+          '[$]斜体'
+          '[L]行居左'
+          '[C]行居中'
+          '[R]行居右'
+          '[C1]黑色'
+          '[C2]红色'
+          '[C3]黄色'
+          '[C4]绿色'
+          '[C5]蓝色'
+          '[S1]字体尺寸9'
+          '[S2]字体尺寸12'
+          '[S3]字体尺寸14'
+          '[S4]字体尺寸16'
+          '[S5]字体尺寸18'
+          '[IMG]--BMP图像'
+          '[s1]'
+          '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
+          '|:-:|:-|-:|:-:|:-|'
+          '|秋风6|检测中心1|南山建工村1|183233649|2030年13月33日入职|'
+          '|秋风7|检测中心2|[#][c4]南山建工村2|283233648||'
+          '|[c2]秋风8|检测中心3|南山建工村3|383233647||'
+          '|秋风9|检测中心4|南山建工村4|483233646||'
+          '|秋风10|检测中心5|南山建工村5|583233645||'
+          ''
+          '以下是范例：'
+          '[line][c4]'
+          '[!][C2][S3]QFScrollingText下划线'
+          '[@][C5][S5]删除线[R]'
+          '[img]2.bmp'
+          '[S3][#][C4]粗体'
+          '[img]3.png'
+          '因为同样是酷睿i5系列，所以Intel酷睿i5 14490F和酷睿i5 14400(F)一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz'
+          '[$][S4]斜体'
+          'http://www.cnblogs.com/qiufeng2014/'
+          '[C2]    因为同样是酷睿i5系列，所以Intel酷睿i5 14490F和酷睿i5 14400(F)一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz，性能核全核频率高出了300MHz，'
+        )
+        GapX = 10
+        GapY = 0
+        Color = clCream
+        Active = False
+      end
+      object Panel2: TPanel
+        Left = 0
+        Height = 75
+        Top = 0
+        Width = 1098
+        Align = alTop
+        ClientHeight = 75
+        ClientWidth = 1098
+        TabOrder = 1
+        object CheckBox1: TCheckBox
+          Left = 48
+          Height = 28
+          Top = 16
+          Width = 97
+          Caption = '滚动文字'
+          TabOrder = 0
+          OnClick = CheckBox1Click
+        end
+      end
+    end
+  end
+  object TabControl1: TTabControl
+    Left = 0
+    Height = 32
+    Top = 0
+    Width = 1106
+    OnChange = TabControl1Change
+    TabIndex = 0
+    Tabs.Strings = (
+      'QFRichView Demo'
+      'QFScrollingText Demo'
     )
-    GapX = 10
-    GapY = 0
-    Color = clCream
-    BackImageFile = 'bj.jpg'
-    StepSize = 15
-  end
-  object ScrollingText1: TQFScrollingText
-    AnchorSideTop.Side = asrCenter
-    Left = 8
-    Height = 298
-    Top = 8
-    Width = 1091
-    Anchors = [akTop, akLeft, akRight]
-    LineSpacing = 0
-    Lines.Strings = (
-      '[s5][c2]QFScrollingText<C5>使用</C><C4>说</C>明[c]'
-      '[2line][c2]'
-      '[s2]以下为markdown<sup>格式</sup>的表格：'
-      '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
-      '|:-:|:-|-:|:-:|:-|'
-      '|秋风1|[$][c2]检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-      '|秋风2|检测中心2|[#][c4]南山建工村2|283233648||'
-      '|[c2]秋风3|检测中心3|南山建工村3|383233647||'
-      '|秋风4|检测中心4|南山建工村4|483233646||'
-      '|秋风5|检测中心5|南山建工村5|583233645||'
-      '|姓名|[#][C2]单位|办公地址|'
-      '|:-:|:-:|:-:|'
-      '|秋风6|检测中心1|南山建工村1|'
-      '|秋风7|检测中心2|[#][c4]南山建工村2|'
-      '|[c2]秋风8|检测中心3|南山建工村3|'
-      '|秋风9|检测中心4|南山建工村4|'
-      '|秋风10|检测中心5|南山建工村5|'
-      'http://www.cnblogs.com'
-      '以下是显示图片：'
-      '[img]demo.bmp'
-      '[!]下划线'
-      '[@]删除线'
-      '[#]粗体'
-      '[$]斜体'
-      '[L]行居左'
-      '[C]行居中'
-      '[R]行居右'
-      '[C1]黑色'
-      '[C2]红色'
-      '[C3]黄色'
-      '[C4]绿色'
-      '[C5]蓝色'
-      '[S1]字体尺寸9'
-      '[S2]字体尺寸12'
-      '[S3]字体尺寸14'
-      '[S4]字体尺寸16'
-      '[S5]字体尺寸18'
-      '[IMG]--BMP图像'
-      '[s1]'
-      '|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
-      '|:-:|:-|-:|:-:|:-|'
-      '|秋风6|检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-      '|秋风7|检测中心2|[#][c4]南山建工村2|283233648||'
-      '|[c2]秋风8|检测中心3|南山建工村3|383233647||'
-      '|秋风9|检测中心4|南山建工村4|483233646||'
-      '|秋风10|检测中心5|南山建工村5|583233645||'
-      ''
-      '以下是范例：'
-      '[line][c4]'
-      '[!][C2][S3]QFScrollingText下划线'
-      '[@][C5][S5]删除线[R]'
-      '[img]2.bmp'
-      '[S3][#][C4]粗体'
-      '[img]3.png'
-      '因为同样是酷睿i5系列，所以Intel酷睿i5 14490F和酷睿i5 14400(F)一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz'
-      '[$][S4]斜体'
-      'http://www.cnblogs.com/qiufeng2014/'
-      '[C2]    因为同样是酷睿i5系列，所以Intel酷睿i5 14490F和酷睿i5 14400(F)一样也是采用了6个性能核加4个能效核的设计，共计10核心16线程。性能核的基础频率为2.5GHz，最大睿频为4.9GHz。能效核基础频率为2.1GHz，最大睿频则为2.8GHz。全核频率方面，酷睿i5 14490F的性能核达到了4.4GHz，能效核则为3.7GHz。相比酷睿i5 14400(F)来看的话酷睿i5 14490F在性能核最大睿频频率上高出了200MHz，性能核全核频率高出了300MHz，'
-    )
-    GapX = 10
-    GapY = 0
-    Color = clCream
-    Active = False
-  end
-  object Button1: TButton
-    Left = 8
-    Height = 38
-    Top = 314
-    Width = 152
-    Caption = '编辑QFRich'
-    TabOrder = 2
-    OnClick = Button1Click
-  end
-  object Button2: TButton
-    Left = 176
-    Height = 38
-    Top = 314
-    Width = 176
-    Caption = '打开QFRich文件'
-    TabOrder = 3
-    OnClick = Button2Click
-  end
-  object Button3: TButton
-    Left = 368
-    Height = 38
-    Top = 314
-    Width = 113
-    Caption = '导出图片'
-    TabOrder = 4
-    OnClick = Button3Click
-  end
-  object CheckBox1: TCheckBox
-    Left = 635
-    Height = 28
-    Top = 319
-    Width = 97
-    Caption = '滚动文字'
-    TabOrder = 5
-    OnClick = CheckBox1Click
-  end
-  object ColorBox1: TColorBox
-    Left = 887
-    Height = 26
-    Top = 314
-    Width = 206
-    ItemHeight = 20
-    OnChange = ColorBox1Change
-    TabOrder = 6
-  end
-  object Label1: TLabel
-    AnchorSideRight.Control = ColorBox1
-    Left = 777
-    Height = 24
-    Top = 314
-    Width = 108
-    BorderSpacing.Right = 2
-    Caption = '设置背景颜色'
-  end
-  object Button4: TButton
-    Left = 491
-    Height = 38
-    Top = 314
-    Width = 113
-    Caption = '打印'
-    TabOrder = 7
-    OnClick = Button4Click
+    Align = alTop
+    TabOrder = 1
   end
 end
