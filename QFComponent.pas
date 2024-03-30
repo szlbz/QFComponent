@@ -81,6 +81,7 @@ type
 
   TLineType = record
      str:string;
+     FontName:string[30];
      FontColor:TColor;
      FontStyle:integer;
      FontSize:integer;
@@ -285,7 +286,9 @@ var s1:string;
   hlkstr:string;
   url:string;
   urldisptext:string;
-  hlk,i:integer;
+  hlk,i,j:integer;
+  FontPos1,FontPos2:integer;
+  tmp1:string;
 begin
   CellType.bookmarkstr:='';
   CellType.DispType:=0;
@@ -389,6 +392,22 @@ begin
     s1:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
     CellType.bookmarkstr:=s1;
   end;
+  if utf8pos('<FONT=',s.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<FONT=',s.ToUpper);
+    FontPos2:=utf8pos('>',s.ToUpper);
+    tmp1:=utf8copy(s,FontPos1+6,FontPos2-FontPos1-6);
+    CellType.FontName:=tmp1;
+    s1:=copy(s,pos('[BM',s.ToUpper),(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)));
+    tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+    s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    CellType.str:=s;
+  end;
+  if pos('</FONT>',s.ToUpper)>0 then
+  begin
+    s:=s.Replace('</FONT>','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    CellType.str:=s;
+  end;
   if (pos('<HLK>',s.ToUpper)>0) and (pos('</HLK>',s.ToUpper)>0) then
   begin
     hlkstr:=s;
@@ -415,7 +434,8 @@ end;
 
 function TCustomText.ReplaceCharacters(str:string):string; //删除所有特殊符号
 var
-  i,hlk:integer;
+  i,j,hlk:integer;
+  FontPos1,FontPos2:integer;
   hlkstr,tmp1,tmp2,tmp3:string;
 begin
   Result:=str;
@@ -432,10 +452,28 @@ begin
   Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<HLK>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</HLK>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</FONT>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUB>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
+  if utf8pos('<FONT=',Result.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<FONT=',Result.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(Result) do
+    begin
+      if utf8copy(Result,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
+        Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<FONT=',Result.ToUpper);
+        //Break;
+      end;
+      inc(i);
+    end;
+  end;
   if Assigned(FBookMark1) then
   begin
     for i:=0 to High(FBookMark1) do
@@ -490,6 +528,7 @@ var
   s1,newstr:string;
   oldFontSize,NewFontSize:integer;
   oldStyles:TFontStyles;
+  FontPos1,FontPos2:integer;
 begin
   x:=0;
   if (pos('<C1>',str.ToUpper)>0) or
@@ -503,6 +542,8 @@ begin
   (pos('<SUB>',str.ToUpper)>0) or
   (pos('</SUP>',str.ToUpper)>0) or
   (pos('</SUB>',str.ToUpper)>0) or
+  (pos('<FONT=',str.ToUpper)>0) or
+  (pos('</FONT>',str.ToUpper)>0) or
   (pos('</C>',str.ToUpper)>0) or
   (pos('<$>',str)>0) or
   (pos('<!>',str)>0) or
@@ -521,6 +562,7 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
+
       if Assigned(FBookMark1) then   //书签1
       begin
         for j:=0 to High(FBookMark1) do
@@ -544,6 +586,29 @@ begin
         end;
       end;
 
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='F') and (utf8copy(str,i+2,1).ToUpper='O')
+         and (utf8copy(str,i+3,1).ToUpper='N') and (utf8copy(str,i+4,1).ToUpper='T')
+         and (utf8copy(str,i+5,1).ToUpper='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='F')
+         and (utf8copy(str,i+3,1).ToUpper='O') and (utf8copy(str,i+4,1).ToUpper='N')
+         and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1).ToUpper='>') then
+      begin
+        i:=i+7;
+      end
+      else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
          and (utf8copy(str,i+3,1).ToUpper='K') and (utf8copy(str,i+4,1)='>') then
       begin
@@ -1178,6 +1243,7 @@ begin
                 FTable[row,col].Align:=MyCellType.Align;
                 FTable[row,col].Color:=MyCellType.Color;
                 FTable[row,col].FontStyle:=MyCellType.FontStyle;
+                FTable[row,col].FontName:=MyCellType.FontName;
               end;
             end;
           end;
@@ -1199,9 +1265,35 @@ end;
 //删除标识(表格文字)
 function TCustomText.Deleteidentification(i:integer;str:string;out j:integer):string;
 var k:integer;
+  FontPos1,FontPos2:integer;
+  tmp1:string;
 begin
   Result:=utf8copy(str,i,1);
   j:=0;
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='/') and
+    (utf8copy(str,i+2,1).ToUpper='F') and
+    (utf8copy(str,i+3,1).ToUpper='O') and
+    (utf8copy(str,i+4,1).ToUpper='N') and
+    (utf8copy(str,i+5,1).ToUpper='T') and
+    (utf8copy(str,i+6,1).ToUpper='>') then
+  begin
+    Result:='';
+    j:=7;
+  end
+  else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='F') and
+    (utf8copy(str,i+2,1).ToUpper='O') and
+    (utf8copy(str,i+3,1).ToUpper='N') and
+    (utf8copy(str,i+4,1).ToUpper='T') and
+    (utf8copy(str,i+5,1).ToUpper='=') then
+  begin
+    FontPos1:=utf8pos('<FONT=',str.ToUpper);
+    FontPos2:=utf8pos('>',str.ToUpper);
+    tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
+    Result:='';
+    j:=(FontPos2-FontPos1)+1;
+  end
+  else
   if (Result='<') and (utf8copy(str,i+1,1).ToUpper='B') and
      (utf8copy(str,i+2,1).ToUpper='M') then
   begin
@@ -1354,14 +1446,18 @@ begin
 end;
 
 procedure TCustomText.DisplayChar(Buffer: TBitmap;x,y:integer;str:string);
-var i:integer;
+var i,j:integer;
   DStr:string;
   zwh,ywh,k:integer;
   oldFontSize,NewFontSize:integer;
   oldColor:TColor;
   oldStyles:TFontStyles;
   oldy,supy,suby:integer;
+  DefaultFontName,NewFontName:string;
+  FontPos1,FontPos2:integer;
+  FH1,FH2:integer;
 begin
+  DefaultFontName:=Buffer.Canvas.Font.Name;
   if (pos('<C1>',str.ToUpper)>0) or
   (pos('<C2>',str.ToUpper)>0) or
   (pos('<C3>',str.ToUpper)>0) or
@@ -1378,6 +1474,8 @@ begin
   (pos('<$>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
+  (pos('</FONT>',str.ToUpper)>0) or
+  (pos('<FONT=',str.ToUpper)>0) or
   (FindMark1(str,DStr)) or
   (FindMark2(str,DStr)) or
   (pos('</>',str)>0)
@@ -1396,6 +1494,36 @@ begin
     while i<=utf8length(str) do
     begin
       DStr:=utf8copy(str,i,1);
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='F')
+      and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='N')
+      and (utf8copy(str,i+4,1).ToUpper='T') and (utf8copy(str,i+5,1)='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+        NewFontName:=utf8copy(str,FontPos1+6,FontPos2-FontPos1-6);
+        FH1:=Buffer.Canvas.GetTextHeight(NewFontName);
+        Buffer.Canvas.font.Name:=NewFontName;
+        FH2:=Buffer.Canvas.GetTextHeight(NewFontName);
+        y:=y+abs(FH2-FH1) div 2;//修正字体不同时的高度差
+      end
+      else
+      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='F')
+       and (utf8copy(str,i+3,1).ToUpper='O') and (utf8copy(str,i+4,1).ToUpper='N')
+       and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1)='>') then
+      begin
+        i:=i+7;
+        Buffer.Canvas.font.Name:=DefaultFontName;
+        y:=y-abs(FH2-FH1) div 2;//恢复原来的显示位置
+    end
+      else
       if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
         and (utf8copy(str,i+3,1).ToUpper='K') and (utf8copy(str,i+4,1)='>') then
       begin
