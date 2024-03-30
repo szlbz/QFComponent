@@ -469,7 +469,8 @@ begin
         tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
         Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
         FontPos1:=utf8pos('<FONT=',Result.ToUpper);
-        //Break;
+        if FontPos1=0 then
+          Break;
       end;
       inc(i);
     end;
@@ -1287,9 +1288,15 @@ begin
     (utf8copy(str,i+4,1).ToUpper='T') and
     (utf8copy(str,i+5,1).ToUpper='=') then
   begin
-    FontPos1:=utf8pos('<FONT=',str.ToUpper);
-    FontPos2:=utf8pos('>',str.ToUpper);
-    tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
+    FontPos1:=i;
+    for k:=i to utf8length(str) do
+    begin
+      if utf8copy(str,k,1)='>' then
+      begin
+        FontPos2:=k;
+        break;
+      end;
+    end;
     Result:='';
     j:=(FontPos2-FontPos1)+1;
   end
