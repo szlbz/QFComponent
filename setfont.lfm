@@ -1,0 +1,18 @@
+object SetFontFrm: TSetFontFrm
+  Left = 404
+  Height = 307
+  Top = 36
+  Width = 291
+  BorderStyle = bsDialog
+  Caption = '选择字体'
+  DesignTimePPI = 144
+  OnCreate = FormCreate
+  OnShow = FormShow
+  Position = poScreenCenter
+  object FontDialog1: TFontDialog
+    MinFontSize = 0
+    MaxFontSize = 0
+    Left = 168
+    Top = 128
+  end
+end

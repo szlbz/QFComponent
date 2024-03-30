@@ -1,12 +1,12 @@
 object QFRichEditor: TQFRichEditor
   Left = -11
-  Height = 1305
+  Height = 1417
   Top = -11
-  Width = 1324
+  Width = 1368
   AllowDropFiles = True
   Caption = 'QFRichEditor'
-  ClientHeight = 1305
-  ClientWidth = 1324
+  ClientHeight = 1417
+  ClientWidth = 1368
   DesignTimePPI = 144
   Menu = MainMenu1
   OnClose = FormClose
@@ -18,8 +18,8 @@ object QFRichEditor: TQFRichEditor
   object StatusBar1: TStatusBar
     Left = 0
     Height = 34
-    Top = 1267
-    Width = 1324
+    Top = 1376
+    Width = 1368
     Panels = <    
       item
         Width = 400
@@ -33,7 +33,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 36
     Top = 0
-    Width = 1324
+    Width = 1368
     Caption = 'ToolBar1'
     Images = ImageList1
     TabOrder = 1
@@ -102,14 +102,14 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object ToolButton10: TToolButton
-      Left = 186
+      Left = 221
       Height = 5
       Top = 2
       Caption = 'ToolButton10'
       Style = tbsDivider
     end
     object cmdBold: TToolButton
-      Left = 191
+      Left = 226
       Hint = '粗体'
       Top = 2
       Caption = 'cmdBold'
@@ -119,7 +119,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdItalic: TToolButton
-      Left = 226
+      Left = 261
       Hint = '斜体'
       Top = 2
       Caption = 'cmdItalic'
@@ -129,7 +129,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdStrike: TToolButton
-      Left = 261
+      Left = 296
       Hint = '删除线'
       Top = 2
       Caption = 'cmdStrike'
@@ -139,14 +139,14 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object ToolButton14: TToolButton
-      Left = 331
+      Left = 366
       Height = 5
       Top = 2
       Caption = 'ToolButton14'
       Style = tbsDivider
     end
     object cmdTable: TToolButton
-      Left = 414
+      Left = 449
       Hint = '表格'
       Top = 2
       Caption = 'cmdTable'
@@ -156,7 +156,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdImg: TToolButton
-      Left = 457
+      Left = 492
       Hint = '图像'
       Top = 2
       Caption = 'cmdImg'
@@ -166,14 +166,14 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object ToolButton23: TToolButton
-      Left = 597
+      Left = 632
       Height = 5
       Top = 2
       Caption = 'ToolButton23'
       Style = tbsDivider
     end
     object cmdHLine: TToolButton
-      Left = 492
+      Left = 527
       Hint = '分割线'
       Top = 2
       Caption = 'cmdHLine'
@@ -183,7 +183,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdDateTime: TToolButton
-      Left = 562
+      Left = 597
       Hint = 'Date & Time'
       Top = 2
       Caption = 'cmdDateTime'
@@ -193,7 +193,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdSubscript: TToolButton
-      Left = 371
+      Left = 406
       Hint = '下标'
       Top = 2
       Caption = 'cmdSubscript'
@@ -203,7 +203,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdSuperscript: TToolButton
-      Left = 336
+      Left = 371
       Hint = '上标'
       Top = 2
       Caption = 'cmdSuperscript'
@@ -213,14 +213,14 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object ToolButton3: TToolButton
-      Left = 406
+      Left = 441
       Height = 8
       Top = 2
       Caption = 'ToolButton3'
       Style = tbsSeparator
     end
     object cmdMark: TToolButton
-      Left = 296
+      Left = 331
       Hint = '文字颜色'
       Top = 2
       ImageIndex = 24
@@ -229,14 +229,14 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object ToolButton2: TToolButton
-      Left = 449
+      Left = 484
       Height = 8
       Top = 2
       Caption = 'ToolButton2'
       Style = tbsSeparator
     end
     object cmdHLine1: TToolButton
-      Left = 527
+      Left = 562
       Hint = '双分割线'
       Top = 2
       Caption = 'cmdHLine1'
@@ -246,7 +246,7 @@ object QFRichEditor: TQFRichEditor
       ShowHint = True
     end
     object cmdHyperlink: TToolButton
-      Left = 602
+      Left = 637
       Hint = 'Hyperlink'
       Top = 2
       Caption = 'cmdHyperlink'
@@ -255,12 +255,22 @@ object QFRichEditor: TQFRichEditor
       ParentShowHint = False
       ShowHint = True
     end
+    object cmdH2: TToolButton
+      Left = 186
+      Hint = '字号'
+      Top = 2
+      Caption = 'cmdH2'
+      ImageIndex = 5
+      OnClick = cmdH2Click
+      ParentShowHint = False
+      ShowHint = True
+    end
   end
   object RichEdit: TMemo
     Left = 0
-    Height = 1223
+    Height = 1332
     Top = 44
-    Width = 1324
+    Width = 1368
     Align = alClient
     Color = clWhite
     Font.CharSet = ANSI_CHARSET
@@ -282,7 +292,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 8
     Top = 36
-    Width = 1324
+    Width = 1368
     Align = alTop
     Shape = bsTopLine
   end

@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ComCtrls,
   StdCtrls, ExtCtrls, Tools,SetFontSize,SetFontColor,SetTable,SetImage,
-  SetHyeperLink,
+  SetHyeperLink,SetFont,
   StrUtils, Clipbrd, LazFileUtils, LCLIntf,ComponentEditors,lazutf8;
 
 type
@@ -18,6 +18,7 @@ type
 
   TQFRichEditor = class(TForm)//(TComponentEditorDesigner)//TComponent)
     Bevel1: TBevel;
+    cmdH2: TToolButton;
     cmdHLine1: TToolButton;
     cmdHyperlink: TToolButton;
     FindDialog1: TFindDialog;
@@ -921,8 +922,19 @@ begin
 end;
 
 procedure TQFRichEditor.mnuH2Click(Sender: TObject);
+var sfz:TSetFontFrm;
 begin
-  MDHeader(2);
+  tools.ButtonPress := 0;
+  sfz:=TSetFontFrm.Create(nil);
+  sfz.ShowModal;
+
+  if tools.ButtonPress = 1 then
+  begin
+    if tools.FontName<>'' then
+      RichEdit.SelText :='<Font='+tools.FontName+'>'+RichEdit.SelText+'</Font>';
+  end;
+  sfz.Free;
+  RichEdit.SetFocus;
 end;
 
 procedure TQFRichEditor.mnuH3Click(Sender: TObject);
