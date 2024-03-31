@@ -170,6 +170,7 @@ type
     FGapX:integer;
     FGapY:integer;
     FColor:TColor;
+    FDefaultFontName:string;
     procedure Init(Buffer:TBitmap);
     function ActiveLineIsURL: boolean;
     function TextPreprocessing(i:integer;str:string;out textstyle:string):string; //文字类预处理
@@ -183,11 +184,11 @@ type
     function GetStringTextWidth(Buffer: TBitmap;str:string):integer;
     procedure DisplayChar(Buffer: TBitmap;x,y:integer;str:string); //显示字符
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
+    function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;//字符串长度超过规定时截断
     function SkipIdentification(i:integer;str:string;out j:integer):string;//跳过标识
-    function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
     function ReplaceCharacters(str:string):string; //删除所有特殊符号
     procedure GetTableInfo(no:integer);
-    procedure GetFontStyle(s:string;out CellType:TCellType);
+    procedure GetTableFontStyle(s:string;out CellType:TCellType);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
   protected
     procedure DoOnChangeBounds; override;
@@ -281,7 +282,7 @@ begin
   Canvas.Draw(0,0,FBuffer)
 end;
 
-procedure TCustomText.GetFontStyle(s:string;out CellType:TCellType);
+procedure TCustomText.GetTableFontStyle(s:string;out CellType:TCellType);
 var s1:string;
   hlkstr:string;
   url:string;
@@ -1237,7 +1238,7 @@ begin
             begin
               if row<=FTablesl[no].row-1 then
               begin
-                GetfontStyle(str,MyCellType);
+                GetTableFontStyle(str,MyCellType);
                 FTable[row,col].str:= MyCellType.str;
                 FTable[row,col].URL:= MyCellType.URL;
                 FTable[row,col].DispType:= MyCellType.DispType;
@@ -1460,11 +1461,10 @@ var i,j:integer;
   oldColor:TColor;
   oldStyles:TFontStyles;
   oldy,supy,suby:integer;
-  DefaultFontName,NewFontName:string;
+  NewFontName:string;
   FontPos1,FontPos2:integer;
   FH1,FH2:integer;
 begin
-  DefaultFontName:=Buffer.Canvas.Font.Name;
   if (pos('<C1>',str.ToUpper)>0) or
   (pos('<C2>',str.ToUpper)>0) or
   (pos('<C3>',str.ToUpper)>0) or
@@ -1501,6 +1501,8 @@ begin
     while i<=utf8length(str) do
     begin
       DStr:=utf8copy(str,i,1);
+      FH1:=0;
+      FH2:=0;
       if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='F')
       and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='N')
       and (utf8copy(str,i+4,1).ToUpper='T') and (utf8copy(str,i+5,1)='=') then
@@ -1517,7 +1519,7 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
         NewFontName:=utf8copy(str,FontPos1+6,FontPos2-FontPos1-6);
         FH1:=Buffer.Canvas.GetTextHeight(NewFontName);
-        Buffer.Canvas.font.Name:=NewFontName;
+        Buffer.Canvas.font.Name:=NewFontName;//设为新字体
         FH2:=Buffer.Canvas.GetTextHeight(NewFontName);
         y:=y+abs(FH2-FH1) div 2;//修正字体不同时的高度差
       end
@@ -1527,7 +1529,7 @@ begin
        and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1)='>') then
       begin
         i:=i+7;
-        Buffer.Canvas.font.Name:=DefaultFontName;
+        Buffer.Canvas.font.Name:=FDefaultFontName;//恢复默认字体
         y:=y-abs(FH2-FH1) div 2;//恢复原来的显示位置
     end
       else
@@ -2054,6 +2056,7 @@ begin
   FGapX:=0;
   FGapY:=0;
   FOldFontSize:=FBuffer.Canvas.Font.Size;
+  FDefaultFontName:=FBuffer.Canvas.Font.Name;
   FColor:=clWhite;
 end;
 
