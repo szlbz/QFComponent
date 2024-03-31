@@ -183,7 +183,7 @@ type
     function GetStringTextWidth(Buffer: TBitmap;str:string):integer;
     procedure DisplayChar(Buffer: TBitmap;x,y:integer;str:string); //显示字符
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
-    function Deleteidentification(i:integer;str:string;out j:integer):string;//删除标识
+    function SkipIdentification(i:integer;str:string;out j:integer):string;//跳过标识
     function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;
     function ReplaceCharacters(str:string):string; //删除所有特殊符号
     procedure GetTableInfo(no:integer);
@@ -586,7 +586,7 @@ begin
           end;
         end;
       end;
-
+      //<Font=xx>
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='F') and (utf8copy(str,i+2,1).ToUpper='O')
          and (utf8copy(str,i+3,1).ToUpper='N') and (utf8copy(str,i+4,1).ToUpper='T')
          and (utf8copy(str,i+5,1).ToUpper='=') then
@@ -603,6 +603,7 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
+      //</Font>
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='F')
          and (utf8copy(str,i+3,1).ToUpper='O') and (utf8copy(str,i+4,1).ToUpper='N')
          and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1).ToUpper='>') then
@@ -1109,14 +1110,14 @@ begin
          while j<= utf8length(s) do
          begin
            s1:=s1+utf8copy(s,j,1);
-           if Buffer.Canvas.TextWidth(ReplaceCharacters(s1)+Deleteidentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
+           if Buffer.Canvas.TextWidth(ReplaceCharacters(s1)+SkipIdentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
            begin
-             if Deleteidentification(j,s,rj)=''then
+             if SkipIdentification(j,s,rj)=''then
                s1:=s1+utf8copy(s,j+1,rj);
              Linetemp.Add(textstyle+s1);
              s1:='';
            end;
-           if Deleteidentification(j,s,rj)='' then
+           if SkipIdentification(j,s,rj)='' then
            begin
              s1:=s1+utf8copy(s,j+1,rj);
              j:=j+rj+1;
@@ -1263,11 +1264,10 @@ begin
   end;
 end;
 
-//删除标识(表格文字)
-function TCustomText.Deleteidentification(i:integer;str:string;out j:integer):string;
+//跳过标识(表格文字)
+function TCustomText.SkipIdentification(i:integer;str:string;out j:integer):string;
 var k:integer;
   FontPos1,FontPos2:integer;
-  tmp1:string;
 begin
   Result:=utf8copy(str,i,1);
   j:=0;
@@ -1690,7 +1690,7 @@ begin
       while i<= utf8length(str) do
       begin
         tmp:=tmp+utf8copy(str,i,1);
-        repstr:=Deleteidentification(i,str,j);
+        repstr:=SkipIdentification(i,str,j);
         if Buffer.Canvas.TextWidth(ReplaceCharacters(tmp)+repstr)+5>fbwidth then //跳过特定符号
         begin
           Result:=tmp;
