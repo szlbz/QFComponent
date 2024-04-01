@@ -104,17 +104,17 @@ type
      Align:byte;
      Width:integer;
      Height:integer;
-     ColSpan:integer;
-     RowSpan:integer;
+     ColSpan:integer; //从当前单元格向右合并n个单元格
+     RowSpan:integer; //从当单元格向下合并n个单元格
      DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2
   end;
 
   TTableSL = record
-     hs1:integer;
-     hs2:integer;
-     row:integer;
-     col:integer;
-     Height:integer;
+     hs1:integer;//表格开始行
+     hs2:integer;//表格结束行
+     row:integer;//表格的行数
+     col:integer;//表格的列数
+     RowHeight:integer;//表格行高
   end;
 
   THyperLink = record
@@ -188,7 +188,7 @@ type
     function SkipIdentification(i:integer;str:string;out j:integer):string;//跳过标识
     function ReplaceCharacters(str:string):string; //删除所有特殊符号
     procedure GetTableInfo(no:integer);
-    procedure GetTableFontStyle(s:string;out CellType:TCellType);
+    procedure GetCellInfo(s:string;out CellType:TCellType);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
   protected
     procedure DoOnChangeBounds; override;
@@ -282,12 +282,12 @@ begin
   Canvas.Draw(0,0,FBuffer)
 end;
 
-procedure TCustomText.GetTableFontStyle(s:string;out CellType:TCellType);
+procedure TCustomText.GetCellInfo(s:string;out CellType:TCellType);
 var s1:string;
   hlkstr:string;
   url:string;
   urldisptext:string;
-  hlk,i,j:integer;
+  hlk,i,j,tmp,e:integer;
   FontPos1,FontPos2:integer;
   tmp1:string;
 begin
@@ -295,6 +295,8 @@ begin
   CellType.DispType:=0;
   CellType.FontStyle:=0;
   CellType.Color:=clBlack;
+  CellType.ColSpan:=0;
+  CellType.RowSpan:=0;
   CellType.str:=s;
   if pos('[L]',s.ToUpper)>0 then
   begin
@@ -393,6 +395,30 @@ begin
     s1:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
     CellType.bookmarkstr:=s1;
   end;
+  if utf8pos('<COLSPAN=',s.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<COLSPAN=',s.ToUpper);
+    FontPos2:=utf8pos('>',s.ToUpper);
+    tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+    val(tmp1,tmp,e);
+    CellType.ColSpan:=tmp;
+    s1:=copy(s,pos('<COLSPAN',s.ToUpper),(pos('>',s.ToUpper)-pos('<COLSPAN',s.ToUpper)));
+    tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+    s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    CellType.str:=s;
+  end;
+  if utf8pos('<ROWSPAN=',s.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
+    FontPos2:=utf8pos('>',s.ToUpper);
+    tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+    val(tmp1,tmp,e);
+    CellType.RowSpan:=tmp;
+    s1:=copy(s,pos('<ROWSPAN',s.ToUpper),(pos('>',s.ToUpper)-pos('<ROWSPAN',s.ToUpper)));
+    tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+    s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    CellType.str:=s;
+  end;
   if utf8pos('<FONT=',s.ToUpper)>0 then
   begin
     FontPos1:=utf8pos('<FONT=',s.ToUpper);
@@ -470,6 +496,42 @@ begin
         tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
         Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
         FontPos1:=utf8pos('<FONT=',Result.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+  end;
+  if utf8pos('<COLSPAN=',Result.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<COLSPAN=',Result.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(Result) do
+    begin
+      if utf8copy(Result,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
+        Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<COLSPAN=',Result.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+  end;
+  if utf8pos('<ROWSPAN=',Result.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<ROWSPAN=',Result.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(Result) do
+    begin
+      if utf8copy(Result,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
+        Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<ROWSPAN=',Result.ToUpper);
         if FontPos1=0 then
           Break;
       end;
@@ -1023,7 +1085,7 @@ begin
   for i := 0 to FLines.Count-1 do
   begin
     str := Trim(FLines[i]);
-    i1:=utf8pos('<ROWH=',str.ToUpper);
+    i1:=utf8pos('<ROWH=',str.ToUpper);//读取表格行高
     if i1>0 then
     begin
       i2:=utf8pos('>',str.ToUpper);
@@ -1058,7 +1120,7 @@ begin
         FTablesl[no].row:=row;//行数
         FTablesl[no].col:=col;//列数
         FTablesl[no].hs2:=i;//结束行数
-        FTablesl[no].Height:=rh;
+        FTablesl[no].RowHeight:=rh;
         inc(no);
         rh:=0;
         row:=0;
@@ -1238,7 +1300,7 @@ begin
             begin
               if row<=FTablesl[no].row-1 then
               begin
-                GetTableFontStyle(str,MyCellType);
+                GetCellInfo(str,MyCellType);
                 FTable[row,col].str:= MyCellType.str;
                 FTable[row,col].URL:= MyCellType.URL;
                 FTable[row,col].DispType:= MyCellType.DispType;
@@ -1247,6 +1309,8 @@ begin
                 FTable[row,col].Color:=MyCellType.Color;
                 FTable[row,col].FontStyle:=MyCellType.FontStyle;
                 FTable[row,col].FontName:=MyCellType.FontName;
+                FTable[row,col].ColSpan:=MyCellType.ColSpan;
+                FTable[row,col].RowSpan:=MyCellType.RowSpan;
               end;
             end;
           end;
@@ -1288,6 +1352,50 @@ begin
     (utf8copy(str,i+3,1).ToUpper='N') and
     (utf8copy(str,i+4,1).ToUpper='T') and
     (utf8copy(str,i+5,1).ToUpper='=') then
+  begin
+    FontPos1:=i;
+    for k:=i to utf8length(str) do
+    begin
+      if utf8copy(str,k,1)='>' then
+      begin
+        FontPos2:=k;
+        break;
+      end;
+    end;
+    Result:='';
+    j:=(FontPos2-FontPos1)+1;
+  end
+  else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='C') and
+    (utf8copy(str,i+2,1).ToUpper='O') and
+    (utf8copy(str,i+3,1).ToUpper='L') and
+    (utf8copy(str,i+4,1).ToUpper='S') and
+    (utf8copy(str,i+5,1).ToUpper='P') and
+    (utf8copy(str,i+6,1).ToUpper='A') and
+    (utf8copy(str,i+7,1).ToUpper='N') and
+    (utf8copy(str,i+8,1).ToUpper='=') then
+  begin
+    FontPos1:=i;
+    for k:=i to utf8length(str) do
+    begin
+      if utf8copy(str,k,1)='>' then
+      begin
+        FontPos2:=k;
+        break;
+      end;
+    end;
+    Result:='';
+    j:=(FontPos2-FontPos1)+1;
+  end
+  else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='R') and
+    (utf8copy(str,i+2,1).ToUpper='O') and
+    (utf8copy(str,i+3,1).ToUpper='W') and
+    (utf8copy(str,i+4,1).ToUpper='S') and
+    (utf8copy(str,i+5,1).ToUpper='P') and
+    (utf8copy(str,i+6,1).ToUpper='A') and
+    (utf8copy(str,i+7,1).ToUpper='N') and
+    (utf8copy(str,i+8,1).ToUpper='=') then
   begin
     FontPos1:=i;
     for k:=i to utf8length(str) do
@@ -1715,17 +1823,21 @@ var
   k:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
+  DrawC,c:integer;
+  DrawR:integer;
   th:integer;//文字高度
 begin
   row:=FTablesl[Index].row;
   col:=FTablesl[Index].col-1;
-  TableRowHeigth:=FTablesl[Index].Height;
+  TableRowHeigth:=FTablesl[Index].RowHeight;
   Buffer.Canvas.Font.Style:=[fsBold];
   th:= Buffer.Canvas.TextHeight('国');
   h:=round(th*1.5); //表格行高
   if TableRowHeigth>h then h:=TableRowHeigth;
   w:=(Buffer.Width-FGapX*2) div col; //单元格宽
   Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
+ {
+  //开始画表格
   for i:=0 to row-1 do  //画横线
   begin
     Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3+i*h,Buffer.Width-FGapX,FOffset + y+FGapY+3+i*h);
@@ -1744,6 +1856,44 @@ begin
       x0,
       y1);
   end;
+  //结束画表格
+}
+  //画横线
+  y0:=FOffset + y+FGapY+3;
+  x0:=FGapX;
+  for j:=0 to col-1 do
+  begin
+    DrawC:=0;
+    for i:=0 to row-1 do
+    begin
+      if FTable[i,j+1].RoWSpan>0 then
+      begin
+         DrawC:=FTable[i,j+1].ColSpan+1; //竖向合并单元格
+      end;
+      if (Drawc=0) or (i=row-1) then
+        Buffer.Canvas.Line(x0+j*w,y0+i*h,x0+j*w+w,y0+i*h);
+    end;
+  end;
+
+  //画竖线
+  y0:=FOffset + y+FGapY+3;
+  x0:=FGapX;
+  for i:=0 to row-2 do//row
+  begin
+    DrawC:=0;
+    c:=0;
+    for j:=0 to col do
+    begin
+      if FTable[i+1,j].ColSpan>0 then    //横向合并单元格
+      begin
+        c:=j;
+        DrawC:=FTable[i+1,j].ColSpan; //row,col
+      end;
+      if (Drawc=0) or (j=(c+Drawc-1)) or (j=col) then
+        Buffer.Canvas.Line(x0+j*w,y0+i*h,x0+j*w,y0+i*h+h);
+    end;
+  end;
+
   for i:=0 to row-1 do  //绘表格文字
   begin
     for j:=0 to col-1 do
