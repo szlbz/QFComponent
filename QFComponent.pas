@@ -107,6 +107,7 @@ type
      ColSpan:integer; //从当前单元格向右合并n个单元格
      RowSpan:integer; //从当单元格向下合并n个单元格
      DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2
+     Visible:Boolean;//
   end;
 
   TTableSL = record
@@ -298,6 +299,7 @@ begin
   CellType.ColSpan:=0;
   CellType.RowSpan:=0;
   CellType.str:=s;
+  CellType.Visible:=true;
   if pos('[L]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
@@ -608,6 +610,8 @@ begin
   (pos('</SUB>',str.ToUpper)>0) or
   (pos('<FONT=',str.ToUpper)>0) or
   (pos('</FONT>',str.ToUpper)>0) or
+  (pos('<COLSPAN=',str.ToUpper)>0) or
+  (pos('<ROWSPAN=',str.ToUpper)>0) or
   (pos('</C>',str.ToUpper)>0) or
   (pos('<$>',str)>0) or
   (pos('<!>',str)>0) or
@@ -649,6 +653,42 @@ begin
           end;
         end;
       end;
+      //ColSpan
+      if (s1='C') and (utf8copy(str,i+1,1).ToUpper='O') and (utf8copy(str,i+2,1).ToUpper='L')
+         and (utf8copy(str,i+3,1).ToUpper='S') and (utf8copy(str,i+4,1).ToUpper='P')
+         and (utf8copy(str,i+5,1).ToUpper='A') and (utf8copy(str,i+6,1).ToUpper='N')
+         and (utf8copy(str,i+7,1).ToUpper='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      //RowSpan
+      if (s1='R') and (utf8copy(str,i+1,1).ToUpper='O') and (utf8copy(str,i+2,1).ToUpper='W')
+         and (utf8copy(str,i+3,1).ToUpper='S') and (utf8copy(str,i+4,1).ToUpper='P')
+         and (utf8copy(str,i+5,1).ToUpper='A') and (utf8copy(str,i+6,1).ToUpper='N')
+         and (utf8copy(str,i+7,1).ToUpper='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
       //<Font=xx>
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='F') and (utf8copy(str,i+2,1).ToUpper='O')
          and (utf8copy(str,i+3,1).ToUpper='N') and (utf8copy(str,i+4,1).ToUpper='T')
@@ -1267,6 +1307,7 @@ begin
 |秋风2|检测中心2|南山建工村2|283233640|
 |秋风3|检测中心3|南山建工村3|383233640|
 }
+  FTable:=nil;
   setlength(FTable,FTablesl[no].row,FTablesl[no].col);
   js:=0;
   col:=0;
@@ -1311,6 +1352,7 @@ begin
                 FTable[row,col].FontName:=MyCellType.FontName;
                 FTable[row,col].ColSpan:=MyCellType.ColSpan;
                 FTable[row,col].RowSpan:=MyCellType.RowSpan;
+                FTable[row,col].Visible:=MyCellType.Visible;
               end;
             end;
           end;
@@ -1819,12 +1861,11 @@ end;
 
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var
-  i,j,w,h,row,col:integer;
+  i,j,w,w1,h,h1,row,col,v:integer;
   k:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
-  DrawC,c:integer;
-  DrawR:integer;
+  Span,c:integer;
   th:integer;//文字高度
 begin
   row:=FTablesl[Index].row;
@@ -1858,20 +1899,30 @@ begin
   end;
   //结束画表格
 }
+  //2024.04.01初步实现单元格合并
   //画横线
   y0:=FOffset + y+FGapY+3;
   x0:=FGapX;
   for j:=0 to col-1 do
   begin
-    DrawC:=0;
+    Span:=0;
+    c:=0;
     for i:=0 to row-1 do
     begin
-      if FTable[i,j+1].RoWSpan>0 then
+      if FTable[i,j+1].RoWSpan>0 then //竖向合并单元格
       begin
-         DrawC:=FTable[i,j+1].ColSpan+1; //竖向合并单元格
+        c:=i;
+        Span:=FTable[i,j+1].RowSpan;//row,col
+        FTable[i,j+1].Height:=h*Span;
+        for v:=I+1 to span+i-1 do
+          FTable[v,j+1].Visible:=false;
       end;
-      if (Drawc=0) or (i=row-1) then
+      if (Span=0) or (i=c+Span-1) then
+      begin
+        FTable[v,j+1].Height:=0;
         Buffer.Canvas.Line(x0+j*w,y0+i*h,x0+j*w+w,y0+i*h);
+        Span:=0;
+      end;
     end;
   end;
 
@@ -1880,17 +1931,24 @@ begin
   x0:=FGapX;
   for i:=0 to row-2 do//row
   begin
-    DrawC:=0;
+    Span:=0;
     c:=0;
     for j:=0 to col do
     begin
       if FTable[i+1,j].ColSpan>0 then    //横向合并单元格
       begin
         c:=j;
-        DrawC:=FTable[i+1,j].ColSpan; //row,col
+        Span:=FTable[i+1,j].ColSpan; //row,col
+        FTable[i+1,j].Width:=Span*w;
+        for v:=j+1 to span+j-1 do
+          FTable[i+1,v].Visible:=false;
       end;
-      if (Drawc=0) or (j=(c+Drawc-1)) or (j=col) then
+      if (Span=0) or (j=c+Span-1) or (j=col) then
+      begin
+        FTable[i+1,j].Width:=0;
         Buffer.Canvas.Line(x0+j*w,y0+i*h,x0+j*w,y0+i*h+h);
+        Span:=0;
+      end;
     end;
   end;
 
@@ -1898,104 +1956,120 @@ begin
   begin
     for j:=0 to col-1 do
     begin
-      if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2)
-         or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
+      if FTable[i,j+1].Visible then
       begin
-        //设置字体属性
-        if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
-        if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
-        if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
-        if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
-        if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
-        if FTable[i,j+1].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
-        else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-        //设置字体属性
-
-        x0:=FGapX+j*w;
-        x1:=x0; //居左
-        if FTable[0,j+1].Align=1 then
-          x1:=x0 ;//居左
-       if FTable[0,j+1].Align=2 then
-          x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2; //居中
-        if FTable[0,j+1].Align=3 then
-           x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w)))-5; //居右
-        if i=0 then
+        if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2)
+           or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
         begin
-          x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
-          y0:=FOffset + y+FGapY+i*h+abs(h- th) div 2;//垂直居中
-          Buffer.Canvas.Font.Style:=[fsBold];
-          Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-          DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
+          //设置字体属性
+          if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
+          if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
+          if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
+          if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
+          if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
+          if FTable[i,j+1].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
+          else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+          //设置字体属性
+
+          x0:=FGapX+j*w;
+          h1:=h;
+          w1:=w;
+          if FTable[i,j+1].Width>0 then
+             w:=FTable[i,j+1].Width;
+
+          if FTable[i,j+1].Height>0 then
+             h:=FTable[i,j+1].Height;
+
+          x1:=x0; //居左
+          if FTable[0,j+1].Align=1 then
+            x1:=x0 ;//居左
+         if FTable[0,j+1].Align=2 then
+            x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2; //居中
+          if FTable[0,j+1].Align=3 then
+             x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w)))-5; //居右
+          if i=0 then
+          begin
+            x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
+            y0:=FOffset + y+FGapY+i*h+abs(h- th) div 2;//垂直居中
+            Buffer.Canvas.Font.Style:=[fsBold];
+            Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+            DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
+          end
+          else
+          if i>1 then //跳过第2行--第2行定义单元格的对齐格式
+          begin
+             if h1<>h then
+               y0:=FOffset + y + FGapY + (i-1)* h1 + abs (h-th) div 2//垂直居中
+             else
+               y0:=FOffset + y + FGapY + (i-1)* h1 + abs(h1- th) div 2;//垂直居中
+             DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
+          end;
+          w:=w1;
+          h:=h1;
+        end;
+
+        if FTable[i,j+1].DispType=4 then //确定URL在表格的位置
+        begin
+          for k:=0 to high(FHyperLink) do
+          begin
+            if FHyperLink[k].url=FTable[i,j+1].URL then// .str then
+            begin
+              FHyperLink[k].x1:=x1;
+              FHyperLink[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
+              FHyperLink[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
+              FHyperLink[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
+              Break;
+            end;
+          end;
         end
         else
-        if i>1 then //跳过第2行--第2行定义单元格的对齐格式
+        if FTable[i,j+1].DispType=2 then //BOOKMARK1
         begin
-           y0:=FOffset + y+FGapY+(i-1)*h+abs(h- th) div 2;//垂直居中
-           DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
-        end;
-      end;
-
-      if FTable[i,j+1].DispType=4 then //确定URL在表格的位置
-      begin
-        for k:=0 to high(FHyperLink) do
-        begin
-          if FHyperLink[k].url=FTable[i,j+1].URL then// .str then
+          for k:=0 to high(FBookMark1) do
           begin
-            FHyperLink[k].x1:=x1;
-            FHyperLink[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
-            FHyperLink[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
-            FHyperLink[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //超链接出现时的高度;
-            Break;
+            if FBookMark1[k].BookMark=FTable[i,j+1].bookmarkstr then
+            begin
+              FBookMark1[k].x1:=x1;
+              FBookMark1[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
+              FBookMark1[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
+              FBookMark1[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
+              Break;
+            end;
           end;
-        end;
-      end
-      else
-      if FTable[i,j+1].DispType=2 then //BOOKMARK1
-      begin
-        for k:=0 to high(FBookMark1) do
-        begin
-          if FBookMark1[k].BookMark=FTable[i,j+1].bookmarkstr then
-          begin
-            FBookMark1[k].x1:=x1;
-            FBookMark1[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
-            FBookMark1[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
-            FBookMark1[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
-            Break;
-          end;
-        end;
-      end
-      else
-      if FTable[i,j+1].DispType=3 then//BOOKMARK2
-      begin
-        for k:=0 to high(FBookMark2) do
-        begin
-          if FBookMark2[k].BookMark=FTable[i,j+1].bookmarkstr then
-          begin
-            FBookMark2[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
-            FBookMark2[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
-            Break;
-          end;
-        end;
-      end
-      else
-      if FTable[i,j+1].DispType=1 then  //显示图形
-      begin
-        x0:=FGapX+j*w+1;
-        y0:=FOffset + y+FGapY+(i-1)*h+4;
-        if  FileExists(FTable[i,j+1].str) then
-        begin
-          IMG.Picture.LoadFromFile(FTable[i,j+1].str);
-          //设置图像显示位置及尺寸（单元格大小）
-          FRect.Top:=y0;
-          FRect.Left:=x0;
-          FRect.Width:=w-1;
-          FRect.Height:=h-1;
-          Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
         end
         else
+        if FTable[i,j+1].DispType=3 then//BOOKMARK2
         begin
-          //没找到图像文件
-          DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
+          for k:=0 to high(FBookMark2) do
+          begin
+            if FBookMark2[k].BookMark=FTable[i,j+1].bookmarkstr then
+            begin
+              FBookMark2[k].y1:= y+FGapY+(i-1)*h+abs(h- th) div 2;
+              FBookMark2[k].y2:= y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签的高度;
+              Break;
+            end;
+          end;
+        end
+        else
+        if FTable[i,j+1].DispType=1 then  //显示图形
+        begin
+          x0:=FGapX+j*w+1;
+          y0:=FOffset + y+FGapY+(i-1)*h+4;
+          if  FileExists(FTable[i,j+1].str) then
+          begin
+            IMG.Picture.LoadFromFile(FTable[i,j+1].str);
+            //设置图像显示位置及尺寸（单元格大小）
+            FRect.Top:=y0;
+            FRect.Left:=x0;
+            FRect.Width:=w-1;
+            FRect.Height:=h-1;
+            Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
+          end
+          else
+          begin
+            //没找到图像文件
+            DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
+          end;
         end;
       end;
     end;
