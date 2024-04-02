@@ -381,12 +381,35 @@ begin
   end;
   if pos('<BM',s.ToUpper)>0 then
   begin
+    s1:=s;
+    FontPos1:=utf8pos('<BM',s1.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(s1) do
+    begin
+      if utf8copy(s1,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(s1,FontPos1+1,FontPos2-FontPos1-1);
+        CellType.bookmarkstr:=tmp1;
+
+        tmp1:=utf8copy(s1,FontPos1,FontPos2-FontPos1+1);
+        s1:=s1.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<BM',s1.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+    CellType.str:=s1;
+    CellType.DispType:=2;
+{
     s1:=copy(s,pos('<BM',s.ToUpper),(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)));
     s1:=copy(s,pos(s1,s)+1+length(s1),length(s));
     CellType.str:=s1;
     CellType.DispType:=2;
     s1:=copy(s,pos('<BM',s.ToUpper)+1,(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)-1));
     CellType.bookmarkstr:=s1;
+}
   end;
   if pos('[BM',s.ToUpper)>0 then
   begin
@@ -400,13 +423,32 @@ begin
   if utf8pos('<COLSPAN=',s.ToUpper)>0 then
   begin
     FontPos1:=utf8pos('<COLSPAN=',s.ToUpper);
-    FontPos2:=utf8pos('>',s.ToUpper);
-    tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
-    val(tmp1,tmp,e);
+
+    i:=FontPos1;
+    while i<= utf8length(s) do
+    begin
+      if utf8copy(s,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+        val(tmp1,tmp,e);
+
+        tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+        s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<COLSPAN=',s.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+
+ //   FontPos2:=utf8pos('>',s.ToUpper);
+    //tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+    //val(tmp1,tmp,e);
     CellType.ColSpan:=tmp;
-    s1:=copy(s,pos('<COLSPAN',s.ToUpper),(pos('>',s.ToUpper)-pos('<COLSPAN',s.ToUpper)));
-    tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
-    s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    //s1:=copy(s,pos('<COLSPAN',s.ToUpper),(pos('>',s.ToUpper)-pos('<COLSPAN',s.ToUpper)));
+    //tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+    //s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
   end;
   if utf8pos('<ROWSPAN=',s.ToUpper)>0 then
@@ -610,6 +652,8 @@ begin
   (pos('</SUB>',str.ToUpper)>0) or
   (pos('<FONT=',str.ToUpper)>0) or
   (pos('</FONT>',str.ToUpper)>0) or
+  (pos('<BM',str.ToUpper)>0) or
+  (pos('[BM',str.ToUpper)>0) or
   (pos('<COLSPAN=',str.ToUpper)>0) or
   (pos('<ROWSPAN=',str.ToUpper)>0) or
   (pos('</C>',str.ToUpper)>0) or
@@ -617,8 +661,8 @@ begin
   (pos('<!>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
-  (FindMark1(str,newstr)) or
-  (FindMark2(str,newstr)) or
+  //(FindMark1(str,newstr)) or
+  //(FindMark2(str,newstr)) or
   (pos('</>',str)>0)
   then
   begin
@@ -630,34 +674,44 @@ begin
     while i<=utf8length(str) do
     begin
       s1:=utf8copy(str,i,1);
-
-      if Assigned(FBookMark1) then   //书签1
+       //<BMx>书签1
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='B')
+         and (utf8copy(str,i+2,1).ToUpper='M') then
       begin
-        for j:=0 to High(FBookMark1) do
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
         begin
-          if pos('<BM'+(j+1).ToString+'>',s1.ToUpper)>0 then
+          if utf8copy(str,j,1)='>' then
           begin
-            i:=i+length('<BM'+(j+1).ToString+'>');
+            FontPos2:=j;
             Break;
           end;
         end;
-      end;
-      if Assigned(FBookMark2) then    //书签2
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      //[BMx]书签2
+      if (s1='[') and (utf8copy(str,i+1,1).ToUpper='B')
+         and (utf8copy(str,i+2,1).ToUpper='M') then
       begin
-        for j:=0 to High(FBookMark2) do
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
         begin
-          if pos('<BM'+(j+1).ToString+'>',s1.ToUpper)>0 then
+          if utf8copy(str,j,1)=']' then
           begin
-            i:=i+length('[BM'+(j+1).ToString+']');
+            FontPos2:=j;
             Break;
           end;
         end;
-      end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
       //ColSpan
-      if (s1='C') and (utf8copy(str,i+1,1).ToUpper='O') and (utf8copy(str,i+2,1).ToUpper='L')
-         and (utf8copy(str,i+3,1).ToUpper='S') and (utf8copy(str,i+4,1).ToUpper='P')
-         and (utf8copy(str,i+5,1).ToUpper='A') and (utf8copy(str,i+6,1).ToUpper='N')
-         and (utf8copy(str,i+7,1).ToUpper='=') then
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C')
+         and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='L')
+         and (utf8copy(str,i+4,1).ToUpper='S') and (utf8copy(str,i+5,1).ToUpper='P')
+         and (utf8copy(str,i+6,1).ToUpper='A') and (utf8copy(str,i+7,1).ToUpper='N')
+         and (utf8copy(str,i+8,1).ToUpper='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -672,10 +726,11 @@ begin
       end
       else
       //RowSpan
-      if (s1='R') and (utf8copy(str,i+1,1).ToUpper='O') and (utf8copy(str,i+2,1).ToUpper='W')
-         and (utf8copy(str,i+3,1).ToUpper='S') and (utf8copy(str,i+4,1).ToUpper='P')
-         and (utf8copy(str,i+5,1).ToUpper='A') and (utf8copy(str,i+6,1).ToUpper='N')
-         and (utf8copy(str,i+7,1).ToUpper='=') then
+      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='R')
+         and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='W')
+         and (utf8copy(str,i+3,1).ToUpper='S') and (utf8copy(str,i+5,1).ToUpper='P')
+         and (utf8copy(str,i+6,1).ToUpper='A') and (utf8copy(str,i+7,1).ToUpper='N')
+         and (utf8copy(str,i+8,1).ToUpper='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -854,7 +909,7 @@ function TCustomText.TextPreprocessing(i:integer;str:string;out textstyle:string
 var newbmstr,nbms:string;
   hlkstr:string;
   tmp1,tmp2,tmp3:string;
-  hlk:integer;
+  j,pos1,pos2,hlk:integer;
 begin
   Result:=str;
   textstyle:='';
@@ -1027,10 +1082,19 @@ begin
     FLineList[i].DispType:='URL';
   end
   else
-  if (Pos('<BM', str.ToUpper)>0) then
+  if (utf8Pos('<BM', str.ToUpper)>0) then
   begin
     FindMark1(str,newbmstr);
-    nbms:=copy(str,pos('<BM',str.ToUpper)+1,(pos('>',str.ToUpper)-pos('<BM',str.ToUpper)-1));
+    pos1:=utf8pos('<BM',str.ToUpper);
+    for j:= pos1 to utf8length(str) do
+    begin
+      if utf8copy(str,j,1)='>' then
+      begin
+        pos2:=j;
+        break;
+      end;
+    end;
+    nbms:=utf8copy(str,pos1+1,pos2-pos1-1);
     textstyle:=textstyle+'<'+nbms+'>';
     str:=newbmstr;
     FLineList[i].BookMark1:=nbms;
@@ -1040,7 +1104,16 @@ begin
   if (Pos('[BM', str.ToUpper)>0) then
   begin
     FindMark2(str,newbmstr);
-    nbms:=copy(str,pos('[BM',str.ToUpper)+1,(pos(']',str.ToUpper)-pos('[BM',str.ToUpper)-1));
+    pos1:=utf8pos('[BM',str.ToUpper);
+    for j:= pos1 to utf8length(str) do
+    begin
+      if utf8copy(str,j,1)=']' then
+      begin
+        pos2:=j;
+        break;
+      end;
+    end;
+    nbms:=utf8copy(str,pos1+1,pos2-pos1-1);
     textstyle:=textstyle+'['+nbms+']';
     str:=newbmstr;
     FLineList[i].BookMark2:=nbms;
@@ -1408,6 +1481,7 @@ begin
     j:=(FontPos2-FontPos1)+1;
   end
   else
+  //ColSpan=
   if (Result='<') and (utf8copy(str,i+1,1).ToUpper='C') and
     (utf8copy(str,i+2,1).ToUpper='O') and
     (utf8copy(str,i+3,1).ToUpper='L') and
@@ -1430,6 +1504,7 @@ begin
     j:=(FontPos2-FontPos1)+1;
   end
   else
+  //RowSpan=
   if (Result='<') and (utf8copy(str,i+1,1).ToUpper='R') and
     (utf8copy(str,i+2,1).ToUpper='O') and
     (utf8copy(str,i+3,1).ToUpper='W') and
@@ -1633,6 +1708,8 @@ begin
   (pos('<#>',str)>0) or
   (pos('</FONT>',str.ToUpper)>0) or
   (pos('<FONT=',str.ToUpper)>0) or
+  (pos('<COLSPAN=',str.ToUpper)>0) or
+  (pos('<ROWSPAN=',str.ToUpper)>0) or
   (FindMark1(str,DStr)) or
   (FindMark2(str,DStr)) or
   (pos('</>',str)>0)
@@ -1681,7 +1758,47 @@ begin
         i:=i+7;
         Buffer.Canvas.font.Name:=FDefaultFontName;//恢复默认字体
         y:=y-abs(FH2-FH1) div 2;//恢复原来的显示位置
-    end
+      end
+      else
+      if (DStr='C') and (utf8copy(str,i+1,1).ToUpper='O')
+        and (utf8copy(str,i+2,1).ToUpper='L')
+        and (utf8copy(str,i+3,1).ToUpper='S')
+        and (utf8copy(str,i+4,1).ToUpper='P')
+        and (utf8copy(str,i+5,1).ToUpper='A')
+        and (utf8copy(str,i+6,1).ToUpper='N')
+        and (utf8copy(str,i+7,1)='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      if (DStr='R') and (utf8copy(str,i+1,1).ToUpper='O')
+        and (utf8copy(str,i+2,1).ToUpper='W')
+        and (utf8copy(str,i+3,1).ToUpper='S')
+        and (utf8copy(str,i+4,1).ToUpper='P')
+        and (utf8copy(str,i+5,1).ToUpper='A')
+        and (utf8copy(str,i+6,1).ToUpper='N')
+        and (utf8copy(str,i+7,1)='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
       else
       if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
         and (utf8copy(str,i+3,1).ToUpper='K') and (utf8copy(str,i+4,1)='>') then
@@ -1861,8 +1978,9 @@ end;
 
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var
-  i,j,w,w1,h,h1,row,col,v:integer;
+  i,j,w1,h,h1,row,col,v:integer;
   k:integer;
+  colWidth:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
   Span,c:integer;
@@ -1875,7 +1993,7 @@ begin
   th:= Buffer.Canvas.TextHeight('国');
   h:=round(th*1.5); //表格行高
   if TableRowHeigth>h then h:=TableRowHeigth;
-  w:=(Buffer.Width-FGapX*2) div col; //单元格宽
+  colWidth:=(Buffer.Width-FGapX*2) div col; //单元格宽
   Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
  {
   //开始画表格
@@ -1920,7 +2038,7 @@ begin
       if (Span=0) or (i=c+Span-1) then
       begin
         FTable[v,j+1].Height:=0;
-        Buffer.Canvas.Line(x0+j*w,y0+i*h,x0+j*w+w,y0+i*h);
+        Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth+colWidth,y0+i*h);
         Span:=0;
       end;
     end;
@@ -1939,14 +2057,14 @@ begin
       begin
         c:=j;
         Span:=FTable[i+1,j].ColSpan; //row,col
-        FTable[i+1,j].Width:=Span*w;
+        FTable[i+1,j].Width:=Span*colWidth;
         for v:=j+1 to span+j-1 do
           FTable[i+1,v].Visible:=false;
       end;
       if (Span=0) or (j=c+Span-1) or (j=col) then
       begin
         FTable[i+1,j].Width:=0;
-        Buffer.Canvas.Line(x0+j*w,y0+i*h,x0+j*w,y0+i*h+h);
+        Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth,y0+i*h+h);
         Span:=0;
       end;
     end;
@@ -1971,11 +2089,11 @@ begin
           else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
           //设置字体属性
 
-          x0:=FGapX+j*w;
+          x0:=FGapX+j*colWidth;
           h1:=h;
-          w1:=w;
+          w1:=colWidth;
           if FTable[i,j+1].Width>0 then
-             w:=FTable[i,j+1].Width;
+            colWidth:=FTable[i,j+1].Width;
 
           if FTable[i,j+1].Height>0 then
              h:=FTable[i,j+1].Height;
@@ -1984,16 +2102,16 @@ begin
           if FTable[0,j+1].Align=1 then
             x1:=x0 ;//居左
          if FTable[0,j+1].Align=2 then
-            x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2; //居中
+            x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2; //居中
           if FTable[0,j+1].Align=3 then
-             x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w)))-5; //居右
+             x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth)))-5; //居右
           if i=0 then
           begin
-            x1:=x0+(w-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,w))) div 2;//标题行文字居中
+            x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2;//标题行文字居中
             y0:=FOffset + y+FGapY+i*h+abs(h- th) div 2;//垂直居中
             Buffer.Canvas.Font.Style:=[fsBold];
             Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-            DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));//截断超过单元格宽度的字符串
+            DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,colWidth));//截断超过单元格宽度的字符串
           end
           else
           if i>1 then //跳过第2行--第2行定义单元格的对齐格式
@@ -2002,9 +2120,9 @@ begin
                y0:=FOffset + y + FGapY + (i-1)* h1 + abs (h-th) div 2//垂直居中
              else
                y0:=FOffset + y + FGapY + (i-1)* h1 + abs(h1- th) div 2;//垂直居中
-             DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,w));
+             DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,colWidth));
           end;
-          w:=w1;
+          colWidth:=w1;
           h:=h1;
         end;
 
@@ -2053,7 +2171,7 @@ begin
         else
         if FTable[i,j+1].DispType=1 then  //显示图形
         begin
-          x0:=FGapX+j*w+1;
+          x0:=FGapX+j*colWidth+1;
           y0:=FOffset + y+FGapY+(i-1)*h+4;
           if  FileExists(FTable[i,j+1].str) then
           begin
@@ -2061,14 +2179,14 @@ begin
             //设置图像显示位置及尺寸（单元格大小）
             FRect.Top:=y0;
             FRect.Left:=x0;
-            FRect.Width:=w-1;
+            FRect.Width:=colWidth-1;
             FRect.Height:=h-1;
             Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
           end
           else
           begin
             //没找到图像文件
-            DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),w));
+            DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),colWidth));
           end;
         end;
       end;
