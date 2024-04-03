@@ -413,17 +413,39 @@ begin
   end;
   if pos('[BM',s.ToUpper)>0 then
   begin
+    s1:=s;
+    FontPos1:=utf8pos('[BM',s1.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(s1) do
+    begin
+      if utf8copy(s1,i,1)=']' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(s1,FontPos1+1,FontPos2-FontPos1-1);
+        CellType.bookmarkstr:=tmp1;
+
+        tmp1:=utf8copy(s1,FontPos1,FontPos2-FontPos1+1);
+        s1:=s1.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('[BM',s1.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+    CellType.str:=s1;
+    CellType.DispType:=3;
+{
     s1:=copy(s,pos('[BM',s.ToUpper),(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)));
     s1:=copy(s,pos(s1,s)+1+length(s1),length(s));
     CellType.str:=s1;
     CellType.DispType:=3;
     s1:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
     CellType.bookmarkstr:=s1;
+}
   end;
   if utf8pos('<COLSPAN=',s.ToUpper)>0 then
   begin
     FontPos1:=utf8pos('<COLSPAN=',s.ToUpper);
-
     i:=FontPos1;
     while i<= utf8length(s) do
     begin
@@ -441,18 +463,32 @@ begin
       end;
       inc(i);
     end;
-
- //   FontPos2:=utf8pos('>',s.ToUpper);
-    //tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
-    //val(tmp1,tmp,e);
     CellType.ColSpan:=tmp;
-    //s1:=copy(s,pos('<COLSPAN',s.ToUpper),(pos('>',s.ToUpper)-pos('<COLSPAN',s.ToUpper)));
-    //tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
-    //s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
   end;
   if utf8pos('<ROWSPAN=',s.ToUpper)>0 then
   begin
+    FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(s) do
+    begin
+      if utf8copy(s,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+        val(tmp1,tmp,e);
+
+        tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+        s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+    CellType.RowSpan:=tmp;
+    CellType.str:=s;
+{
     FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
     FontPos2:=utf8pos('>',s.ToUpper);
     tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
@@ -462,9 +498,31 @@ begin
     tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
     s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
+}
   end;
   if utf8pos('<FONT=',s.ToUpper)>0 then
   begin
+    FontPos1:=utf8pos('<FONT=',s.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(s) do
+    begin
+      if utf8copy(s,i,1)='>' then
+      begin
+        FontPos2:=i;
+        //tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+        //val(tmp1,tmp,e);
+
+        tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
+        s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<FONT=',s.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+    CellType.FontName:=tmp1;
+    CellType.str:=s;
+{
     FontPos1:=utf8pos('<FONT=',s.ToUpper);
     FontPos2:=utf8pos('>',s.ToUpper);
     tmp1:=utf8copy(s,FontPos1+6,FontPos2-FontPos1-6);
@@ -473,6 +531,7 @@ begin
     tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
     s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
+}
   end;
   if pos('</FONT>',s.ToUpper)>0 then
   begin
@@ -584,18 +643,22 @@ begin
   end;
   if Assigned(FBookMark1) then
   begin
-    for i:=0 to High(FBookMark1) do
+    if pos('<BM',Result.ToUpper)>0 then
     begin
-      Result:=Result.Replace('<BM'+(i+1).ToString+'>','',[rfReplaceAll, rfIgnoreCase]);
-      //Break;
+      for i:=0 to High(FBookMark1) do
+      begin
+        Result:=Result.Replace('<BM'+(i+1).ToString+'>','',[rfReplaceAll, rfIgnoreCase]);
+       end;
     end;
   end;
   if Assigned(FBookMark2) then
   begin
-    for i:=0 to High(FBookMark2) do
+    if pos('[BM',Result.ToUpper)>0 then
     begin
-      Result:=Result.Replace('[BM'+(i+1).ToString+']','',[rfReplaceAll, rfIgnoreCase]);
-      //Break;
+      for i:=0 to High(FBookMark2) do
+      begin
+        Result:=Result.Replace('[BM'+(i+1).ToString+']','',[rfReplaceAll, rfIgnoreCase]);
+      end;
     end;
   end;
 end;
@@ -604,13 +667,16 @@ function TCustomText.FindMark1(str:string;out NewStr:string):Boolean;
 var i:integer;
 begin
   Result:=false;
-  for i:=0 to High(FBookMark1) do
+  if pos('<BM',str.ToUpper)>0 then
   begin
-    if pos('<BM'+(i+1).ToString+'>',str.ToUpper)>0 then
+    for i:=0 to High(FBookMark1) do
     begin
-      NewStr:=str.Replace('<BM'+(i+1).ToString+'>','',[rfReplaceAll, rfIgnoreCase]);
-      Result:=true;
-      Break;
+      if pos('<BM'+(i+1).ToString+'>',str.ToUpper)>0 then
+      begin
+        NewStr:=str.Replace('<BM'+(i+1).ToString+'>','',[rfReplaceAll, rfIgnoreCase]);
+        Result:=true;
+        Break;
+      end;
     end;
   end;
 end;
@@ -619,13 +685,16 @@ function TCustomText.FindMark2(str:string;out NewStr:string):Boolean;
 var i:integer;
 begin
   Result:=false;
-  for i:=0 to High(FBookMark2) do
+  if pos('[BM',str.ToUpper)>0 then
   begin
-    if pos('[BM'+(i+1).ToString+']',str.ToUpper)>0 then
+    for i:=0 to High(FBookMark2) do
     begin
-      NewStr:=str.Replace('[BM'+(i+1).ToString+']','',[rfReplaceAll, rfIgnoreCase]);
-      Result:=true;
-      Break;
+      if pos('[BM'+(i+1).ToString+']',str.ToUpper)>0 then
+      begin
+        NewStr:=str.Replace('[BM'+(i+1).ToString+']','',[rfReplaceAll, rfIgnoreCase]);
+        Result:=true;
+        Break;
+      end;
     end;
   end;
 end;
@@ -2148,7 +2217,7 @@ begin
             if FBookMark1[k].BookMark=FTable[i,j+1].bookmarkstr then
             begin
               FBookMark1[k].x1:=x1;
-              FBookMark1[k].x2:=x1+Buffer.Canvas.TextWidth(FTable[i,j+1].str);
+              FBookMark1[k].x2:=x1+GetStringTextWidth(Buffer,FTable[i,j+1].str);
               FBookMark1[k].y1:=y+FGapY+(i-1)*h+abs(h- th) div 2;
               FBookMark1[k].y2:=y+FGapY+(i-1)*h+(abs(h- th) div 2)+Buffer.Canvas.TextHeight(FLineList[i].str); //书签目录的高度;
               Break;
