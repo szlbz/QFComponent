@@ -402,14 +402,6 @@ begin
     end;
     CellType.str:=s1;
     CellType.DispType:=2;
-{
-    s1:=copy(s,pos('<BM',s.ToUpper),(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)));
-    s1:=copy(s,pos(s1,s)+1+length(s1),length(s));
-    CellType.str:=s1;
-    CellType.DispType:=2;
-    s1:=copy(s,pos('<BM',s.ToUpper)+1,(pos('>',s.ToUpper)-pos('<BM',s.ToUpper)-1));
-    CellType.bookmarkstr:=s1;
-}
   end;
   if pos('[BM',s.ToUpper)>0 then
   begin
@@ -434,14 +426,6 @@ begin
     end;
     CellType.str:=s1;
     CellType.DispType:=3;
-{
-    s1:=copy(s,pos('[BM',s.ToUpper),(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)));
-    s1:=copy(s,pos(s1,s)+1+length(s1),length(s));
-    CellType.str:=s1;
-    CellType.DispType:=3;
-    s1:=copy(s,pos('[BM',s.ToUpper)+1,(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)-1));
-    CellType.bookmarkstr:=s1;
-}
   end;
   if utf8pos('<COLSPAN=',s.ToUpper)>0 then
   begin
@@ -488,17 +472,6 @@ begin
     end;
     CellType.RowSpan:=tmp;
     CellType.str:=s;
-{
-    FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
-    FontPos2:=utf8pos('>',s.ToUpper);
-    tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
-    val(tmp1,tmp,e);
-    CellType.RowSpan:=tmp;
-    s1:=copy(s,pos('<ROWSPAN',s.ToUpper),(pos('>',s.ToUpper)-pos('<ROWSPAN',s.ToUpper)));
-    tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
-    s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    CellType.str:=s;
-}
   end;
   if utf8pos('<FONT=',s.ToUpper)>0 then
   begin
@@ -509,9 +482,6 @@ begin
       if utf8copy(s,i,1)='>' then
       begin
         FontPos2:=i;
-        //tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
-        //val(tmp1,tmp,e);
-
         tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
         s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
         FontPos1:=utf8pos('<FONT=',s.ToUpper);
@@ -522,16 +492,6 @@ begin
     end;
     CellType.FontName:=tmp1;
     CellType.str:=s;
-{
-    FontPos1:=utf8pos('<FONT=',s.ToUpper);
-    FontPos2:=utf8pos('>',s.ToUpper);
-    tmp1:=utf8copy(s,FontPos1+6,FontPos2-FontPos1-6);
-    CellType.FontName:=tmp1;
-    s1:=copy(s,pos('[BM',s.ToUpper),(pos(']',s.ToUpper)-pos('[BM',s.ToUpper)));
-    tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
-    s:=s.Replace(tmp1,'',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
-    CellType.str:=s;
-}
   end;
   if pos('</FONT>',s.ToUpper)>0 then
   begin
@@ -730,8 +690,6 @@ begin
   (pos('<!>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
-  //(FindMark1(str,newstr)) or
-  //(FindMark2(str,newstr)) or
   (pos('</>',str)>0)
   then
   begin
@@ -1794,11 +1752,12 @@ begin
     NewFontSize:=Buffer.Canvas.font.Size div 2;
     Buffer.Canvas.Brush.Style := bsClear;//透明文字
     if NewFontSize=0 then NewFontSize:=5;
+    FH1:=0;
+    FH2:=0;
     while i<=utf8length(str) do
     begin
       DStr:=utf8copy(str,i,1);
-      FH1:=0;
-      FH2:=0;
+      //<Font=xx>
       if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='F')
       and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='N')
       and (utf8copy(str,i+4,1).ToUpper='T') and (utf8copy(str,i+5,1)='=') then
