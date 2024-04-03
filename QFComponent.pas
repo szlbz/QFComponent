@@ -2207,7 +2207,10 @@ begin
             //设置图像显示位置及尺寸（单元格大小）
             FRect.Top:=y0;
             FRect.Left:=x0;
-            FRect.Width:=colWidth-1;
+            if FTable[i,j+1].Width<>0 then
+              FRect.Width:=FTable[i,j+1].Width-1
+            else
+              FRect.Width:=colWidth-1;
             if FTable[i,j+1].Height<>0 then
               FRect.Height:=FTable[i,j+1].Height-1
             else
