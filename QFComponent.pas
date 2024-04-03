@@ -2208,7 +2208,10 @@ begin
             FRect.Top:=y0;
             FRect.Left:=x0;
             FRect.Width:=colWidth-1;
-            FRect.Height:=h-1;
+            if FTable[i,j+1].Height<>0 then
+              FRect.Height:=FTable[i,j+1].Height-1
+            else
+              FRect.Height:=h-1;
             Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
           end
           else
