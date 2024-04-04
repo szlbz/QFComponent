@@ -16,10 +16,12 @@
 {*******************************************************}
 {
 控件包有2个控件：
-秋风(QQ:315795176)开发的控件包,采用自定义的富文本格式，集编辑、显示和导出图片等功能。
-纯pascal代码，没使用额外的dll/so，只需QFComponent.pas这个文件就可以实现以下功能。
-1、TQFRichView：采用自定义的富文本格式，类RichView控件，这个控件特别适合作为使用说明等用途，比用html或pdf都灵活且特别是可以跨平台使用；
-2、TQFScrollingText：滚动内容采用自定义的类富文本文字显示的滚动显示控件；
+QFComponent由秋风(QQ:315795176)开发的控件包,采用自定义的富文本格式，
+集编辑、显示、导出和打印等功能。纯pascal代码，没使用额外的dll/so，
+只需QFComponent.pas这个文件就可以实现文字渲染等功能，可跨平台使用。
+1、TQFRichView：采用自定义的富文本格式，类RichView控件，支持超链接、
+   书签跳转等丰富的功能，适合作为使用说明等用途；
+2、TQFScrollingText：采用自定义的富文本格式，可实现图文的滚动；
 
 说明：
 1、控件的自定义富文件格式渲染等核心功能是秋风独立原创编写。
@@ -2640,6 +2642,7 @@ var k:integer;
 begin
   inherited WMMouseWheel(Message);
 
+  self.ShowHint:=false;
   FActiveLine:= -1;
   FBMActiveStr:='';
   Cursor := crDefault;
@@ -2780,6 +2783,7 @@ var
 begin
   inherited MouseMove(Shift, X, Y);
 
+  self.ShowHint:=false;
   if Assigned(FHyperLink) then   //URL
   begin
     for k:=0 to high(FHyperLink) do
@@ -2787,6 +2791,8 @@ begin
       if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) and
          (x>FHyperLink[k].x1) and (x<FHyperLink[k].x2) then
       begin
+        self.Hint:='超链接地址:'+FHyperLink[k].URL;
+        self.ShowHint:=true;
         FActiveLine := FHyperLink[k].hs;
         break;
       end
@@ -2803,6 +2809,8 @@ begin
       begin
         FBMActiveLine := FBookMark1[k].hs;
         FBMActiveStr := FBookMark1[k].BookMark;
+        self.Hint:='书签名称:'+FBookMark1[k].BookMark;
+        self.ShowHint:=true;
         break;
       end
       else

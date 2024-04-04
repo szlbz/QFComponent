@@ -12,11 +12,12 @@
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Description Value="秋风(QQ:315795176)开发的控件包，有2个控件：
-1、TQFRichView：自定义的富文本格式，类RichView控件，这个控件特别适合作为使用说明等用途，比用html或pdf都灵活且特别是可以跨平台使用；
-2、TQFScrollingText：滚动内容采用自定义的类富文本文字显示的滚动显示控件；
-这是由秋风(QQ:315795176)开发的控件包,采用自定义的富文本格式，集编辑、显示、导出和打印等功能。
-纯pascal代码，没使用额外的dll/so，只需QFComponent.pas这个文件就可以实现富文本的显示等功能。"/>
+    <Description Value="QFComponent由秋风(QQ:315795176)开发的控件包,采用自定义的富文本格式，
+集编辑、显示、导出和打印等功能。纯pascal代码，没使用额外的dll/so，
+只需QFComponent.pas这个文件就可以实现文字渲染等功能，可跨平台使用。
+1、TQFRichView：采用自定义的富文本格式，类RichView控件，支持超链接、
+   书签跳转等丰富的功能，适合作为使用说明等用途；
+2、TQFScrollingText：采用自定义的富文本格式，可实现图文的滚动；"/>
     <License Value="{*******************************************************}
 {                                                                                        }
 {                        自定义的富文本控件                                }
@@ -34,7 +35,7 @@
 {                                                                                        }
 {*******************************************************}
 "/>
-    <Version Minor="9" Release="9"/>
+    <Version Minor="9" Release="9" Build="9"/>
     <Files>
       <Item>
         <Filename Value="QFComponent.pas"/>
