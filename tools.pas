@@ -17,6 +17,7 @@ var
   CodeLan: string;
   CharCode: string;
   LicStr: string;
+  FontName:string;
   fontsize:string;
   fontcolor:string;
   SelTextlength:integer;
