@@ -13,9 +13,28 @@
       </SearchPaths>
     </CompilerOptions>
     <Description Value="秋风(QQ:315795176)开发的控件包，有2个控件：
-TQFRichView：类RichView控件
-TQFScrollingText：滚动显示控件"/>
-    <Version Minor="9"/>
+1、TQFRichView：自定义的富文本格式，类RichView控件，这个控件特别适合作为使用说明等用途，比用html或pdf都灵活且特别是可以跨平台使用；
+2、TQFScrollingText：滚动内容采用自定义的类富文本文字显示的滚动显示控件；
+这是由秋风(QQ:315795176)开发的控件包,采用自定义的富文本格式，集编辑、显示、导出和打印等功能。
+纯pascal代码，没使用额外的dll/so，只需QFComponent.pas这个文件就可以实现富文本的显示等功能。"/>
+    <License Value="{*******************************************************}
+{                                                                                        }
+{                        自定义的富文本控件                                }
+{                               TQFRichView                                   }
+{                            TQFScrollingText                               }
+{                                                                                        }
+{           支持Lazarus及windows、linux等平台                }
+{           x86_64/aarch64/lonngarch64等CPU               }
+{                                                                                        }
+{                    Copyright(c) 2024-2024                          }
+{                秋风(QQ315795176)原创出品                      }
+{                                                                                        }
+{                            All rights reserved                             }
+{                                保留所有权利                                  }
+{                                                                                        }
+{*******************************************************}
+"/>
+    <Version Minor="9" Release="9"/>
     <Files>
       <Item>
         <Filename Value="QFComponent.pas"/>
@@ -53,6 +72,10 @@ TQFScrollingText：滚动显示控件"/>
       <Item>
         <Filename Value="SetHyeperLink.pas"/>
         <UnitName Value="SetHyeperLink"/>
+      </Item>
+      <Item>
+        <Filename Value="setfont.pas"/>
+        <UnitName Value="setfont"/>
       </Item>
     </Files>
     <RequiredPkgs>
