@@ -236,10 +236,12 @@ type
 
   TQFRichView =  class(TCustomText)
   private
+    FShowUrlBookMakeHint: Boolean;
     FinitialY: Integer; // 用于存储鼠标按下时的初始位置
     procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
-  protected
+    procedure SetShowUrlBookMakeHint(Value : Boolean);
+    protected
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
@@ -254,6 +256,7 @@ type
     procedure PageFooter; //跳到页尾
   published
     property StepSize: integer read FStepSize write FStepSize;
+    property ShowUrlBookMakeHint: Boolean read FShowUrlBookMakeHint write SetShowUrlBookMakeHint;
   end;
 
 procedure Register;
@@ -2622,11 +2625,20 @@ begin
 
   OnPaint := @DrawScrollingText;
   FStepSize := 10;
+  FShowUrlBookMakeHint:=true;
 end;
 
 destructor TQFRichView.Destroy;
 begin
   inherited Destroy;
+end;
+
+procedure TQFRichView.SetShowUrlBookMakeHint(Value : Boolean);
+begin
+  if FShowUrlBookMakeHint <> Value then
+  begin
+    FShowUrlBookMakeHint := Value;
+  end;
 end;
 
 procedure TQFRichView.SetLines(const AValue: TStrings);
@@ -2791,8 +2803,11 @@ begin
       if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) and
          (x>FHyperLink[k].x1) and (x<FHyperLink[k].x2) then
       begin
-        self.Hint:='超链接地址:'+FHyperLink[k].URL;
-        self.ShowHint:=true;
+        if FShowUrlBookMakeHint then
+        begin
+          self.Hint:='超链接地址:'+FHyperLink[k].URL;
+          self.ShowHint:=true;
+        end;
         FActiveLine := FHyperLink[k].hs;
         break;
       end
@@ -2809,8 +2824,11 @@ begin
       begin
         FBMActiveLine := FBookMark1[k].hs;
         FBMActiveStr := FBookMark1[k].BookMark;
-        self.Hint:='书签名称:'+FBookMark1[k].BookMark;
-        self.ShowHint:=true;
+        if FShowUrlBookMakeHint then
+        begin
+          self.Hint:='书签名称:'+FBookMark1[k].BookMark;
+          self.ShowHint:=true;
+        end;
         break;
       end
       else
