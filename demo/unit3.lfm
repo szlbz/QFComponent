@@ -183,7 +183,7 @@ object Form1: TForm1
         GapX = 10
         GapY = 0
         Color = clCream
-        BackImageFile = 'bj.jpg'
+        BackImageFile = 'bg.jpg'
         StepSize = 15
         ShowUrlBookMakeHint = True
       end
@@ -300,6 +300,7 @@ object Form1: TForm1
         GapX = 0
         GapY = 0
         Color = clWhite
+        BackImageFile = 'bg.jpg'
         ScrollingText = '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
         Active = False
       end
@@ -311,6 +312,17 @@ object Form1: TForm1
         Caption = '滚动'
         TabOrder = 1
         OnClick = CheckBox2Click
+      end
+      object CheckBox3: TCheckBox
+        Left = 232
+        Height = 28
+        Top = 136
+        Width = 97
+        Caption = '显示背景'
+        Checked = True
+        State = cbChecked
+        TabOrder = 2
+        OnChange = CheckBox3Change
       end
     end
   end

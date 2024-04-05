@@ -21,6 +21,7 @@ type
     Button6: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
+    CheckBox3: TCheckBox;
     ColorBox1: TColorBox;
     Label1: TLabel;
     PageControl1: TPageControl;
@@ -41,6 +42,7 @@ type
     procedure Button6Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
+    procedure CheckBox3Change(Sender: TObject);
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
@@ -64,8 +66,9 @@ implementation
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   PageControl1.TabIndex:=0;
-  QFRichView1.BackImagefile:='bg.jpg';
+  //QFRichView1.BackImagefile:='bg.jpg';
   ScrollingText1.BackImagefile:='bg.jpg';
+  //QFHorizontalScrollingText1.BackImageFile:='bg.jpg';
   TabSheet2.Visible:=true;
   //UniConnection1.SpecificOptions.Values['SQL Server.Provider']:='prDirect';// .Add('SQL Server.Provider=prDirect');
   //UniConnection1.Connected:=true;
@@ -128,6 +131,12 @@ procedure TForm1.CheckBox2Click(Sender: TObject);
 begin
   if checkbox2.Checked then QFHorizontalScrollingText1.Active:=true
   else QFHorizontalScrollingText1.Active:=false;
+end;
+
+procedure TForm1.CheckBox3Change(Sender: TObject);
+begin
+  if checkbox3.Checked then QFHorizontalScrollingText1.ShowBackImage:=true
+  else QFHorizontalScrollingText1.ShowBackImage:=false;
 end;
 
 procedure TForm1.ColorBox1Change(Sender: TObject);
