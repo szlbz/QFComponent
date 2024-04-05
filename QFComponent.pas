@@ -234,6 +234,27 @@ type
     property Active: boolean read FActive write SetActive;
   end;
 
+  //横向滚动
+  TQFHorizontalScrollingText= class(TCustomText)
+  private
+    FTimer: TTimer;
+    FOffsetX:integer;
+    FTextWidth:integer;
+    FScrollingText:string;
+    procedure HDrawTexts(Buffer: TBitmap;x,y:integer);
+    procedure DoTimer(Sender: TObject);
+    procedure SetActive(const AValue: boolean);
+    procedure SetLines(const AValue: TStrings);
+    procedure DrawScrollingText(Sender: TObject);
+    procedure SetScrollingText(const AValue: string);
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    property ScrollingText:string read FScrollingText write SetScrollingText;
+    property Active: boolean read FActive write SetActive;
+  end;
+
   TQFRichView =  class(TCustomText)
   private
     FShowUrlBookMakeHint: Boolean;
@@ -269,7 +290,7 @@ procedure Register;
 begin
   //RegisterClasses([TQFRichEditor]);
   //RegisterComponentEditor(TString,TQFRichEditor);
-  RegisterComponents('QF Component', [TQFScrollingText,TQFRichView]);
+  RegisterComponents('QF Component', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText]);
 end;
 
 { TScrollingText }
@@ -2615,6 +2636,114 @@ begin
   DrawTexts(FBuffer,0);
   if FOffset+FTextHeigth=0 then
     FOffset := FBuffer.Height;
+
+  Invalidate;
+end;
+
+constructor TQFHorizontalScrollingText.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+
+  FTextWidth:=0;
+  FOffsetX:=0;
+  OnPaint := @DrawScrollingText;
+  FTimer := TTimer.Create(nil);
+  FTimer.OnTimer:=@DoTimer;
+  FTimer.Interval:=30;
+end;
+
+destructor TQFHorizontalScrollingText.Destroy;
+begin
+  FTimer.Free;
+  inherited Destroy;
+end;
+
+procedure TQFHorizontalScrollingText.SetActive(const AValue: boolean);
+begin
+  FActive := AValue;
+  if FActive then
+  begin
+    Init(FBuffer);
+  end;
+  FTimer.Enabled:=Active;
+end;
+
+procedure TQFHorizontalScrollingText.SetLines(const AValue: TStrings);
+begin
+  if (AValue <> nil) then
+  begin
+    if FActive then
+      FTimer.Enabled:=false;
+    FLines.Assign(AValue);
+    Init(FBuffer);
+    if FActive then
+      FTimer.Enabled:=FActive;
+  end;
+end;
+
+procedure TQFHorizontalScrollingText.SetScrollingText(const AValue: string);
+begin
+  if (AValue <> FScrollingText) then
+  begin
+    FScrollingText:= AValue;
+    Lines.Text:=AValue;
+  end;
+end;
+
+procedure TQFHorizontalScrollingText.DrawScrollingText(Sender: TObject);
+begin
+  if Active then
+    Canvas.Draw(0,0,FBuffer)
+  else
+  begin
+    Init(FBuffer);
+    BackgroundRefresh(FBuffer);//刷新背景
+    FOffsetX:=0;
+    HDrawTexts(FBuffer,FOffsetx,0);
+    Canvas.Draw(0,0,FBuffer)
+  end;
+end;
+
+procedure TQFHorizontalScrollingText.HDrawTexts(Buffer: TBitmap;x,y:integer);
+var
+  i,h: integer;
+  str:string;
+begin
+  str:='';
+  for i:=0 to Lineno-1 do
+     str:=str+FLineList[i].str;
+
+  FTextWidth:=GetStringTextWidth(Buffer,str);
+  Buffer.Canvas.Font.Size:=FLineList[0].FontSize;
+  if FLineList[0].FontStyle=0 then
+    Buffer.Canvas.Font.Style:=[];
+  if FLineList[0].FontStyle=1 then
+      Buffer.Canvas.Font.Style:=[fsBold];
+  if FLineList[0].FontStyle=2 then
+      Buffer.Canvas.Font.Style:=[fsStrikeOut];
+  if FLineList[0].FontStyle=3 then
+      Buffer.Canvas.Font.Style:=[fsItalic];
+  if FLineList[0].FontStyle=4 then
+      Buffer.Canvas.Font.Style:=[fsUnderline];
+  Buffer.Canvas.Font.Color:=FLineList[0].FontColor;
+
+  h:=(Buffer.Canvas.GetTextHeight(str)+FGapY);
+  h:=abs(h-Buffer.Height) div 2; //垂直居中
+  DisplayChar(Buffer,x, y+h, str);
+end;
+
+procedure TQFHorizontalScrollingText.DoTimer(Sender: TObject);
+var k:integer;
+begin
+  if not Active then
+    Exit;
+
+  Dec(FOffsetX, FStepSize);
+
+  BackgroundRefresh(FBuffer);//刷新背景
+  HDrawTexts(FBuffer,FOffsetX,0);
+  if FOffsetX+FTextWidth=0 then
+    FOffsetX := FBuffer.Width;
 
   Invalidate;
 end;
