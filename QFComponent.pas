@@ -156,6 +156,7 @@ type
     FTS:integer;//表格数量
     FBackgroundImage:TImage;
     FBackImageFile:string;
+    FShowBackImage:boolean;
     FBookMark1:array of TQFBookMark;
     FBookMark2:array of TQFBookMark;
     FHyperLink:array of THyperLink;
@@ -196,6 +197,8 @@ type
     procedure GetTableInfo(no:integer);
     procedure GetCellInfo(s:string;out CellType:TCellType);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
+    procedure SetBackImageFile(AValue: String);
+    procedure SetShowBackImage(AValue: Boolean);
   protected
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
@@ -214,7 +217,8 @@ type
     property GapX: integer read FGapX write FGapX;
     property GapY: integer read FGapY write FGapY;
     property Color: TColor read FColor write SetColor;
-    property BackImageFile: string read FBackImageFile write FBackImageFile;
+    property BackImageFile: string read FBackImageFile write SetBackImageFile;
+    property ShowBackImage: Boolean read FShowBackImage write SetShowBackImage;
     //property RichEdit:TQFRichEditor read FQFRE write RichEditor;
   end;
 
@@ -247,12 +251,14 @@ type
     procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
     procedure SetScrollingText(const AValue: string);
+    procedure SetShowBackImage(AValue: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
     property ScrollingText:string read FScrollingText write SetScrollingText;
     property Active: boolean read FActive write SetActive;
+    property ShowBackImage: Boolean read FShowBackImage write SetShowBackImage;
   end;
 
   TQFRichView =  class(TCustomText)
@@ -294,6 +300,26 @@ begin
 end;
 
 { TScrollingText }
+
+procedure TCustomText.SetShowBackImage(AValue: Boolean);
+begin
+  if (AValue <> FShowBackImage) then
+  begin
+    FShowBackImage:=AValue;
+    Init(FBuffer);
+    FOffset:=0;
+    DrawTexts(FBuffer,FOffset);
+    Canvas.Draw(0,0,FBuffer)
+  end;
+end;
+
+procedure TCustomText.SetBackImageFile(AValue: String);
+begin
+  if (AValue <> FBackImageFile) then
+  begin
+    FBackImageFile:=AValue;
+  end;
+end;
 
 procedure TCustomText.SetLines(const AValue: TStrings);
 begin
@@ -929,7 +955,7 @@ begin
   FRect.Left:=0;
   FRect.Width:=Width;
   FRect.Height:=Height;
-  if trim(FBackImageFile)<>'' then
+  if (trim(FBackImageFile)<>'') and (FShowBackImage) then
   begin
     if  FileExists(FBackImageFile) then
     begin
@@ -2447,7 +2473,6 @@ begin
 
   ControlStyle := ControlStyle + [csOpaque];
 
-  OnPaint := @DrawScrollingText;
   FLines := TStringList.Create;
   FBuffer := TBitmap.Create;
   img:=TImage.Create(nil);
@@ -2463,6 +2488,8 @@ begin
   FOldFontSize:=FBuffer.Canvas.Font.Size;
   FDefaultFontName:=FBuffer.Canvas.Font.Name;
   FColor:=clWhite;
+  FShowBackImage:=true;
+  OnPaint := @DrawScrollingText;
 end;
 
 destructor TCustomText.Destroy;
@@ -2687,6 +2714,18 @@ begin
   begin
     FScrollingText:= AValue;
     Lines.Text:=AValue;
+  end;
+end;
+
+procedure TQFHorizontalScrollingText.SetShowBackImage(AValue: Boolean);
+begin
+  if (AValue <> FShowBackImage) then
+  begin
+    FShowBackImage:=AValue;
+    Init(FBuffer);
+    FOffset:=0;
+    HDrawTexts(FBuffer,FOffsetx,0);
+    Canvas.Draw(0,0,FBuffer)
   end;
 end;
 
