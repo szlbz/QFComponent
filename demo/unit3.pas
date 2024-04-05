@@ -20,16 +20,19 @@ type
     Button5: TButton;
     Button6: TButton;
     CheckBox1: TCheckBox;
+    CheckBox2: TCheckBox;
     ColorBox1: TColorBox;
     Label1: TLabel;
     PageControl1: TPageControl;
     Panel1: TPanel;
     Panel2: TPanel;
+    QFHorizontalScrollingText1: TQFHorizontalScrollingText;
     QFRichView1: TQFRichView;
     ScrollingText1: TQFScrollingText;
     TabControl1: TTabControl;
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
+    TabSheet3: TTabSheet;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -37,6 +40,7 @@ type
     procedure Button5Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
+    procedure CheckBox2Click(Sender: TObject);
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
@@ -59,6 +63,7 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  PageControl1.TabIndex:=0;
   QFRichView1.BackImagefile:='bg.jpg';
   ScrollingText1.BackImagefile:='bg.jpg';
   TabSheet2.Visible:=true;
@@ -76,8 +81,11 @@ begin
   else if TabControl1.TabIndex=1 then
   begin
     PageControl1.TabIndex:=1;
+  end
+  else if TabControl1.TabIndex=2 then
+  begin
+    PageControl1.TabIndex:=2;
   end;
-
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
@@ -114,6 +122,12 @@ procedure TForm1.CheckBox1Click(Sender: TObject);
 begin
   if checkbox1.Checked then ScrollingText1.Active:=true
   else ScrollingText1.Active:=false;
+end;
+
+procedure TForm1.CheckBox2Click(Sender: TObject);
+begin
+  if checkbox2.Checked then QFHorizontalScrollingText1.Active:=true
+  else QFHorizontalScrollingText1.Active:=false;
 end;
 
 procedure TForm1.ColorBox1Change(Sender: TObject);

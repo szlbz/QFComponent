@@ -9,17 +9,16 @@ object Form1: TForm1
   DesignTimePPI = 144
   Font.Height = -18
   OnCreate = FormCreate
-  LCLVersion = '3.0.0.3'
   object PageControl1: TPageControl
     Left = 0
     Height = 734
     Top = 32
     Width = 1106
-    ActivePage = TabSheet1
+    ActivePage = TabSheet3
     Align = alClient
     ShowTabs = False
     Style = tsButtons
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'QFRichView Demo'
@@ -123,13 +122,13 @@ object Form1: TForm1
           '<bm3>书签目录测试3'
           '[s2]以下为<C2>markdown</C><sup>格式</sup>的表格：'
           '<rowh=70>|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
-          '|:-:|:-|-:|:-:|:-|'
-          '|秋风1|<colspan=3>[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-          '|秋风2|<colspan=2>检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
-          '|[c2]秋风3|检测中心3|南山建工村3|383233647|[img]3.png|'
-          '|<colspan=3>秋风4|检测中心4|南山建工村4|483233646|<hlk>(盒子论坛)http://bbs.2ccc.com/</hlk>|'
-          '|秋风5|<rowspan=3>检测中心5|南山建工村5|583233645||'
-          '|秋风6|检测中心6|南山建工村6|583233645||'
+          '|:-:|-:|-:|:-:|:-|'
+          '|<rowspan=3>秋风1|<colspan=2>[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
+          '|秋风2|<colspan=2>[r]检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
+          '|[c2]秋风3|检测中心3|南山建工村3|383233647|<rowspan=3>[img]3.png|'
+          '|<colspan=3>秋风4|检测中心4|南山建工村4|483233646||'
+          '|秋风5|<rowspan=2>检测中心5|南山建工村5|583233645||'
+          '|秋风6|检测中心6|南山建工村6|583233645|<hlk>(盒子论坛)http://bbs.2ccc.com/</hlk>|'
           '|秋风7|检测中心7|南山建工村7|583233645||'
           '|姓名|[#][C2]单位|办公地址|'
           '|:-:|:-:|:-:|'
@@ -186,12 +185,13 @@ object Form1: TForm1
         Color = clCream
         BackImageFile = 'bj.jpg'
         StepSize = 15
+        ShowUrlBookMakeHint = True
       end
     end
     object TabSheet2: TTabSheet
       Caption = 'QFScrollingText Demo'
-      ClientHeight = 0
-      ClientWidth = 0
+      ClientHeight = 726
+      ClientWidth = 1098
       object ScrollingText1: TQFScrollingText
         Left = 0
         Height = 651
@@ -285,6 +285,34 @@ object Form1: TForm1
         end
       end
     end
+    object TabSheet3: TTabSheet
+      ClientHeight = 726
+      ClientWidth = 1098
+      object QFHorizontalScrollingText1: TQFHorizontalScrollingText
+        Left = 120
+        Height = 110
+        Top = 184
+        Width = 496
+        LineSpacing = 0
+        Lines.Strings = (
+          '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+        )
+        GapX = 0
+        GapY = 0
+        Color = clWhite
+        ScrollingText = '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+        Active = False
+      end
+      object CheckBox2: TCheckBox
+        Left = 128
+        Height = 28
+        Top = 136
+        Width = 61
+        Caption = '滚动'
+        TabOrder = 1
+        OnClick = CheckBox2Click
+      end
+    end
   end
   object TabControl1: TTabControl
     Left = 0
@@ -292,10 +320,11 @@ object Form1: TForm1
     Top = 0
     Width = 1106
     OnChange = TabControl1Change
-    TabIndex = 0
+    TabIndex = 2
     Tabs.Strings = (
       'QFRichView Demo'
       'QFScrollingText Demo'
+      'QFHorizontalScrollingText Demo'
     )
     Align = alTop
     TabOrder = 1
