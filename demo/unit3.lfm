@@ -1,37 +1,38 @@
 object Form1: TForm1
   Left = 397
-  Height = 766
+  Height = 986
   Top = 36
-  Width = 1106
-  Caption = 'QFRichView Demo'
-  ClientHeight = 766
-  ClientWidth = 1106
+  Width = 977
+  Caption = 'QFComponent Demo'
+  ClientHeight = 986
+  ClientWidth = 977
   DesignTimePPI = 144
   Font.Height = -18
   OnCreate = FormCreate
+  Position = poScreenCenter
   object PageControl1: TPageControl
     Left = 0
-    Height = 734
+    Height = 954
     Top = 32
-    Width = 1106
-    ActivePage = TabSheet3
+    Width = 977
+    ActivePage = TabSheet4
     Align = alClient
     ShowTabs = False
     Style = tsButtons
-    TabIndex = 2
+    TabIndex = 3
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'QFRichView Demo'
-      ClientHeight = 726
-      ClientWidth = 1098
+      ClientHeight = 946
+      ClientWidth = 969
       object Panel1: TPanel
         Left = 0
         Height = 75
         Top = 0
-        Width = 1098
+        Width = 969
         Align = alTop
         ClientHeight = 75
-        ClientWidth = 1098
+        ClientWidth = 969
         TabOrder = 0
         object Button1: TButton
           Left = 8
@@ -107,9 +108,9 @@ object Form1: TForm1
       end
       object QFRichView1: TQFRichView
         Left = 0
-        Height = 651
+        Height = 871
         Top = 75
-        Width = 1098
+        Width = 969
         Align = alClient
         LineSpacing = 0
         Lines.Strings = (
@@ -121,7 +122,7 @@ object Form1: TForm1
           '<bm2>书签目录测试2'
           '<bm3>书签目录测试3'
           '[s2]以下为<C2>markdown</C><sup>格式</sup>的表格：'
-          '<rowh=70>|姓名|[#][C2]单位|办公地址|[l]电话(手机号码)|备注|'
+          '<rowh=70>|姓名|[#][C2]<colspan=2>单位|办公地址|[l]电话(手机号码)|备注|'
           '|:-:|-:|-:|:-:|:-|'
           '|<rowspan=3>秋风1|<colspan=2>[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
           '|秋风2|<colspan=2>[r]检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
@@ -184,19 +185,20 @@ object Form1: TForm1
         GapY = 0
         Color = clCream
         BackImageFile = 'bg.jpg'
+        ShowBackImage = True
         StepSize = 15
         ShowUrlBookMakeHint = True
       end
     end
     object TabSheet2: TTabSheet
       Caption = 'QFScrollingText Demo'
-      ClientHeight = 726
-      ClientWidth = 1098
+      ClientHeight = 946
+      ClientWidth = 969
       object ScrollingText1: TQFScrollingText
         Left = 0
-        Height = 651
+        Height = 871
         Top = 75
-        Width = 1098
+        Width = 969
         Align = alClient
         Anchors = [akTop, akLeft, akRight]
         LineSpacing = 0
@@ -263,16 +265,17 @@ object Form1: TForm1
         GapX = 10
         GapY = 0
         Color = clCream
+        ShowBackImage = True
         Active = False
       end
       object Panel2: TPanel
         Left = 0
         Height = 75
         Top = 0
-        Width = 1098
+        Width = 969
         Align = alTop
         ClientHeight = 75
-        ClientWidth = 1098
+        ClientWidth = 969
         TabOrder = 1
         object CheckBox1: TCheckBox
           Left = 48
@@ -286,13 +289,13 @@ object Form1: TForm1
       end
     end
     object TabSheet3: TTabSheet
-      ClientHeight = 726
-      ClientWidth = 1098
+      ClientHeight = 946
+      ClientWidth = 969
       object QFHorizontalScrollingText1: TQFHorizontalScrollingText
-        Left = 120
+        Left = 128
         Height = 110
-        Top = 184
-        Width = 496
+        Top = 176
+        Width = 480
         LineSpacing = 0
         Lines.Strings = (
           '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
@@ -301,6 +304,7 @@ object Form1: TForm1
         GapY = 0
         Color = clWhite
         BackImageFile = 'bg.jpg'
+        ShowBackImage = True
         ScrollingText = '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
         Active = False
       end
@@ -325,18 +329,191 @@ object Form1: TForm1
         OnChange = CheckBox3Change
       end
     end
+    object TabSheet4: TTabSheet
+      Caption = 'TabSheet4'
+      ClientHeight = 946
+      ClientWidth = 969
+      object QFGridPanelComponent1: TQFGridPanelComponent
+        Left = 27
+        Height = 646
+        Top = 55
+        Width = 888
+        Anchors = [akTop, akLeft, akRight]
+        LineSpacing = 0
+        Lines.Strings = (
+          '|单位名称|<compname=name1>||<rowspan=3>[img]cl.png|'
+          '|:-:|:-:|:-:|:-:|'
+          '|单位地址|<compname=eeee>|<rowspan=2><compname=name3>|2|'
+          '|联系电话|<compname=tel>||3|'
+          '|联系人|<compname=name2>|<colspan=2><compname=DateEdit1>|4|'
+          '|<rowspan=3>备注|<rowspan=3><colspan=2><compname=Memo11>|1|5|'
+          '|||2|6|'
+          '|||3|7|'
+          '|||4|8|'
+          ''
+        )
+        GapX = 0
+        GapY = 0
+        Color = clWhite
+        ShowBackImage = True
+        RowHeight = 80
+        Gap = 5
+        Border = 1
+        Font.CharSet = GB2312_CHARSET
+        Font.Height = -24
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
+      end
+      object name1: TEdit
+        Left = 255
+        Height = 24
+        Top = 83
+        Width = 212
+        BorderStyle = bsNone
+        TabOrder = 0
+        TextHint = '请输入单位名称'
+      end
+      object name3: TButton
+        Left = 477
+        Height = 150
+        Top = 140
+        Width = 212
+        Caption = 'name3'
+        TabOrder = 5
+      end
+      object DateEdit1: TDateEdit
+        Left = 477
+        Height = 32
+        Top = 319
+        Width = 434
+        CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
+        DateOrder = doNone
+        ButtonWidth = 34
+        NumGlyphs = 1
+        MaxLength = 0
+        TabOrder = 7
+        Text = 'DateEdit1'
+      end
+      object tel: TEdit
+        Left = 255
+        Height = 24
+        Top = 243
+        Width = 212
+        BorderStyle = bsNone
+        TabOrder = 3
+        TextHint = '请输入联系电话'
+      end
+      object name2: TEdit
+        Left = 255
+        Height = 24
+        Top = 323
+        Width = 212
+        BorderStyle = bsNone
+        TabOrder = 4
+        TextHint = '请输入联系人'
+      end
+      object eeee: TEdit
+        Left = 255
+        Height = 24
+        Top = 163
+        Width = 212
+        BorderStyle = bsNone
+        TabOrder = 1
+        TextHint = '请输入单位地址'
+      end
+      object Memo1: TMemo
+        Left = 928
+        Height = 230
+        Top = 448
+        Width = 212
+        BorderStyle = bsNone
+        Lines.Strings = (
+          'TQFGridPanelComponent控件支持在单元格绑定可视控件，运行时单元格绑定的控件会吸附到相应的单元格里。绑定后，控件的TabOrder从表格第1行第1列开始从左到右，从上到下重新编排。控件的宽和高自动适配单元格的尺寸。'
+        )
+        TabOrder = 6
+      end
+      object Panel3: TPanel
+        Left = 0
+        Height = 216
+        Top = 734
+        Width = 967
+        Anchors = [akLeft, akBottom]
+        Caption = 'Panel3'
+        ClientHeight = 216
+        ClientWidth = 967
+        TabOrder = 8
+        object Memo2: TMemo
+          Left = 28
+          Height = 144
+          Top = 8
+          Width = 888
+          Anchors = [akLeft, akRight, akBottom]
+          Lines.Strings = (
+            'Memo2'
+          )
+          TabOrder = 0
+          WordWrap = False
+        end
+        object Button7: TButton
+          Left = 32
+          Height = 46
+          Top = 164
+          Width = 232
+          Anchors = [akLeft, akBottom]
+          Caption = '更新'
+          TabOrder = 1
+          OnClick = Button7Click
+        end
+        object LabeledEdit1: TLabeledEdit
+          Left = 328
+          Height = 32
+          Top = 178
+          Width = 120
+          EditLabel.Height = 24
+          EditLabel.Width = 120
+          EditLabel.Caption = '表格行高'
+          TabOrder = 2
+          Text = '80'
+          OnKeyPress = LabeledEdit1KeyPress
+        end
+        object LabeledEdit2: TLabeledEdit
+          Left = 604
+          Height = 32
+          Top = 178
+          Width = 312
+          EditLabel.Height = 24
+          EditLabel.Width = 312
+          EditLabel.Caption = 'QFGridPanelComponent控件高度'
+          TabOrder = 3
+          Text = '646'
+          OnKeyPress = LabeledEdit2KeyPress
+        end
+      end
+      object Label2: TLabel
+        Left = 0
+        Height = 48
+        Top = 0
+        Width = 969
+        Align = alTop
+        Alignment = taCenter
+        Caption = '界面动态调整Demo'
+        Font.Height = 48
+        ParentFont = False
+      end
+    end
   end
   object TabControl1: TTabControl
     Left = 0
     Height = 32
     Top = 0
-    Width = 1106
+    Width = 977
     OnChange = TabControl1Change
-    TabIndex = 2
+    TabIndex = 0
     Tabs.Strings = (
       'QFRichView Demo'
       'QFScrollingText Demo'
       'QFHorizontalScrollingText Demo'
+      '控件表格'
     )
     Align = alTop
     TabOrder = 1
