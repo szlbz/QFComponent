@@ -78,7 +78,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
-  OSPrinters,
+  OSPrinters,StdCtrls,DBCtrls,
   //ComponentEditors,
   lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
 
@@ -111,7 +111,8 @@ type
      Height:integer;
      ColSpan:integer; //从当前单元格向右合并n个单元格
      RowSpan:integer; //从当单元格向下合并n个单元格
-     DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2
+     DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
+     ComponentName:string;
      Visible:Boolean;//
   end;
 
@@ -146,6 +147,7 @@ type
 
   TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
+    //FRun:integer;
     FRect:TRect;
     FMV:integer;
     FLineSpacing:integer;//行距
@@ -178,19 +180,19 @@ type
     FGapY:integer;
     FColor:TColor;
     FDefaultFontName:string;
+    //function FindControls(CompName:string):TControl;
     procedure Init(Buffer:TBitmap);
     function ActiveLineIsURL: boolean;
     function TextPreprocessing(i:integer;str:string;out textstyle:string):string; //文字类预处理
     procedure TablePreprocessing; //表格类预处理
     procedure BackgroundRefresh(Buffer:TBitmap);
     procedure DrawScrollingText(Sender: TObject);
-    procedure SetLines(const AValue: TStrings);
     procedure SetColor(const AValue: TColor);
     function FindMark1(str:string;out NewStr:string):Boolean;
     function FindMark2(str:string;out NewStr:string):Boolean;
     function GetStringTextWidth(Buffer: TBitmap;str:string):integer;
     procedure DisplayChar(Buffer: TBitmap;x,y:integer;str:string); //显示字符
-    function DrawTable(Buffer: TBitmap;Index, y:integer):integer;
+    function DrawTable(Buffer: TBitmap;Index, y:integer):integer;virtual;
     function TruncationStr(Buffer: TBitmap; str:string;fbwidth:integer):string;//字符串长度超过规定时截断
     function SkipIdentification(i:integer;str:string;out j:integer):string;//跳过标识
     function ReplaceCharacters(str:string):string; //删除所有特殊符号
@@ -200,6 +202,7 @@ type
     procedure SetBackImageFile(AValue: String);
     procedure SetShowBackImage(AValue: Boolean);
   protected
+    procedure SetLines(const AValue: TStrings); virtual;
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
     procedure MouseMove(Shift: TShiftState; X,Y: Integer); override;
@@ -265,10 +268,10 @@ type
   private
     FShowUrlBookMakeHint: Boolean;
     FinitialY: Integer; // 用于存储鼠标按下时的初始位置
-    procedure SetLines(const AValue: TStrings);
     procedure DrawScrollingText(Sender: TObject);
     procedure SetShowUrlBookMakeHint(Value : Boolean);
-    protected
+  protected
+    procedure SetLines(const AValue: TStrings);
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
@@ -286,6 +289,32 @@ type
     property ShowUrlBookMakeHint: Boolean read FShowUrlBookMakeHint write SetShowUrlBookMakeHint;
   end;
 
+  TQFGridPanelComponent =  class(TCustomText)
+  private
+    FRun:integer;
+    FGap:integer;
+    FBorder:integer;
+    FRowHeight:integer;
+    procedure DisplayTable(Sender: TObject);
+    function DrawTable(Buffer: TBitmap;Index, y:integer):integer;override;
+  protected
+    procedure SetLines(const AValue: TStrings);override;
+    procedure DoOnChangeBounds; override;
+    procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
+    procedure MouseMove(Shift: TShiftState; X,Y: Integer); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure Refresh;
+  published
+    //property Lines: TStrings read FLines write SetLines;
+    property RowHeight:integer read FRowHeight write FRowHeight;
+    property Gap:integer read FGap write FGap;
+    property Border:integer read FBorder write FBorder;
+    property Font;
+  end;
+
 procedure Register;
 
 implementation
@@ -296,7 +325,7 @@ procedure Register;
 begin
   //RegisterClasses([TQFRichEditor]);
   //RegisterComponentEditor(TString,TQFRichEditor);
-  RegisterComponents('QF Component', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText]);
+  RegisterComponents('QF Component', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText,TQFGridPanelComponent]);
 end;
 
 { TScrollingText }
@@ -355,6 +384,7 @@ begin
   CellType.RowSpan:=0;
   CellType.str:=s;
   CellType.Visible:=true;
+  CellType.ComponentName:='';
   if pos('[L]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
@@ -433,6 +463,30 @@ begin
     s:=s.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.DispType:=1;
+  end;
+  if (utf8Pos('<COMPNAME=', s.ToUpper)>0) then
+  begin
+    s1:=s;
+    FontPos1:=utf8pos('<COMPNAME=',s1.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(s1) do
+    begin
+      if utf8copy(s1,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(s1,FontPos1+10,FontPos2-FontPos1-10);
+        CellType.ComponentName:=tmp1;
+
+        tmp1:=utf8copy(s1,FontPos1,FontPos2-FontPos1+1);
+        s1:=s1.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<COMPNAME',s1.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+    CellType.str:='';//s1;
+    CellType.DispType:=5;//控件类
   end;
   if pos('<BM',s.ToUpper)>0 then
   begin
@@ -1164,6 +1218,23 @@ begin
     FLineList[i].DispType:='URL';
   end
   else
+  if (utf8Pos('<COMPNAME=', str.ToUpper)>0) then
+  begin
+    pos1:=utf8pos('<COMPNAME=',str.ToUpper);
+    for j:= pos1 to utf8length(str) do
+    begin
+      if utf8copy(str,j,1)='>' then
+      begin
+        pos2:=j;
+        break;
+      end;
+    end;
+    nbms:=utf8copy(str,pos1+1,pos2-pos1-1);
+    textstyle:=textstyle+'<COMPNAME='+nbms+'>';
+    str:=str.Replace('<COMPNAME='+nbms+'>','',[rfReplaceAll,rfIgnoreCase]);
+    FLineList[i].DispType:='COMPONENT';
+  end
+  else
   if (utf8Pos('<BM', str.ToUpper)>0) then
   begin
     FindMark1(str,newbmstr);
@@ -1508,6 +1579,7 @@ begin
                 FTable[row,col].ColSpan:=MyCellType.ColSpan;
                 FTable[row,col].RowSpan:=MyCellType.RowSpan;
                 FTable[row,col].Visible:=MyCellType.Visible;
+                FTable[row,col].ComponentName:=MyCellType.ComponentName;
               end;
             end;
           end;
@@ -2062,7 +2134,7 @@ end;
 function TCustomText.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
 var
   i,j,w1,h,h1,row,col,v:integer;
-  k:integer;
+  i1,k:integer;
   colWidth:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
@@ -2134,19 +2206,21 @@ begin
   begin
     Span:=0;
     c:=0;
+    if i=0 then i1:=i
+    else i1:=i+1;
     for j:=0 to col do
     begin
-      if FTable[i+1,j].ColSpan>0 then    //横向合并单元格
+      if FTable[i1,j].ColSpan>0 then    //横向合并单元格
       begin
         c:=j;
-        Span:=FTable[i+1,j].ColSpan; //row,col
-        FTable[i+1,j].Width:=Span*colWidth;
+        Span:=FTable[i1,j].ColSpan; //row,col
+        FTable[i1,j].Width:=Span*colWidth;
         for v:=j+1 to span+j-1 do
-          FTable[i+1,v].Visible:=false;
+          FTable[i1,v].Visible:=false;
       end;
       if (Span=0) or (j=c+Span-1) or (j=col) then
       begin
-        FTable[i+1,j].Width:=0;
+        FTable[i1,j].Width:=0;
         Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth,y0+i*h+h);
         Span:=0;
       end;
@@ -2752,7 +2826,6 @@ begin
   for i:=0 to Lineno-1 do
      str:=str+FLineList[i].str;
 
-  FTextWidth:=GetStringTextWidth(Buffer,str);
   Buffer.Canvas.Font.Size:=FLineList[0].FontSize;
   if FLineList[0].FontStyle=0 then
     Buffer.Canvas.Font.Style:=[];
@@ -2766,6 +2839,7 @@ begin
       Buffer.Canvas.Font.Style:=[fsUnderline];
   Buffer.Canvas.Font.Color:=FLineList[0].FontColor;
 
+  FTextWidth:=GetStringTextWidth(Buffer,str);
   h:=(Buffer.Canvas.GetTextHeight(str)+FGapY);
   h:=abs(h-Buffer.Height) div 2; //垂直居中
   DisplayChar(Buffer,x, y+h, str);
@@ -3239,6 +3313,574 @@ begin
   FOffset:=-(FTextHeigth-FBuffer.Height+70);
   DrawTexts(FBuffer,0);
   Canvas.Draw(0,0,FBuffer);
+end;
+
+constructor TQFGridPanelComponent.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+
+  OnPaint := @DisplayTable;
+  FRun:=0;
+  FGap:=5;
+  FBorder:=0;
+  FRowHeight:=30;
+  Lines.Add(
+  '||||||'+#13#10+
+  '|:-:|:-:|:-:|:-:|:-:|'+#13#10+
+  '||||||'+#13#10+
+  '||||||'+#13#10+
+  '||||||'+#13#10+
+  '||||||'+#13#10+
+  '||||||'+#13#10);
+end;
+
+destructor TQFGridPanelComponent.Destroy;
+begin
+  inherited Destroy;
+end;
+
+procedure TQFGridPanelComponent.DoOnChangeBounds;
+begin
+  inherited DoOnChangeBounds;
+  FRun:=0;
+end;
+
+procedure TQFGridPanelComponent.Refresh;
+begin
+  FRun:=0;
+  Init(FBuffer);
+  if FTablesl<>nil then
+    GetTableInfo(0);
+  DrawTable(FBuffer,0,0);
+  Canvas.Draw(0,0,FBuffer)
+end;
+
+procedure TQFGridPanelComponent.SetLines(const AValue: TStrings);
+begin
+  if (AValue <> nil) then
+  begin
+    FRun:=0;
+    FLines.Assign(AValue);
+    Init(FBuffer);
+    if FTablesl<>nil then
+      GetTableInfo(0);
+    DrawTable(FBuffer,0,0);
+    Canvas.Draw(0,0,FBuffer)
+  end;
+end;
+
+procedure TQFGridPanelComponent.DisplayTable(Sender: TObject);
+begin
+  Init(FBuffer);
+  if FTablesl<>nil then
+    GetTableInfo(0);
+  DrawTable(FBuffer,0,0);
+  Canvas.Draw(0,0,FBuffer)
+end;
+
+function TQFGridPanelComponent.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
+var
+  i,j,w1,h,h1,row,col,v:integer;
+  i1:integer;
+  k:integer;
+  colWidth:integer;
+  x0,y0,x1,y1:integer;
+  TableRowHeigth:integer;
+  Span,c:integer;
+  th:integer;//文字高度
+  TabStops:integer;
+  Control: TControl;
+  row1,col1:integer;
+  kk,jj,oo:integer;
+
+
+  function FindChildControls(str:string):TControl;
+  var kk,i:integer;
+  begin
+    Result:=nil;
+    kk:=self.Parent.ControlCount;
+    for i:=0 to kk-1 do
+    begin
+      if self.Parent.Controls[i].Name =str then
+      begin
+        Result:=self.Parent.Controls[i];
+        break;
+      end;
+    end;
+  end;
+
+begin
+  Index:=0;
+  y:=0;
+  if FTablesl<>nil then
+  begin
+    row:=FTablesl[Index].row;
+    col:=FTablesl[Index].col-1;
+    TableRowHeigth:=FTablesl[Index].RowHeight;
+    Buffer.Canvas.Font.Style:=[fsBold];
+    th:= Buffer.Canvas.TextHeight('国');
+    h:=round(th*1.5); //表格行高
+    if TableRowHeigth>h then h:=TableRowHeigth;
+    if FRowHeight>h then h:= FRowHeight;
+
+    colWidth:=(Buffer.Width) div col; //单元格宽
+    Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
+
+    //2024.04.01实现单元格合并
+    //画横线
+    y0:=y;
+    x0:=1;
+    Span:=0;
+    kk:=0;
+    jj:=0;
+    //for j:=0 to col-1 do
+    j:=0;
+    while j<=col-1 do
+    begin
+      span:=0;
+      c:=0;
+      i1:=0;
+      i:=0;
+      col1:=0;
+      //for i:=0 to row-1 do //row
+      while i<=row-1 do //row
+      begin
+        if FTable[i,j+1].RoWSpan>0 then //竖向合并单元格
+        begin
+          c:=i;
+          Span:=FTable[i,j+1].RowSpan;//row,col
+          col1:=FTable[i,j+1].ColSpan;
+          FTable[i,j+1].Height:=h*Span;
+          if i=0 then i1:=1;
+
+          for v:=I+1 to span+i1+i-1 do
+            FTable[v,j+1].Visible:=false;
+
+          if col1>0 then
+          begin
+            kk:=col1;
+            for oo:=j+2 to col1+j-1 do
+            begin
+              FTable[i,oo].Visible:=false;
+            end;
+            //j:=j+col1-1;
+          end;
+        end;
+        //else
+        if (Span=0)  or (i=c+Span+i1-1) then
+        begin
+          FTable[i,j+1].Height:=h;
+          Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth+colWidth,y0+i*h);
+          Span:=0;
+        end;
+        inc(i);//row
+      end;
+      inc(j);
+    end;
+
+    //画竖线
+    y0:=y;
+    x0:=1;
+    k:=0;
+    i:=0;
+    row1:=0;
+    //for i:=0 to row-2 do//row
+    while i<=row-2 do
+    begin
+      Span:=0;
+      c:=0;
+      k:=1;
+      row1:=0;
+
+      if i=0 then i1:=i
+      else i1:=i+1;
+
+      //for j:=0 to col do
+      j:=0;
+      while j<= col do
+      begin
+        if FTable[i1,j].ColSpan>0 then    //横向合并单元格
+        begin
+          row1:=FTable[i1,j].RoWSpan;
+          c:=j;
+          Span:=FTable[i1,j].ColSpan; //row,col
+          FTable[i1,j].Width:=Span*colWidth;
+
+          for v:=j+1 to span+j-1 do
+            FTable[i1,v].Visible:=false;
+
+          if row1>0 then
+          begin
+            Buffer.Canvas.Line(x0+(j-1)*colWidth,y0+(i1-1)*h,x0+(j-1)*colWidth,y0+(i1-1)*h+h);
+            Buffer.Canvas.Line(x0+(span+j-1)*colWidth,y0+(i1-1)*h,x0+(span+j-1)*colWidth,y0+(i1-1)*h+h);
+            for oo:=i1+1 to row1+i1-1 do
+            begin
+              for v:=j+1 to span+j-1 do
+                FTable[oo,v].Visible:=false;
+              Buffer.Canvas.Line(x0+(j-1)*colWidth,y0+(oo-1)*h,x0+(j-1)*colWidth,y0+(oo-1)*h+h);
+              Buffer.Canvas.Line(x0+(span+j-1)*colWidth,y0+(oo-1)*h,x0+(span+j-1)*colWidth,y0+(oo-1)*h+h);
+            end;
+          end;
+          i:=i+row1;
+        end
+        else
+        if (Span=0) or (j=c+Span-1) then
+        begin
+          FTable[i1,j].Width:=colWidth;
+          Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth,y0+i*h+h);
+          Span:=0;
+        end;
+        inc(j);
+      end;
+      if row1=0 then
+         inc(i);
+    end;
+    //开始画表格边框
+    Buffer.Canvas.Pen.Width:=1;
+    Buffer.Canvas.MoveTo(1,0);
+    Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,0);  //顶
+    Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,h*(row-1));//右;
+    Buffer.Canvas.LineTo(1,h*(row-1)); //底
+    Buffer.Canvas.LineTo(1,1);//左
+    Buffer.Canvas.Pen.Width:=1;
+    Buffer.Canvas.MoveTo(2,1);
+    Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
+    Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row-1)-1);//右;
+    Buffer.Canvas.LineTo(2,h*(row-1)-1); //底
+    Buffer.Canvas.LineTo(2,1);//左
+
+    //开始画表格边框
+    //if FBorder>0 then
+    //begin
+    //  Buffer.Canvas.Pen.Width:=FBorder;
+    //  Buffer.Canvas.MoveTo(2,1);
+    //  Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
+    //  Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row-1)-1);//右;
+    //  Buffer.Canvas.LineTo(2,h*(row-1)-1); //底
+    //  Buffer.Canvas.LineTo(2,1);//左
+    //  Buffer.Canvas.Pen.Width:=1;
+    //end;
+    //结束画表格边框
+
+    Buffer.Canvas.Brush.Style := bsClear;//透明文字
+    TabStops:=0;
+    for i:=0 to row-1 do  //绘表格文字
+    begin
+      for j:=0 to col-1 do
+      begin
+        if FTable[i,j+1].Visible then
+        begin
+          if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2)
+             or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
+          begin
+            //设置字体属性
+            if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
+            if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
+            if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
+            if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
+            if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
+            if FTable[i,j+1].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
+            else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+            //设置字体属性
+
+            x0:=j*colWidth;
+            h1:=h;
+            w1:=colWidth;
+            if FTable[i,j+1].Width>0 then
+              colWidth:=FTable[i,j+1].Width;
+
+            if FTable[i,j+1].Height>0 then
+               h:=FTable[i,j+1].Height;
+
+            x1:=x0; //居左
+            if FTable[0,j+1].Align=1 then
+              x1:=x0 ;//居左
+           if FTable[0,j+1].Align=2 then
+              x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2; //居中
+            if FTable[0,j+1].Align=3 then
+               x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth)))-5; //居右
+            if i=0 then
+            begin
+              //x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2;//标题行文字居中
+              y0:=y+i*h+abs(h- th) div 2;//垂直居中
+              //Buffer.Canvas.Font.Style:=[fsBold];
+              Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+              DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,colWidth));//截断超过单元格宽度的字符串
+            end
+            else
+            if i>1 then //跳过第2行--第2行定义单元格的对齐格式
+            begin
+               if h1<>h then
+                 y0:=y + (i-1)* h1 + abs (h-th) div 2//垂直居中
+               else
+                 y0:=y + (i-1)* h1 + abs(h1- th) div 2;//垂直居中
+               DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,colWidth));
+            end;
+            colWidth:=w1;
+            h:=h1;
+          end;
+          if (FTable[i,j+1].DispType=5) and (FRun=0) then  //控件
+          begin
+            Control:=FindChildControls(FTable[i,j+1].ComponentName);// self.Parent.FindChildControl(FTable[i,j+1].ComponentName); //查找控件
+            if Control<>nil then
+            begin
+              x0:=j*colWidth+1+FGap;
+              if i=0 then
+                y0:=y+FGap
+              else
+                y0:=y+(i-1)*h+FGap;
+              if FTable[i,j+1].Width=0 then
+                Control.Width:=ColWidth-FGap*2
+              else
+                Control.Width:=FTable[i,j+1].Width-FGap*2;
+              Control.Height:= FTable[i,j+1].Height-FGap*2;
+              y1:=(abs(Control.Height-FTable[i,j+1].Height) div 2)-FGap;
+              Control.Left:=x0+self.Left;
+              Control.Top:=y0+self.Top+y1;//垂直居中显示控件
+              if (Control is TEdit) or (Control is TDBEdit) or
+                 (Control is TMemo) or
+                 (Control is TDBMemo) or
+                 (Control is TComboBox) or (Control is TDBComboBox) then
+              begin
+                TEdit(Control).BorderStyle:=bsNone;
+                TEdit(Control).TabOrder:= TabStops;
+              end;
+              inc(TabStops);
+            end;
+          end;
+          if FTable[i,j+1].DispType=1 then  //显示图形
+          begin
+            x0:=j*colWidth+1;
+            if i=0 then  y0:=y+2
+            else
+            y0:=y+(i-1)*h+4;
+            if  FileExists(FTable[i,j+1].str) then
+            begin
+              IMG.Picture.LoadFromFile(FTable[i,j+1].str);
+              //设置图像显示位置及尺寸（单元格大小）
+              FRect.Top:=y0+1;
+              FRect.Left:=x0+1;
+              if FTable[i,j+1].Width<>0 then
+                FRect.Width:=FTable[i,j+1].Width-4
+              else
+                FRect.Width:=colWidth-3;
+              if FTable[i,j+1].Height<>0 then
+                FRect.Height:=FTable[i,j+1].Height-4
+              else
+                FRect.Height:=h-3;
+              Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
+            end
+            else
+            begin
+              //没找到图像文件
+              DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),colWidth));
+            end;
+          end;
+        end;
+      end;
+      FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
+    end;
+    FRun:=1;
+    y:=y+(row-1)*h+5;
+    Result:=y;
+  end;
+end;
+
+procedure TQFGridPanelComponent.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
+var
+  k,k1,oldy1,oldy2:integer;
+  oldTextHeigth:integer;
+begin
+  if Button = mbLeft then
+  begin
+    // 处理左键按下
+    //FisLeftButtonDown := True;
+    //FinitialY := Y;
+  end;
+
+  //if FBMActiveStr<>'' then //跳转到指定书签的位置
+  //begin
+  //    if Assigned(FBookMark2) then
+  //    begin
+  //      oldy1:=0;
+  //      oldy2:=0;
+  //      for k:=0 to high(FBookMark2) do
+  //      begin
+  //        if FBookMark2[k].BookMark=FBMActiveStr then
+  //        begin
+  //          BackgroundRefresh(FBuffer);//刷新背景
+  //          FOffset:=0;
+  //          oldTextHeigth:=FTextHeigth;
+  //          oldy1:=FBookMark2[k].y1;
+  //          oldy2:=FBookMark2[k].y2;
+  //          DrawTexts(FBuffer,-FBookMark2[k].y1);
+  //          Canvas.Draw(0,0,FBuffer);
+  //          FOffset:=-oldy1;
+  //          FTextHeigth:=oldTextHeigth;
+  //          for k1:=0 to high(FBookMark2) do
+  //          begin
+  //            FBookMark2[k1].y1:=-oldy1;
+  //            FBookMark2[k1].y2:=-oldy2;
+  //          end;
+  //          break;
+  //        end;
+  //      end;
+  //      if Assigned(FHyperLink) then
+  //      begin
+  //        for k:=0 to high(FHyperLink) do
+  //        begin
+  //          FHyperLink[k].y1:=FHyperLink[k].y1+oldy1;
+  //          FHyperLink[k].y2:=FHyperLink[k].y2+oldy1;
+  //        end;
+  //      end;
+  //    end;
+  //end;
+
+  inherited MouseDown(Button, Shift, X, Y);
+end;
+
+procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
+begin
+  if Button = mbLeft then
+  begin
+    // 处理左键释放
+    //FisLeftButtonDown := False;
+  end;
+end;
+
+procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  movedY: Integer;//存储鼠标移动的距离
+  k:integer;
+begin
+  inherited MouseMove(Shift, X, Y);
+
+  //if Assigned(FHyperLink) then   //URL
+  //begin
+  //  for k:=0 to high(FHyperLink) do
+  //  begin
+  //    if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) and
+  //       (x>FHyperLink[k].x1) and (x<FHyperLink[k].x2) then
+  //    begin
+  //      if FShowUrlBookMakeHint then
+  //      begin
+  //        self.Hint:='超链接地址:'+FHyperLink[k].URL;
+  //        self.ShowHint:=true;
+  //      end;
+  //      FActiveLine := FHyperLink[k].hs;
+  //      break;
+  //    end
+  //    else
+  //      FActiveLine:= -1;
+  //  end;
+  //end;
+  //if Assigned(FBookMark1) then  //书签
+  //begin
+  //  for k:=0 to high(FBookMark1) do
+  //  begin
+  //    if (y>abs(FOffset+FBookMark1[k].y1)) and (y<abs(FOffset+FBookMark1[k].y2)) and
+  //       (x>FBookMark1[k].x1) and (x<FBookMark1[k].x2) then
+  //    begin
+  //      FBMActiveLine := FBookMark1[k].hs;
+  //      FBMActiveStr := FBookMark1[k].BookMark;
+  //      if FShowUrlBookMakeHint then
+  //      begin
+  //        self.Hint:='书签名称:'+FBookMark1[k].BookMark;
+  //        self.ShowHint:=true;
+  //      end;
+  //      break;
+  //    end
+  //    else
+  //    begin
+  //      FBMActiveStr:= '';
+  //      FBMActiveLine:= -1;
+  //    end;
+  //  end;
+  //end;
+  //
+  //Cursor := crDefault;
+  ////URL
+  //if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
+  //  Cursor := crHandPoint;
+  //
+  ////书签
+  //if (FBMActiveLine >= 0) and (FBMActiveLine < Lineno) then
+  //  Cursor := crHandPoint;
+  //
+  //if FisLeftButtonDown then
+  //begin
+  //  movedY := Y - FinitialY; // 计算Y轴上的移动距离
+  //
+  //  if movedY > 0 then
+  //  begin
+  //    // 鼠标向下移动
+  //    if abs(FOffset)<(FTextHeigth-FBuffer.Height+35) then
+  //    begin
+  //      Dec(FOffset, abs(35));
+  //      if Assigned(FHyperLink) then
+  //      begin
+  //        for k:=0 to high(FHyperLink) do
+  //        begin
+  //          FHyperLink[k].y1:=FHyperLink[k].y1-35;
+  //          FHyperLink[k].y2:=FHyperLink[k].y2-35;
+  //        end;
+  //      end;
+  //      if Assigned(FBookMark1) then
+  //      begin
+  //        for k:=0 to high(FBookMark1) do
+  //        begin
+  //          FBookMark1[k].y1:=FBookMark1[k].y1-35;
+  //          FBookMark1[k].y2:=FBookMark1[k].y2-35;
+  //        end;
+  //      end;
+  //      if Assigned(FBookMark2) then
+  //      begin
+  //        for k:=0 to high(FBookMark2) do
+  //        begin
+  //          FBookMark2[k].y1:=FBookMark2[k].y1-35;
+  //          FBookMark2[k].y2:=FBookMark2[k].y2-35;
+  //        end;
+  //      end;
+  //    end;
+  //  end
+  //  else
+  //  if movedY < 0 then
+  //  begin
+  //    // 鼠标向上移动
+  //    if FOffset<0 then
+  //    begin
+  //      inc(FOffset, abs(35));
+  //      if Assigned(FHyperLink) then
+  //      begin
+  //        for k:=0 to high(FHyperLink) do
+  //        begin
+  //          FHyperLink[k].y1:=FHyperLink[k].y1+35;
+  //          FHyperLink[k].y2:=FHyperLink[k].y2+35;
+  //        end;
+  //      end;
+  //      if Assigned(FBookMark1) then
+  //      begin
+  //        for k:=0 to high(FBookMark1) do
+  //        begin
+  //          FBookMark1[k].y1:=FBookMark1[k].y1+35;
+  //          FBookMark1[k].y2:=FBookMark1[k].y2+35;
+  //        end;
+  //      end;
+  //      if Assigned(FBookMark2) then
+  //      begin
+  //        for k:=0 to high(FBookMark2) do
+  //        begin
+  //          FBookMark2[k].y1:=FBookMark2[k].y1+35;
+  //          FBookMark2[k].y2:=FBookMark2[k].y2+35;
+  //        end;
+  //      end;
+  //    end;
+  //  end;
+  //
+  //  BackgroundRefresh(FBuffer);//刷新背景
+  //  DrawTexts(FBuffer,0);
+  //  Canvas.Draw(0,0,FBuffer);
+  //end;
 end;
 
 initialization
