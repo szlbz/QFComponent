@@ -346,7 +346,7 @@ object Form1: TForm1
           '|单位地址|<compname=eeee>|<rowspan=2><compname=name3>|2|'
           '|联系电话|<compname=tel>||3|'
           '|联系人|<compname=name2>|<colspan=2><compname=DateEdit1>|4|'
-          '|<rowspan=3>备注|<rowspan=3><colspan=2><compname=Memo11>|1|5|'
+          '|<rowspan=3>备注|<rowspan=3><compname=Memo1>|1|5|'
           '|||2|6|'
           '|||3|7|'
           '|||4|8|'
@@ -422,9 +422,9 @@ object Form1: TForm1
         TextHint = '请输入单位地址'
       end
       object Memo1: TMemo
-        Left = 928
+        Left = 255
         Height = 230
-        Top = 448
+        Top = 380
         Width = 212
         BorderStyle = bsNone
         Lines.Strings = (
