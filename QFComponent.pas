@@ -3401,6 +3401,10 @@ procedure TQFGridPanelComponent.DoOnChangeBounds;
 begin
   inherited DoOnChangeBounds;
   FRun:=0;
+  FOldP.Left:=0;
+  FOldP.Top:=0;
+  FOldP.Width:=0;
+  FOldP.Height:=0;
 end;
 
 procedure TQFGridPanelComponent.Refresh;
@@ -3739,7 +3743,7 @@ var p:TRect;
     begin
       for j:=1 to FCol do
       begin
-        if FTable[i,j].Visible then
+        if (FTable[i,j].Visible) and (FTable[i,j].DispType=5) then
         begin
           x0:=(j-1)*FColWidth;
           x1:=x0+FTable[i,j].Width;
@@ -3761,9 +3765,9 @@ var p:TRect;
     end;
   end;
 
-  procedure DrawLine(p:TRect;color:TColor);
+  procedure DrawLine(p:TRect;color:TColor;pw:integer);
   begin
-    FBuffer.Canvas.Pen.Width:=1;
+    FBuffer.Canvas.Pen.Width:=pw;
     FBuffer.Canvas.Pen.Color:=color;
     FBuffer.Canvas.MoveTo(p.Left,p.Top);
     FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top);  //顶
@@ -3776,11 +3780,11 @@ var p:TRect;
 begin
   inherited MouseMove(Shift, X, Y);
 
-  DrawLine(FoldP,clBlack);
+  DrawLine(FoldP,clBlack,1);
   if isCell(x,y,p) then
   begin
     FOldP:=p;
-    DrawLine(p,clred);
+    DrawLine(p,clred,1);
   end;
 
 end;
