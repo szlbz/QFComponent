@@ -294,7 +294,7 @@ type
   private
     FRun:integer;
     FGap:integer;
-    FBorder:integer;
+    FBorder:Boolean;
     FRowHeight:integer;
     procedure DisplayTable(Sender: TObject);
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;override;
@@ -312,7 +312,7 @@ type
     //property Lines: TStrings read FLines write SetLines;
     property RowHeight:integer read FRowHeight write FRowHeight;
     property Gap:integer read FGap write FGap;
-    property Border:integer read FBorder write FBorder;
+    property Border:Boolean read FBorder write FBorder;
     property Font;
   end;
 
@@ -3372,7 +3372,7 @@ begin
   OnPaint := @DisplayTable;
   FRun:=0;
   FGap:=5;
-  FBorder:=0;
+  FBorder:=true;
   FRowHeight:=30;
   Lines.Add(
   '||||||'+#13#10+
@@ -3483,7 +3483,7 @@ begin
       begin
         FTable[i,j].Height:=h;
         FTable[i,j].Width:=colWidth;
-        //竖向合并单元格
+        //竖向(row)合并单元格
         if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
         begin
           row1:=FTable[i,j].RowSpan+i-1;
@@ -3503,7 +3503,7 @@ begin
           end;
         end
         else
-        //竖向合并单元格
+        //竖向(row)合并单元格
         if FTable[i,j].RowSpan>0 then
         begin
           FTable[i,j].Height:=h*FTable[i,j].RowSpan;
@@ -3515,7 +3515,7 @@ begin
           end;
         end
         else
-        //横向合并单元格
+        //横向(col)合并单元格
         if FTable[i,j].ColSpan>0 then
         begin
           FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
@@ -3528,10 +3528,11 @@ begin
         end;
       end;
     end;
+
     //画单元格
     for i:=0 to row do
     begin
-      for j:=0 to col do
+      for j:=1 to col do
       begin
         if FTable[i,j].Visible then
         begin
@@ -3569,10 +3570,11 @@ begin
         end;
       end;
     end;
+
     //开始画表格边框
-    if FBorder>0 then
+    if FBorder then
     begin
-      Buffer.Canvas.Pen.Width:=FBorder;
+      Buffer.Canvas.Pen.Width:=1;
       Buffer.Canvas.MoveTo(2,1);
       Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
       Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row+1)-1);//右;
