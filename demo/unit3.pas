@@ -83,6 +83,7 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  TabControl1.TabIndex:=3;
   memo2.Lines.Assign(QFGridPanelComponent1.Lines);
   PageControl1.TabIndex:=3;
   //QFRichView1.BackImagefile:='bg.jpg';
