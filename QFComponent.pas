@@ -292,17 +292,21 @@ type
 
   TQFGridPanelComponent =  class(TCustomText)
   private
+    FRow:integer;
+    FCol:integer;
+    FColWidth:integer;
+    FColHeight:integer;
     FRun:integer;
     FGap:integer;
     FBorder:Boolean;
     FRowHeight:integer;
+    FOldP:TRect;
     procedure DisplayTable(Sender: TObject);
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;override;
   protected
     procedure SetLines(const AValue: TStrings);override;
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
-    procedure MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
     procedure MouseMove(Shift: TShiftState; X,Y: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -3369,6 +3373,10 @@ constructor TQFGridPanelComponent.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
+  FOldP.Left:=0;
+  FOldP.Top:=0;
+  FOldP.Width:=0;
+  FOldP.Height:=0;
   OnPaint := @DisplayTable;
   FRun:=0;
   FGap:=5;
@@ -3466,14 +3474,18 @@ begin
     DeleteRecord(index);//删除第2行定义单元格的对齐格式
     row:=FTablesl[Index].row-2;
     col:=FTablesl[Index].col-1;
+    FRow:=row;
+    FCol:=col;
     TableRowHeigth:=FTablesl[Index].RowHeight;
     Buffer.Canvas.Font.Style:=[fsBold];
     th:= Buffer.Canvas.TextHeight('国');
     h:=round(th*1.5); //表格行高
     if TableRowHeigth>h then h:=TableRowHeigth;
     if FRowHeight>h then h:= FRowHeight;
+    FColHeight:=h;
 
     colWidth:=(Buffer.Width) div col; //单元格宽
+    FColWidth:=colWidth;
     Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
 
     //重新计算合并后单元格的width和height
@@ -3707,200 +3719,70 @@ begin
 end;
 
 procedure TQFGridPanelComponent.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
-var
-  k,k1,oldy1,oldy2:integer;
-  oldTextHeigth:integer;
 begin
-  if Button = mbLeft then
-  begin
-    // 处理左键按下
-    //FisLeftButtonDown := True;
-    //FinitialY := Y;
-  end;
-
-  //if FBMActiveStr<>'' then //跳转到指定书签的位置
-  //begin
-  //    if Assigned(FBookMark2) then
-  //    begin
-  //      oldy1:=0;
-  //      oldy2:=0;
-  //      for k:=0 to high(FBookMark2) do
-  //      begin
-  //        if FBookMark2[k].BookMark=FBMActiveStr then
-  //        begin
-  //          BackgroundRefresh(FBuffer);//刷新背景
-  //          FOffset:=0;
-  //          oldTextHeigth:=FTextHeigth;
-  //          oldy1:=FBookMark2[k].y1;
-  //          oldy2:=FBookMark2[k].y2;
-  //          DrawTexts(FBuffer,-FBookMark2[k].y1);
-  //          Canvas.Draw(0,0,FBuffer);
-  //          FOffset:=-oldy1;
-  //          FTextHeigth:=oldTextHeigth;
-  //          for k1:=0 to high(FBookMark2) do
-  //          begin
-  //            FBookMark2[k1].y1:=-oldy1;
-  //            FBookMark2[k1].y2:=-oldy2;
-  //          end;
-  //          break;
-  //        end;
-  //      end;
-  //      if Assigned(FHyperLink) then
-  //      begin
-  //        for k:=0 to high(FHyperLink) do
-  //        begin
-  //          FHyperLink[k].y1:=FHyperLink[k].y1+oldy1;
-  //          FHyperLink[k].y2:=FHyperLink[k].y2+oldy1;
-  //        end;
-  //      end;
-  //    end;
-  //end;
-
   inherited MouseDown(Button, Shift, X, Y);
 end;
 
-procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
-begin
-  if Button = mbLeft then
-  begin
-    // 处理左键释放
-    //FisLeftButtonDown := False;
-  end;
-end;
-
 procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
-var
-  movedY: Integer;//存储鼠标移动的距离
-  k:integer;
+var p:TRect;
+
+  function isCell(x,y:integer;out p:TRect):Boolean;
+  var
+    i,j,x0,x1,y0,y1:integer;
+  begin
+    Result:=false;
+    p.Left:=0;
+    p.Top:=0;
+    p.Width:=0;
+    p.Height:=0;
+    for i:=0 to FRow do
+    begin
+      for j:=1 to FCol do
+      begin
+        if FTable[i,j].Visible then
+        begin
+          x0:=(j-1)*FColWidth;
+          x1:=x0+FTable[i,j].Width;
+
+          y0:=i*FColHeight;
+          y1:=y0+FTable[i,j].Height;
+
+          if (x>=x0) and (x<=x1) and (y>=y0) and (y<=y1) then
+          begin
+            p.Left:=x0;
+            p.Top:=y0;
+            p.Width:=FTable[i,j].Width;
+            p.Height:=FTable[i,j].Height;
+            Result:=true;
+            Break;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  procedure DrawLine(p:TRect;color:TColor);
+  begin
+    FBuffer.Canvas.Pen.Width:=1;
+    FBuffer.Canvas.Pen.Color:=color;
+    FBuffer.Canvas.MoveTo(p.Left,p.Top);
+    FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top);  //顶
+    FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top+p.Height);//右;
+    FBuffer.Canvas.LineTo(p.Left,p.Top+p.Height); //底
+    FBuffer.Canvas.LineTo(p.Left,p.Top);//左
+    FBuffer.Canvas.Pen.Width:=1;
+    Canvas.Draw(0,0,FBuffer);
+  end;
 begin
   inherited MouseMove(Shift, X, Y);
 
-  //if Assigned(FHyperLink) then   //URL
-  //begin
-  //  for k:=0 to high(FHyperLink) do
-  //  begin
-  //    if (y>abs(FOffset+FHyperLink[k].y1)) and (y<abs(FOffset+FHyperLink[k].y2)) and
-  //       (x>FHyperLink[k].x1) and (x<FHyperLink[k].x2) then
-  //    begin
-  //      if FShowUrlBookMakeHint then
-  //      begin
-  //        self.Hint:='超链接地址:'+FHyperLink[k].URL;
-  //        self.ShowHint:=true;
-  //      end;
-  //      FActiveLine := FHyperLink[k].hs;
-  //      break;
-  //    end
-  //    else
-  //      FActiveLine:= -1;
-  //  end;
-  //end;
-  //if Assigned(FBookMark1) then  //书签
-  //begin
-  //  for k:=0 to high(FBookMark1) do
-  //  begin
-  //    if (y>abs(FOffset+FBookMark1[k].y1)) and (y<abs(FOffset+FBookMark1[k].y2)) and
-  //       (x>FBookMark1[k].x1) and (x<FBookMark1[k].x2) then
-  //    begin
-  //      FBMActiveLine := FBookMark1[k].hs;
-  //      FBMActiveStr := FBookMark1[k].BookMark;
-  //      if FShowUrlBookMakeHint then
-  //      begin
-  //        self.Hint:='书签名称:'+FBookMark1[k].BookMark;
-  //        self.ShowHint:=true;
-  //      end;
-  //      break;
-  //    end
-  //    else
-  //    begin
-  //      FBMActiveStr:= '';
-  //      FBMActiveLine:= -1;
-  //    end;
-  //  end;
-  //end;
-  //
-  //Cursor := crDefault;
-  ////URL
-  //if (FActiveLine >= 0) and (FActiveLine < Lineno) and ActiveLineIsURL then
-  //  Cursor := crHandPoint;
-  //
-  ////书签
-  //if (FBMActiveLine >= 0) and (FBMActiveLine < Lineno) then
-  //  Cursor := crHandPoint;
-  //
-  //if FisLeftButtonDown then
-  //begin
-  //  movedY := Y - FinitialY; // 计算Y轴上的移动距离
-  //
-  //  if movedY > 0 then
-  //  begin
-  //    // 鼠标向下移动
-  //    if abs(FOffset)<(FTextHeigth-FBuffer.Height+35) then
-  //    begin
-  //      Dec(FOffset, abs(35));
-  //      if Assigned(FHyperLink) then
-  //      begin
-  //        for k:=0 to high(FHyperLink) do
-  //        begin
-  //          FHyperLink[k].y1:=FHyperLink[k].y1-35;
-  //          FHyperLink[k].y2:=FHyperLink[k].y2-35;
-  //        end;
-  //      end;
-  //      if Assigned(FBookMark1) then
-  //      begin
-  //        for k:=0 to high(FBookMark1) do
-  //        begin
-  //          FBookMark1[k].y1:=FBookMark1[k].y1-35;
-  //          FBookMark1[k].y2:=FBookMark1[k].y2-35;
-  //        end;
-  //      end;
-  //      if Assigned(FBookMark2) then
-  //      begin
-  //        for k:=0 to high(FBookMark2) do
-  //        begin
-  //          FBookMark2[k].y1:=FBookMark2[k].y1-35;
-  //          FBookMark2[k].y2:=FBookMark2[k].y2-35;
-  //        end;
-  //      end;
-  //    end;
-  //  end
-  //  else
-  //  if movedY < 0 then
-  //  begin
-  //    // 鼠标向上移动
-  //    if FOffset<0 then
-  //    begin
-  //      inc(FOffset, abs(35));
-  //      if Assigned(FHyperLink) then
-  //      begin
-  //        for k:=0 to high(FHyperLink) do
-  //        begin
-  //          FHyperLink[k].y1:=FHyperLink[k].y1+35;
-  //          FHyperLink[k].y2:=FHyperLink[k].y2+35;
-  //        end;
-  //      end;
-  //      if Assigned(FBookMark1) then
-  //      begin
-  //        for k:=0 to high(FBookMark1) do
-  //        begin
-  //          FBookMark1[k].y1:=FBookMark1[k].y1+35;
-  //          FBookMark1[k].y2:=FBookMark1[k].y2+35;
-  //        end;
-  //      end;
-  //      if Assigned(FBookMark2) then
-  //      begin
-  //        for k:=0 to high(FBookMark2) do
-  //        begin
-  //          FBookMark2[k].y1:=FBookMark2[k].y1+35;
-  //          FBookMark2[k].y2:=FBookMark2[k].y2+35;
-  //        end;
-  //      end;
-  //    end;
-  //  end;
-  //
-  //  BackgroundRefresh(FBuffer);//刷新背景
-  //  DrawTexts(FBuffer,0);
-  //  Canvas.Draw(0,0,FBuffer);
-  //end;
+  DrawLine(FoldP,clBlack);
+  if isCell(x,y,p) then
+  begin
+    FOldP:=p;
+    DrawLine(p,clred);
+  end;
+
 end;
 
 initialization
