@@ -295,6 +295,7 @@ type
     FGap:integer;
     FBorder:integer;
     FRowHeight:integer;
+    procedure DeleteRecord;
     procedure DisplayTable(Sender: TObject);
     function DrawTable(Buffer: TBitmap;Index, y:integer):integer;override;
   protected
@@ -379,11 +380,13 @@ begin
   CellType.bookmarkstr:='';
   CellType.DispType:=0;
   CellType.FontStyle:=0;
+  CellType.FontName:='';
   CellType.Color:=clBlack;
   CellType.ColSpan:=0;
   CellType.RowSpan:=0;
   CellType.str:=s;
   CellType.Visible:=true;
+  CellType.URL:='';
   CellType.ComponentName:='';
   if pos('[L]',s.ToUpper)>0 then
   begin
@@ -3355,6 +3358,34 @@ begin
   Canvas.Draw(0,0,FBuffer)
 end;
 
+procedure TQFGridPanelComponent.DeleteRecord;
+var
+  FTable1:Array of Array of TCellType;
+
+  i,j,i1: Integer;
+begin
+  FTable1:=nil;
+  setlength(FTable1,FTablesl[0].row-1,FTablesl[0].col);
+  i1:=0;
+  for i := 0 to FTablesl[0].row-1 do
+  begin
+    if i<>1 then
+    begin
+    for j:=0 to FTablesl[0].col-1 do
+      FTable1[i1,j] := FTable[i ,j]; // 将后面的记录向前移动
+      inc(i1);
+    end;
+  end;
+  FTable:=nil;
+  setlength(FTable,FTablesl[0].row-1,FTablesl[0].col);
+  for i := 0 to FTablesl[0].row-1 - 1 do
+  begin
+    for j:=0 to FTablesl[0].col-1 do
+      FTable[i,j] := FTable1[i ,j]; // 将后面的记录向前移动
+  end;
+  FTable1:=nil;
+end;
+
 procedure TQFGridPanelComponent.SetLines(const AValue: TStrings);
 begin
   if (AValue <> nil) then
@@ -3391,8 +3422,8 @@ var
   TabStops:integer;
   Control: TControl;
   row1,col1:integer;
-  kk,jj,oo:integer;
-
+  kk,oo,oo1,oo2:integer;
+  str:string;
 
   function FindChildControls(str:string):TControl;
   var kk,i:integer;
@@ -3401,20 +3432,20 @@ var
     kk:=self.Parent.ControlCount;
     for i:=0 to kk-1 do
     begin
-      if self.Parent.Controls[i].Name =str then
+      if UpperCase(self.Parent.Controls[i].Name) =str.ToUpper then
       begin
         Result:=self.Parent.Controls[i];
         break;
       end;
     end;
   end;
-
 begin
   Index:=0;
   y:=0;
   if FTablesl<>nil then
   begin
-    row:=FTablesl[Index].row;
+    DeleteRecord;//删除第2行定义单元格的对齐格式
+    row:=FTablesl[Index].row-2;
     col:=FTablesl[Index].col-1;
     TableRowHeigth:=FTablesl[Index].RowHeight;
     Buffer.Canvas.Font.Style:=[fsBold];
@@ -3426,215 +3457,178 @@ begin
     colWidth:=(Buffer.Width) div col; //单元格宽
     Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
 
-    //2024.04.01实现单元格合并
-    //画横线
-    y0:=y;
-    x0:=1;
-    Span:=0;
-    kk:=0;
-    jj:=0;
-    //for j:=0 to col-1 do
-    j:=0;
-    while j<=col-1 do
+     for i:=0 to row do
     begin
-      span:=0;
-      c:=0;
-      i1:=0;
-      i:=0;
-      col1:=0;
-      //for i:=0 to row-1 do //row
-      while i<=row-1 do //row
+      for j:=0 to col do
       begin
-        if FTable[i,j+1].RoWSpan>0 then //竖向合并单元格
+        FTable[i,j].Height:=h;
+        FTable[i,j].Width:=colWidth;
+        if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then //竖向合并单元格
         begin
-          c:=i;
-          Span:=FTable[i,j+1].RowSpan;//row,col
-          col1:=FTable[i,j+1].ColSpan;
-          FTable[i,j+1].Height:=h*Span;
-          if i=0 then i1:=1;
+          row1:=FTable[i,j].RowSpan+i-1;
+          if row1>row then row1:=row;
 
-          for v:=I+1 to span+i1+i-1 do
-            FTable[v,j+1].Visible:=false;
-
-          if col1>0 then
+          for oo:=i to row1 do
           begin
-            kk:=col1;
-            for oo:=j+2 to col1+j-1 do
+            col1:=FTable[i,j].ColSpan+j-1;
+            if col1>col then col1:=col;
+            for oo1:=j to col1 do
             begin
-              FTable[i,oo].Visible:=false;
+              FTable[oo,oo1].Visible:=false;
             end;
-            //j:=j+col1-1;
+            FTable[i,j].Visible:=true;//将左上角单元格置为true
+            FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
+            FTable[i,j].Height:=h*FTable[i,j].RowSpan;
           end;
-        end;
-        //else
-        if (Span=0)  or (i=c+Span+i1-1) then
-        begin
-          FTable[i,j+1].Height:=h;
-          Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth+colWidth,y0+i*h);
-          Span:=0;
-        end;
-        inc(i);//row
-      end;
-      inc(j);
-    end;
-
-    //画竖线
-    y0:=y;
-    x0:=1;
-    k:=0;
-    i:=0;
-    row1:=0;
-    //for i:=0 to row-2 do//row
-    while i<=row-2 do
-    begin
-      Span:=0;
-      c:=0;
-      k:=1;
-      row1:=0;
-
-      if i=0 then i1:=i
-      else i1:=i+1;
-
-      //for j:=0 to col do
-      j:=0;
-      while j<= col do
-      begin
-        if FTable[i1,j].ColSpan>0 then    //横向合并单元格
-        begin
-          row1:=FTable[i1,j].RoWSpan;
-          c:=j;
-          Span:=FTable[i1,j].ColSpan; //row,col
-          FTable[i1,j].Width:=Span*colWidth;
-
-          for v:=j+1 to span+j-1 do
-            FTable[i1,v].Visible:=false;
-
-          if row1>0 then
-          begin
-            Buffer.Canvas.Line(x0+(j-1)*colWidth,y0+(i1-1)*h,x0+(j-1)*colWidth,y0+(i1-1)*h+h);
-            Buffer.Canvas.Line(x0+(span+j-1)*colWidth,y0+(i1-1)*h,x0+(span+j-1)*colWidth,y0+(i1-1)*h+h);
-            for oo:=i1+1 to row1+i1-1 do
-            begin
-              for v:=j+1 to span+j-1 do
-                FTable[oo,v].Visible:=false;
-              Buffer.Canvas.Line(x0+(j-1)*colWidth,y0+(oo-1)*h,x0+(j-1)*colWidth,y0+(oo-1)*h+h);
-              Buffer.Canvas.Line(x0+(span+j-1)*colWidth,y0+(oo-1)*h,x0+(span+j-1)*colWidth,y0+(oo-1)*h+h);
-            end;
-          end;
-          i:=i+row1;
         end
         else
-        if (Span=0) or (j=c+Span-1) then
+        if FTable[i,j].RowSpan>0 then //竖向合并单元格
         begin
-          FTable[i1,j].Width:=colWidth;
-          Buffer.Canvas.Line(x0+j*colWidth,y0+i*h,x0+j*colWidth,y0+i*h+h);
-          Span:=0;
+          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+          row1:=FTable[i,j].RowSpan+i-1;
+          if row1>row then row1:=row;
+          for oo:=i+1 to row1 do
+          begin
+            FTable[oo,j].Visible:=false;
+          end;
+        end
+        else
+        if FTable[i,j].ColSpan>0 then //横向合并单元格
+        begin
+          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
+          col1:=FTable[i,j].ColSpan+j-1;
+          if col1>col then col1:=col;
+          for oo:=j+1 to col1 do
+          begin
+            FTable[i,oo].Visible:=false;
+          end;
         end;
-        inc(j);
       end;
-      if row1=0 then
-         inc(i);
+    end;
+
+    for i:=0 to row do
+    begin
+      for j:=0 to col do
+      begin
+        if FTable[i,j].Visible then
+        begin
+          //顶横线
+          x0:=(j-1)*colWidth;
+          y0:=i*h;
+          x1:=x0+FTable[i,j].Width;
+          y1:=y0;
+          Buffer.Canvas.Line(x0,y0,x1,y1);
+
+          //底横线
+          x0:=(j-1)*colWidth;
+          y0:=i*h+FTable[i,j].Height;
+          x1:=x0+FTable[i,j].Width;
+          y1:=y0;
+          Buffer.Canvas.Line(x0,y0,x1,y1);
+
+          //左竖线
+          x0:=(j-1)*colWidth;
+          y0:=i*h;
+          x1:=x0;
+          y1:=y0+FTable[i,j].Height;
+          Buffer.Canvas.Line(x0,y0,x1,y1);
+
+          //右竖线
+          x0:=x0+FTable[i,j].Width;
+          y0:=i*h;
+          x1:=x0;
+          y1:=y0+FTable[i,j].Height;
+          if x0>=Buffer.Width then
+            x0:=Buffer.Width-1;
+          if x1>=Buffer.Width then
+            x1:=Buffer.Width-1;
+          Buffer.Canvas.Line(x0,y0,x1,y1);
+        end;
+      end;
     end;
     //开始画表格边框
-    Buffer.Canvas.Pen.Width:=1;
-    Buffer.Canvas.MoveTo(1,0);
-    Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,0);  //顶
-    Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,h*(row-1));//右;
-    Buffer.Canvas.LineTo(1,h*(row-1)); //底
-    Buffer.Canvas.LineTo(1,1);//左
-    Buffer.Canvas.Pen.Width:=1;
-    Buffer.Canvas.MoveTo(2,1);
-    Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
-    Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row-1)-1);//右;
-    Buffer.Canvas.LineTo(2,h*(row-1)-1); //底
-    Buffer.Canvas.LineTo(2,1);//左
-
-    //开始画表格边框
-    //if FBorder>0 then
-    //begin
-    //  Buffer.Canvas.Pen.Width:=FBorder;
-    //  Buffer.Canvas.MoveTo(2,1);
-    //  Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
-    //  Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row-1)-1);//右;
-    //  Buffer.Canvas.LineTo(2,h*(row-1)-1); //底
-    //  Buffer.Canvas.LineTo(2,1);//左
-    //  Buffer.Canvas.Pen.Width:=1;
-    //end;
+    if FBorder>0 then
+    begin
+      Buffer.Canvas.Pen.Width:=FBorder;
+      Buffer.Canvas.MoveTo(2,1);
+      Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
+      Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row+1)-1);//右;
+      Buffer.Canvas.LineTo(1,h*(row+1)-1); //底
+      Buffer.Canvas.LineTo(1,1);//左
+      Buffer.Canvas.Pen.Width:=1;
+    end;
     //结束画表格边框
 
     Buffer.Canvas.Brush.Style := bsClear;//透明文字
     TabStops:=0;
-    for i:=0 to row-1 do  //绘表格文字
+    for i:=0 to row do  //绘表格文字
     begin
-      for j:=0 to col-1 do
+      for j:=1 to col do
       begin
-        if FTable[i,j+1].Visible then
+        if FTable[i,j].Visible then
         begin
-          if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2)
-             or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
+          if (FTable[i,j].DispType=0) or (FTable[i,j+1].DispType=2)
+             or (FTable[i,j].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
           begin
             //设置字体属性
-            if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
-            if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
-            if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
-            if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
-            if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
-            if FTable[i,j+1].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
-            else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
+            if FTable[i,j].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
+            if FTable[i,j].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
+            if FTable[i,j].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
+            if FTable[i,j].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
+            if FTable[i,j].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
+            if FTable[i,j].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
+            else Buffer.Canvas.Font.Color:=FTable[i,j].Color;
             //设置字体属性
 
-            x0:=j*colWidth;
+            x0:=(j-1)*colWidth;
             h1:=h;
             w1:=colWidth;
-            if FTable[i,j+1].Width>0 then
-              colWidth:=FTable[i,j+1].Width;
+            if FTable[i,j].Width>0 then
+              colWidth:=FTable[i,j].Width;
 
-            if FTable[i,j+1].Height>0 then
-               h:=FTable[i,j+1].Height;
+            if FTable[i,j].Height>0 then
+               h:=FTable[i,j].Height;
 
             x1:=x0; //居左
-            if FTable[0,j+1].Align=1 then
+            if FTable[0,j].Align=1 then
               x1:=x0 ;//居左
-           if FTable[0,j+1].Align=2 then
-              x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2; //居中
-            if FTable[0,j+1].Align=3 then
-               x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth)))-5; //居右
+           if FTable[0,j].Align=2 then
+              x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j].str,colWidth))) div 2; //居中
+            if FTable[0,j].Align=3 then
+               x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j].str,colWidth)))-5; //居右
             if i=0 then
             begin
-              //x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2;//标题行文字居中
               y0:=y+i*h+abs(h- th) div 2;//垂直居中
-              //Buffer.Canvas.Font.Style:=[fsBold];
               Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-              DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,colWidth));//截断超过单元格宽度的字符串
+              DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j].str,colWidth));//截断超过单元格宽度的字符串
             end
             else
-            if i>1 then //跳过第2行--第2行定义单元格的对齐格式
             begin
                if h1<>h then
-                 y0:=y + (i-1)* h1 + abs (h-th) div 2//垂直居中
+                 y0:=y + (i)* h1 + abs (h-th) div 2//垂直居中
                else
-                 y0:=y + (i-1)* h1 + abs(h1- th) div 2;//垂直居中
-               DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j+1].str,colWidth));
+                 y0:=y + (i)* h1 + abs(h1- th) div 2;//垂直居中
+               DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j].str,colWidth));
             end;
             colWidth:=w1;
             h:=h1;
           end;
-          if (FTable[i,j+1].DispType=5) and (FRun=0) then  //控件
+          if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
           begin
-            Control:=FindChildControls(FTable[i,j+1].ComponentName);// self.Parent.FindChildControl(FTable[i,j+1].ComponentName); //查找控件
-            if Control<>nil then
+            Control:=FindChildControls(FTable[i,j].ComponentName);//查找控件
+             if Control<>nil then
             begin
-              x0:=j*colWidth+1+FGap;
+              x0:=(j-1)*colWidth+1+FGap;
               if i=0 then
                 y0:=y+FGap
               else
-                y0:=y+(i-1)*h+FGap;
-              if FTable[i,j+1].Width=0 then
+                y0:=y+(i)*h+FGap;
+              if FTable[i,j].Width=0 then
                 Control.Width:=ColWidth-FGap*2
               else
-                Control.Width:=FTable[i,j+1].Width-FGap*2;
-              Control.Height:= FTable[i,j+1].Height-FGap*2;
-              y1:=(abs(Control.Height-FTable[i,j+1].Height) div 2)-FGap;
+                Control.Width:=FTable[i,j].Width-FGap*2;
+              Control.Height:= FTable[i,j].Height-FGap*2;
+              y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
               Control.Left:=x0+self.Left;
               Control.Top:=y0+self.Top+y1;//垂直居中显示控件
               if (Control is TEdit) or (Control is TDBEdit) or
@@ -3648,24 +3642,24 @@ begin
               inc(TabStops);
             end;
           end;
-          if FTable[i,j+1].DispType=1 then  //显示图形
+          if FTable[i,j].DispType=1 then  //显示图形
           begin
-            x0:=j*colWidth+1;
+            x0:=(j-1)*colWidth+1;
             if i=0 then  y0:=y+2
             else
-            y0:=y+(i-1)*h+4;
-            if  FileExists(FTable[i,j+1].str) then
+            y0:=y+(i)*h+4;
+            if  FileExists(FTable[i,j].str) then
             begin
-              IMG.Picture.LoadFromFile(FTable[i,j+1].str);
+              IMG.Picture.LoadFromFile(FTable[i,j].str);
               //设置图像显示位置及尺寸（单元格大小）
               FRect.Top:=y0+1;
               FRect.Left:=x0+1;
-              if FTable[i,j+1].Width<>0 then
-                FRect.Width:=FTable[i,j+1].Width-4
+              if FTable[i,j].Width<>0 then
+                FRect.Width:=FTable[i,j].Width-4
               else
                 FRect.Width:=colWidth-3;
-              if FTable[i,j+1].Height<>0 then
-                FRect.Height:=FTable[i,j+1].Height-4
+              if FTable[i,j].Height<>0 then
+                FRect.Height:=FTable[i,j].Height-4
               else
                 FRect.Height:=h-3;
               Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
@@ -3673,7 +3667,7 @@ begin
             else
             begin
               //没找到图像文件
-              DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j+1].str+']'),colWidth));
+              DisplayChar(Buffer,x0+2, y0,TruncationStr(Buffer,'['+ExtractFileName(FTable[i,j].str+']'),colWidth));
             end;
           end;
         end;
@@ -3681,7 +3675,7 @@ begin
       FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
     end;
     FRun:=1;
-    y:=y+(row-1)*h+5;
+    y:=y+(row)*h+5;
     Result:=y;
   end;
 end;
