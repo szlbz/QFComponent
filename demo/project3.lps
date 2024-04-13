@@ -8,7 +8,7 @@
       <Unit>
         <Filename Value="project3.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="9"/>
         <CursorPos Y="17"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
@@ -19,9 +19,8 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="69"/>
-        <CursorPos X="26" Y="86"/>
+        <TopLine Value="171"/>
+        <CursorPos X="40" Y="196"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -37,18 +36,19 @@
         <Filename Value="unit3.lfm"/>
         <HasResources Value="True"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="7"/>
-        <CursorPos X="26" Y="24"/>
-        <UsageCount Value="6"/>
+        <TopLine Value="69"/>
+        <CursorPos X="19" Y="96"/>
+        <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\..\lazarus\lcl\graphics.pp"/>
         <UnitName Value="Graphics"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1106"/>
-        <CursorPos X="15" Y="1120"/>
-        <UsageCount Value="49"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="269"/>
+        <CursorPos X="10" Y="278"/>
+        <UsageCount Value="51"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\..\fpcsrc\packages\rtl-objpas\src\inc\system.uitypes.pp"/>
@@ -214,9 +214,10 @@
       </Unit>
       <Unit>
         <Filename Value="..\QFComponent.pas"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="3398"/>
-        <CursorPos X="42" Y="3479"/>
+        <TopLine Value="3761"/>
+        <CursorPos X="55" Y="3768"/>
         <UsageCount Value="100"/>
         <Loaded Value="True"/>
       </Unit>
@@ -259,8 +260,8 @@
         <ComponentName Value="QFRichEditor"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="1096"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="1095"/>
         <CursorPos X="33" Y="934"/>
         <UsageCount Value="100"/>
         <Loaded Value="True"/>
@@ -276,7 +277,7 @@
       <Unit>
         <Filename Value="..\tools.pas"/>
         <UnitName Value="Tools"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <CursorPos X="19" Y="20"/>
         <UsageCount Value="100"/>
         <Loaded Value="True"/>
@@ -314,7 +315,7 @@
         <ComponentName Value="frmTable"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="7"/>
         <TopLine Value="123"/>
         <CursorPos Y="140"/>
         <UsageCount Value="100"/>
@@ -326,7 +327,7 @@
         <ComponentName Value="frmImage"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="27"/>
         <CursorPos X="16" Y="54"/>
         <UsageCount Value="100"/>
@@ -627,7 +628,7 @@
         <ComponentName Value="frmHyeperLink"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="7"/>
         <CursorPos X="3" Y="14"/>
         <UsageCount Value="100"/>
@@ -671,9 +672,9 @@
         <ComponentName Value="SetFontFrm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <CursorPos X="30" Y="15"/>
-        <UsageCount Value="92"/>
+        <UsageCount Value="95"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -812,7 +813,6 @@
         <TopLine Value="2251"/>
         <CursorPos X="42" Y="2267"/>
         <UsageCount Value="10"/>
-        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="D:\fpcupdeluxe226\fpcsrc\packages\libndsfpc\src\nds\jtypes.inc"/>
@@ -869,114 +869,126 @@
         <UsageCount Value="10"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="26">
+    <JumpHistory HistoryIndex="29">
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3509" TopLine="3503"/>
+        <Caret Line="3816" Column="36" TopLine="3799"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3511" TopLine="3503"/>
+        <Caret Line="3813" Column="24" TopLine="3798"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3470" TopLine="3463"/>
+        <Caret Line="3799" Column="67" TopLine="3771"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3471" TopLine="3463"/>
+        <Caret Line="3815" Column="32" TopLine="3801"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3577" TopLine="3551"/>
+        <Caret Line="3827" Column="21" TopLine="3808"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3565" Column="7" TopLine="3549"/>
+        <Caret Line="3800" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3577" TopLine="3561"/>
-      </Position>
-      <Position>
-        <Filename Value="unit3.pas"/>
-        <Caret Line="104" Column="3" TopLine="84"/>
+        <Caret Line="3790" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3536" Column="22" TopLine="345"/>
+        <Caret Line="3792" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3358" TopLine="3358"/>
+        <Caret Line="3794" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="195" Column="21" TopLine="182"/>
+        <Caret Line="3795" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3438" TopLine="3428"/>
+        <Caret Line="3797" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2333" TopLine="2312"/>
+        <Caret Line="3798" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3522" TopLine="3501"/>
+        <Caret Line="3800" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2177" Column="29" TopLine="2165"/>
+        <Caret Line="3792" TopLine="3776"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3522" Column="19" TopLine="3505"/>
+        <Caret Line="313" Column="15" TopLine="296"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2176" Column="24" TopLine="2163"/>
+        <Caret Line="3803" Column="29" TopLine="3787"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3526" TopLine="3510"/>
+        <Caret Line="3802" TopLine="3780"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2178" TopLine="2165"/>
+        <Caret Line="3803" TopLine="3780"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="337" TopLine="334"/>
+        <Caret Line="3805" TopLine="3780"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="334" Column="49" TopLine="334"/>
+        <Caret Line="3806" TopLine="3780"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="204" Column="42" TopLine="204"/>
+        <Caret Line="3808" TopLine="3781"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2176" Column="22" TopLine="2161"/>
+        <Caret Line="3810" TopLine="3783"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3523" Column="23" TopLine="3507"/>
+        <Caret Line="3811" TopLine="3784"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2337" Column="18" TopLine="2327"/>
+        <Caret Line="3727" TopLine="3707"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="3963" TopLine="3931"/>
+        <Caret Line="311" TopLine="296"/>
       </Position>
       <Position>
         <Filename Value="..\QFComponent.pas"/>
-        <Caret Line="2187" Column="52" TopLine="2166"/>
+        <Caret Line="3635" Column="65" TopLine="3612"/>
+      </Position>
+      <Position>
+        <Filename Value="..\QFComponent.pas"/>
+        <Caret Line="312" Column="14" TopLine="288"/>
+      </Position>
+      <Position>
+        <Filename Value="..\QFComponent.pas"/>
+        <Caret Line="3380" TopLine="3372"/>
+      </Position>
+      <Position>
+        <Filename Value="..\QFComponent.pas"/>
+        <Caret Line="308" Column="17" TopLine="297"/>
+      </Position>
+      <Position>
+        <Filename Value="..\QFComponent.pas"/>
+        <Caret Line="3785" Column="27" TopLine="3763"/>
       </Position>
     </JumpHistory>
     <RunParams>
