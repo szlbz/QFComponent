@@ -20,6 +20,7 @@ type
     Button5: TButton;
     Button6: TButton;
     Button7: TButton;
+    CheckBox4: TCheckBox;
     DateEdit1: TDateEdit;
     eeee: TEdit;
     Label2: TLabel;
@@ -59,6 +60,7 @@ type
     procedure CheckBox1Click(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
     procedure CheckBox3Change(Sender: TObject);
+    procedure CheckBox4Click(Sender: TObject);
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LabeledEdit1KeyPress(Sender: TObject; var Key: char);
@@ -184,6 +186,15 @@ procedure TForm1.CheckBox3Change(Sender: TObject);
 begin
   if checkbox3.Checked then QFHorizontalScrollingText1.ShowBackImage:=true
   else QFHorizontalScrollingText1.ShowBackImage:=false;
+end;
+
+procedure TForm1.CheckBox4Click(Sender: TObject);
+begin
+  if CheckBox4.Checked then
+    QFGridPanelComponent1.Border:=true
+  else
+    QFGridPanelComponent1.Border:=false;
+  QFGridPanelComponent1.Refresh;
 end;
 
 procedure TForm1.ColorBox1Change(Sender: TObject);

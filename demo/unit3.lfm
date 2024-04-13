@@ -336,7 +336,7 @@ object Form1: TForm1
       object QFGridPanelComponent1: TQFGridPanelComponent
         Left = 32
         Height = 646
-        Top = 72
+        Top = 56
         Width = 888
         Anchors = [akTop, akLeft, akRight]
         LineSpacing = 0
@@ -358,7 +358,7 @@ object Form1: TForm1
         ShowBackImage = True
         RowHeight = 80
         Gap = 5
-        Border = 1
+        Border = True
         Font.CharSet = GB2312_CHARSET
         Font.Height = -24
         Font.Pitch = fpVariable
@@ -367,7 +367,7 @@ object Form1: TForm1
       object name1: TEdit
         Left = 260
         Height = 24
-        Top = 100
+        Top = 84
         Width = 212
         BorderStyle = bsNone
         TabOrder = 0
@@ -376,15 +376,15 @@ object Form1: TForm1
       object name3: TButton
         Left = 482
         Height = 150
-        Top = 157
+        Top = 141
         Width = 212
-        Caption = 'name3'
+        Caption = 'Button'
         TabOrder = 5
       end
       object DateEdit1: TDateEdit
         Left = 482
         Height = 32
-        Top = 336
+        Top = 320
         Width = 434
         CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
         DateOrder = doNone
@@ -397,7 +397,7 @@ object Form1: TForm1
       object tel: TEdit
         Left = 260
         Height = 24
-        Top = 260
+        Top = 244
         Width = 212
         BorderStyle = bsNone
         TabOrder = 3
@@ -406,7 +406,7 @@ object Form1: TForm1
       object name2: TEdit
         Left = 260
         Height = 24
-        Top = 340
+        Top = 324
         Width = 212
         BorderStyle = bsNone
         TabOrder = 4
@@ -415,7 +415,7 @@ object Form1: TForm1
       object eeee: TEdit
         Left = 260
         Height = 24
-        Top = 180
+        Top = 164
         Width = 212
         BorderStyle = bsNone
         TabOrder = 1
@@ -424,7 +424,7 @@ object Form1: TForm1
       object Memo1: TMemo
         Left = 260
         Height = 230
-        Top = 397
+        Top = 381
         Width = 656
         BorderStyle = bsNone
         Lines.Strings = (
@@ -465,7 +465,7 @@ object Form1: TForm1
           OnClick = Button7Click
         end
         object LabeledEdit1: TLabeledEdit
-          Left = 328
+          Left = 456
           Height = 32
           Top = 178
           Width = 120
@@ -487,6 +487,17 @@ object Form1: TForm1
           TabOrder = 3
           Text = '646'
           OnKeyPress = LabeledEdit2KeyPress
+        end
+        object CheckBox4: TCheckBox
+          Left = 296
+          Height = 28
+          Top = 171
+          Width = 133
+          Caption = '表格边框加粗'
+          Checked = True
+          State = cbChecked
+          TabOrder = 4
+          OnClick = CheckBox4Click
         end
       end
       object Label2: TLabel
