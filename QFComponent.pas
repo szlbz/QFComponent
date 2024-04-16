@@ -100,6 +100,8 @@ type
   end;
 
   TCellType = record
+     x:integer;
+     y:integer;
      str:string[255];
      FontName:string[20];
      URL:string[200];
@@ -147,7 +149,6 @@ type
 
   TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
-    //FRun:integer;
     FRect:TRect;
     FMV:integer;
     FLineSpacing:integer;//行距
@@ -180,7 +181,6 @@ type
     FGapY:integer;
     FColor:TColor;
     FDefaultFontName:string;
-    //function FindControls(CompName:string):TControl;
     procedure Init(Buffer:TBitmap);
     function ActiveLineIsURL: boolean;
     function TextPreprocessing(i:integer;str:string;out textstyle:string):string; //文字类预处理
@@ -292,21 +292,24 @@ type
 
   TQFGridPanelComponent =  class(TCustomText)
   private
+    FinitialY: Integer; // 用于存储鼠标按下时的初始位置
+    FinitialX: Integer; // 用于存储鼠标按下时的初始位置
     FRow:integer;
     FCol:integer;
     FColWidth:integer;
-    FColHeight:integer;
+    FRowHeight:integer;
     FRun:integer;
     FGap:integer;
     FBorder:Boolean;
-    FRowHeight:integer;
     FOldP:TRect;
+    FResultCursor:TCursor;
     procedure DisplayTable(Sender: TObject);
-    function DrawTable(Buffer: TBitmap;Index, y:integer):integer;override;
+    function DrawTable(Buffer: TBitmap;colWidth,h,Index, y:integer):integer;//override;
   protected
     procedure SetLines(const AValue: TStrings);override;
     procedure DoOnChangeBounds; override;
     procedure MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);override;
     procedure MouseMove(Shift: TShiftState; X,Y: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -3413,7 +3416,7 @@ begin
   Init(FBuffer);
   if FTablesl<>nil then
     GetTableInfo(0);
-  DrawTable(FBuffer,0,0);
+  DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
   Canvas.Draw(0,0,FBuffer)
 end;
 
@@ -3426,7 +3429,7 @@ begin
     Init(FBuffer);
     if FTablesl<>nil then
       GetTableInfo(0);
-    DrawTable(FBuffer,0,0);
+    DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
     Canvas.Draw(0,0,FBuffer)
   end;
 end;
@@ -3436,16 +3439,17 @@ begin
   Init(FBuffer);
   if FTablesl<>nil then
     GetTableInfo(0);
-  DrawTable(FBuffer,0,0);
+  DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
   Canvas.Draw(0,0,FBuffer)
 end;
 
-function TQFGridPanelComponent.DrawTable(Buffer: TBitmap;Index,y:integer):integer;
+function TQFGridPanelComponent.DrawTable(Buffer: TBitmap;colWidth,h,Index,y:integer):integer;
 var
-  i,j,w1,h,h1,row,col,v:integer;
+  i,j,w1,h1,row,col,v:integer;
   i1:integer;
+  hg:integer;
   k:integer;
-  colWidth:integer;
+  //colWidth:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
   Span,c:integer;
@@ -3483,13 +3487,17 @@ begin
     TableRowHeigth:=FTablesl[Index].RowHeight;
     Buffer.Canvas.Font.Style:=[fsBold];
     th:= Buffer.Canvas.TextHeight('国');
-    h:=round(th*1.5); //表格行高
-    if TableRowHeigth>h then h:=TableRowHeigth;
-    if FRowHeight>h then h:= FRowHeight;
-    FColHeight:=h;
+    if (h=0) and (FRowHeight=0) then
+      h:=round(th*1.5); //表格行高
+    //if TableRowHeigth>h then h:=TableRowHeigth;
+    if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
+    if FRowHeight=0 then FRowHeight:=h;
 
-    colWidth:=(Buffer.Width) div col; //单元格宽
-    FColWidth:=colWidth;
+    if (colWidth=0) and (FColWidth=0) then
+      colWidth:=(Buffer.Width) div col; //单元格宽
+    if FColWidth=0 then
+      FColWidth:=colWidth;
+
     Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
 
     //重新计算合并后单元格的width和height
@@ -3546,43 +3554,28 @@ begin
     end;
 
     //画单元格
+    hg:=0;
     for i:=0 to row do
     begin
       for j:=1 to col do
       begin
         if FTable[i,j].Visible then
         begin
-          //顶横线
-          x0:=(j-1)*colWidth;
-          y0:=i*h;
+          x0:=(j-1)*FTable[i,j-1].Width;
+          if FTable[i,j-1].Height>h then
+            y0:=i*h
+          else
+            y0:=i*FTable[i,j-1].Height;
           x1:=x0+FTable[i,j].Width;
-          y1:=y0;
-          Buffer.Canvas.Line(x0,y0,x1,y1);
-
-          //底横线
-          x0:=(j-1)*colWidth;
-          y0:=i*h+FTable[i,j].Height;
-          x1:=x0+FTable[i,j].Width;
-          y1:=y0;
-          Buffer.Canvas.Line(x0,y0,x1,y1);
-
-          //左竖线
-          x0:=(j-1)*colWidth;
-          y0:=i*h;
-          x1:=x0;
-          y1:=y0+FTable[i,j].Height;
-          Buffer.Canvas.Line(x0,y0,x1,y1);
-
-          //右竖线
-          x0:=x0+FTable[i,j].Width;
-          y0:=i*h;
-          x1:=x0;
           y1:=y0+FTable[i,j].Height;
           if x0>=Buffer.Width then
             x0:=Buffer.Width-1;
           if x1>=Buffer.Width then
             x1:=Buffer.Width-1;
-          Buffer.Canvas.Line(x0,y0,x1,y1);
+          Buffer.Canvas.Line(x0,y0,x1,y0);//顶横线
+          Buffer.Canvas.Line(x1,y0,x1,y1);//右竖线
+          Buffer.Canvas.Line(x1,y1,x0,y1);//底横线
+          Buffer.Canvas.Line(x0,y1,x0,y0);//左竖线
         end;
       end;
     end;
@@ -3592,8 +3585,16 @@ begin
     begin
       Buffer.Canvas.Pen.Width:=1;
       Buffer.Canvas.MoveTo(2,1);
-      Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
-      Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row+1)-1);//右;
+      if FColWidth*FCol>=Buffer.Canvas.Width then
+      begin
+        Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
+        Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row+1)-1);//右;
+      end
+      else
+      begin
+        Buffer.Canvas.LineTo(FColWidth*FCol-1,1);
+        Buffer.Canvas.LineTo(FColWidth*FCol-1,h*(row+1)-1);
+      end;
       Buffer.Canvas.LineTo(1,h*(row+1)-1); //底
       Buffer.Canvas.LineTo(1,1);//左
       Buffer.Canvas.Pen.Width:=1;
@@ -3725,10 +3726,65 @@ end;
 procedure TQFGridPanelComponent.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 begin
   inherited MouseDown(Button, Shift, X, Y);
+
+  if Button = mbLeft then
+  begin
+    // 处理左键按下
+    FisLeftButtonDown := True;
+    FinitialY := Y;
+    FinitialX := X;
+  end;
+end;
+
+procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
+var movedX:integer;
+  movedY:integer;
+begin
+  if FisLeftButtonDown then  //按下鼠标左键
+  begin
+    if FResultCursor=crVSplit then //调整单元格高度
+    begin
+      FOldP.Left:=0;
+      FOldP.Top:=0;
+      FOldP.Width:=0;
+      FOldP.Height:=0;
+      movedY := Y - FinitialY; // 计算Y轴上的移动距离
+      FRowHeight:=FRowHeight+movedY;
+      FRun:=0;
+      Init(FBuffer);
+      if FTablesl<>nil then
+        GetTableInfo(0);
+      DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+      Canvas.Draw(0,0,FBuffer)
+    end;
+    if FResultCursor=crHSplit then //调整单元格宽度
+    begin
+      FOldP.Left:=0;
+      FOldP.Top:=0;
+      FOldP.Width:=0;
+      FOldP.Height:=0;
+      movedX := X - FinitialX; // 计算Y轴上的移动距离
+      FColWidth:=FColWidth+movedX;
+      FRun:=0;
+      Init(FBuffer);
+      if FTablesl<>nil then
+        GetTableInfo(0);
+      DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+      Canvas.Draw(0,0,FBuffer)
+    end;
+  end;
+  if Button = mbLeft then
+  begin
+    // 处理左键释放
+    FisLeftButtonDown := False;
+    Cursor := crDefault;
+    FResultCursor:=Cursor;
+  end;
 end;
 
 procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
 var p:TRect;
+  i,j:integer;
 
   function isCell(x,y:integer;out p:TRect):Boolean;
   var
@@ -3748,7 +3804,7 @@ var p:TRect;
           x0:=(j-1)*FColWidth;
           x1:=x0+FTable[i,j].Width;
 
-          y0:=i*FColHeight;
+          y0:=i*FRowHeight;
           y1:=y0+FTable[i,j].Height;
 
           if (x>=x0) and (x<=x1) and (y>=y0) and (y<=y1) then
@@ -3765,11 +3821,51 @@ var p:TRect;
     end;
   end;
 
+  function isLine(x,y:integer;out i0,j0:integer):TCursor;
+  var
+    i,j,x0,x1,y0,y1:integer;
+  begin
+    Cursor:=crDefault;
+    Result:=Cursor;
+    for i:=0 to FRow do
+    begin
+      for j:=1 to FCol do
+      begin
+          if FTable[i,j].Visible then
+          begin
+            x0:=(j-1)*FColWidth;
+            y0:=i*FRowHeight;
+            x1:=x0+FTable[i,j].Width;
+            y1:=y0+FTable[i,j].Height;
+            if (x>=x0-2) and (x<=x0+2) and (y>y0) and (y<y1) then
+            begin
+              Cursor :=crHSplit;
+              Result:=Cursor;  //水平线
+              i0:=i;
+              j0:=j;
+              Break;
+            end;
+            if (x>x0) and (x<x1) and (y>=y0-2) and (y<=y0+2) then
+            begin
+              Cursor := crVSplit; //垂线
+              Result:=Cursor;
+              i0:=i;
+              j0:=j;
+              Break;
+            end
+          end;
+      end;
+    end;
+  end;
+
   procedure DrawLine(p:TRect;color:TColor;pw:integer);
   begin
     FBuffer.Canvas.Pen.Width:=pw;
     FBuffer.Canvas.Pen.Color:=color;
     FBuffer.Canvas.MoveTo(p.Left,p.Top);
+    if p.Left+p.Width>=FBuffer.Width then
+    p.Width:=p.Width-1;
+
     FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top);  //顶
     FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top+p.Height);//右;
     FBuffer.Canvas.LineTo(p.Left,p.Top+p.Height); //底
@@ -3787,6 +3883,10 @@ begin
     DrawLine(p,clred,1);
   end;
 
+  if FisLeftButtonDown then
+    FResultCursor:=Cursor
+  else
+    FResultCursor:=isLine(x,y,i,j);
 end;
 
 initialization
