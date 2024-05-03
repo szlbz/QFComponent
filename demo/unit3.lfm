@@ -1,10 +1,10 @@
 object Form1: TForm1
   Left = 397
-  Height = 986
+  Height = 1047
   Top = 36
   Width = 977
   Caption = 'QFComponent Demo'
-  ClientHeight = 986
+  ClientHeight = 1047
   ClientWidth = 977
   DesignTimePPI = 144
   Font.Height = -18
@@ -12,7 +12,7 @@ object Form1: TForm1
   Position = poScreenCenter
   object PageControl1: TPageControl
     Left = 0
-    Height = 954
+    Height = 1015
     Top = 32
     Width = 977
     ActivePage = TabSheet4
@@ -23,7 +23,7 @@ object Form1: TForm1
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'QFRichView Demo'
-      ClientHeight = 946
+      ClientHeight = 1007
       ClientWidth = 969
       object Panel1: TPanel
         Left = 0
@@ -108,7 +108,7 @@ object Form1: TForm1
       end
       object QFRichView1: TQFRichView
         Left = 0
-        Height = 871
+        Height = 932
         Top = 75
         Width = 969
         Align = alClient
@@ -192,11 +192,11 @@ object Form1: TForm1
     end
     object TabSheet2: TTabSheet
       Caption = 'QFScrollingText Demo'
-      ClientHeight = 946
+      ClientHeight = 1007
       ClientWidth = 969
       object ScrollingText1: TQFScrollingText
         Left = 0
-        Height = 871
+        Height = 932
         Top = 75
         Width = 969
         Align = alClient
@@ -289,7 +289,7 @@ object Form1: TForm1
       end
     end
     object TabSheet3: TTabSheet
-      ClientHeight = 946
+      ClientHeight = 1007
       ClientWidth = 969
       object QFHorizontalScrollingText1: TQFHorizontalScrollingText
         Left = 128
@@ -331,25 +331,26 @@ object Form1: TForm1
     end
     object TabSheet4: TTabSheet
       Caption = 'TabSheet4'
-      ClientHeight = 946
+      ClientHeight = 1007
       ClientWidth = 969
       object QFGridPanelComponent1: TQFGridPanelComponent
         Left = 32
-        Height = 646
-        Top = 56
+        Height = 721
+        Top = 2
         Width = 888
         Anchors = [akTop, akLeft, akRight]
         LineSpacing = 0
         Lines.Strings = (
-          '|单位名称|<compname=name1>||<rowspan=3>[img]cl.png|'
+          '|<colspan=4><font=楷体><fontsize=16>界面动态调整Demo</font></fontsize>||||'
           '|:-:|:-:|:-:|:-:|'
+          '|单位名称|<compname=name1>|按键测试|<rowspan=3>[img]cl.png|'
           '|单位地址|<compname=eeee>|<rowspan=2><compname=name3>|2|'
           '|联系电话|<compname=tel>||3|'
           '|联系人|<compname=name2>|<colspan=2><compname=dateEdit1>|4|'
-          '|<rowspan=3>备注|<rowspan=3><colspan=3><compname=Memo1>|1|5|'
+          '|<rowspan=3>表格控件|<rowspan=3><colspan=3><compname=grid1>|1|5|'
           '|||2|6|'
           '|||3|7|'
-          '|8|12|4|8|'
+          '|[c2]说明|<colspan=3><compname=Memo1>|4|8|'
           ''
         )
         GapX = 0
@@ -359,93 +360,117 @@ object Form1: TForm1
         RowHeight = 80
         Gap = 5
         Border = True
+        EditFocusColor = clCream
+        CellLineStyle = psPattern
         Font.CharSet = GB2312_CHARSET
         Font.Height = -24
         Font.Pitch = fpVariable
         Font.Quality = fqDraft
+        ColCount = 4
+        RowCount = 8
       end
       object name1: TEdit
-        Left = 260
-        Height = 24
-        Top = 84
+        Left = 259
+        Height = 31
+        Top = 106
         Width = 212
         BorderStyle = bsNone
+        Font.CharSet = GB2312_CHARSET
+        Font.Height = -24
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
+        ParentFont = False
         TabOrder = 0
         TextHint = '请输入单位名称'
       end
       object name3: TButton
-        Left = 482
+        Left = 481
         Height = 150
-        Top = 141
+        Top = 167
         Width = 212
         Caption = 'Button'
         TabOrder = 5
       end
       object DateEdit1: TDateEdit
-        Left = 482
+        Left = 481
         Height = 32
-        Top = 320
+        Top = 346
         Width = 434
         CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
         DateOrder = doNone
         ButtonWidth = 34
         NumGlyphs = 1
         MaxLength = 0
-        TabOrder = 7
+        TabOrder = 6
         Text = 'DateEdit1'
       end
       object tel: TEdit
-        Left = 260
-        Height = 24
-        Top = 244
+        Left = 259
+        Height = 31
+        Top = 266
         Width = 212
         BorderStyle = bsNone
+        Font.CharSet = GB2312_CHARSET
+        Font.Height = -24
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
+        ParentFont = False
         TabOrder = 3
         TextHint = '请输入联系电话'
       end
       object name2: TEdit
-        Left = 260
-        Height = 24
-        Top = 324
+        Left = 259
+        Height = 31
+        Top = 346
         Width = 212
         BorderStyle = bsNone
+        Font.CharSet = GB2312_CHARSET
+        Font.Height = -24
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
+        ParentFont = False
         TabOrder = 4
         TextHint = '请输入联系人'
       end
       object eeee: TEdit
-        Left = 260
-        Height = 24
-        Top = 164
+        Left = 259
+        Height = 31
+        Top = 186
         Width = 212
         BorderStyle = bsNone
+        Font.CharSet = GB2312_CHARSET
+        Font.Height = -24
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
+        ParentFont = False
         TabOrder = 1
         TextHint = '请输入单位地址'
       end
       object Memo1: TMemo
-        Left = 260
-        Height = 230
-        Top = 381
+        Left = 259
+        Height = 70
+        Top = 647
         Width = 656
         BorderStyle = bsNone
         Lines.Strings = (
           'TQFGridPanelComponent控件支持在单元格绑定可视控件，运行时单元格绑定的控件会吸附到相应的单元格里。绑定后，控件的TabOrder从表格第1行第1列开始从左到右，从上到下重新编排。控件的宽和高自动适配单元格的尺寸。'
         )
-        TabOrder = 6
+        TabOrder = 7
       end
       object Panel3: TPanel
         Left = 0
-        Height = 216
-        Top = 734
+        Height = 267
+        Top = 744
         Width = 967
         Anchors = [akLeft, akBottom]
         Caption = 'Panel3'
-        ClientHeight = 216
+        ClientHeight = 267
         ClientWidth = 967
         TabOrder = 8
         object Memo2: TMemo
           Left = 32
           Height = 144
-          Top = 4
+          Top = 8
           Width = 888
           Anchors = [akLeft, akRight, akBottom]
           Lines.Strings = (
@@ -457,7 +482,7 @@ object Form1: TForm1
         object Button7: TButton
           Left = 32
           Height = 46
-          Top = 164
+          Top = 208
           Width = 232
           Anchors = [akLeft, akBottom]
           Caption = '更新'
@@ -467,7 +492,7 @@ object Form1: TForm1
         object LabeledEdit1: TLabeledEdit
           Left = 456
           Height = 32
-          Top = 178
+          Top = 222
           Width = 120
           EditLabel.Height = 24
           EditLabel.Width = 120
@@ -479,7 +504,7 @@ object Form1: TForm1
         object LabeledEdit2: TLabeledEdit
           Left = 608
           Height = 32
-          Top = 178
+          Top = 222
           Width = 312
           EditLabel.Height = 24
           EditLabel.Width = 312
@@ -491,7 +516,7 @@ object Form1: TForm1
         object CheckBox4: TCheckBox
           Left = 296
           Height = 28
-          Top = 171
+          Top = 215
           Width = 133
           Caption = '表格边框加粗'
           Checked = True
@@ -499,17 +524,50 @@ object Form1: TForm1
           TabOrder = 4
           OnClick = CheckBox4Click
         end
+        object Button8: TButton
+          Left = 90
+          Height = 38
+          Top = 163
+          Width = 110
+          Caption = 'Button8'
+          TabOrder = 5
+          OnClick = Button8Click
+        end
+        object Button9: TButton
+          Left = 248
+          Height = 31
+          Top = 160
+          Width = 142
+          Caption = 'Button9'
+          TabOrder = 6
+          OnClick = Button9Click
+        end
+        object Button10: TButton
+          Left = 417
+          Height = 38
+          Top = 156
+          Width = 113
+          Caption = '保存设置'
+          TabOrder = 7
+          OnClick = Button10Click
+        end
+        object Button11: TButton
+          Left = 544
+          Height = 38
+          Top = 156
+          Width = 113
+          Caption = '调用设置'
+          TabOrder = 8
+          OnClick = Button11Click
+        end
       end
-      object Label2: TLabel
-        Left = 0
-        Height = 48
-        Top = 0
-        Width = 969
-        Align = alTop
-        Alignment = taCenter
-        Caption = '界面动态调整Demo'
-        Font.Height = 48
-        ParentFont = False
+      object Grid1: TStringGrid
+        Left = 259
+        Height = 230
+        Top = 407
+        Width = 656
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
+        TabOrder = 9
       end
     end
   end
