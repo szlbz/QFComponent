@@ -78,9 +78,15 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
-  OSPrinters,StdCtrls,DBCtrls,
-  //ComponentEditors,
-  lclintf, LazFileUtils, lazutf8, LMessages,StrUtils,QFRichEdit;
+  OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,  FPCanvas,
+  fpjson,lazutf8,PublicDefinition,
+  lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit;
+
+const
+  ReservedSpace = 1024;
+
+  VerInfo = 'TQFGridPanelComponent' + #26;
+  Version ='0.9.9.9';
 
 type
 
@@ -97,25 +103,6 @@ type
      DispType:string[10];
      BookMark1:string;
      BookMark2:string;
-  end;
-
-  TCellType = record
-     x:integer;
-     y:integer;
-     str:string[255];
-     FontName:string[20];
-     URL:string[200];
-     bookmarkstr:string[7];
-     FontStyle:byte;
-     Color:TColor;
-     Align:byte;
-     Width:integer;
-     Height:integer;
-     ColSpan:integer; //从当前单元格向右合并n个单元格
-     RowSpan:integer; //从当单元格向下合并n个单元格
-     DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
-     ComponentName:string;
-     Visible:Boolean;//
   end;
 
   TTableSL = record
@@ -147,6 +134,12 @@ type
      y2:integer;
   end;
 
+  // 弹出菜单的标识
+  TStMenuItemTag = (mtCut, mtCopy, mtPaste,
+                  mtInsertRow, mtInsertCol,
+                  mtDeleteRow, mtDeleteCol,
+                  mtClearCells, mtSetCellProp);
+
   TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
     FRect:TRect;
@@ -164,7 +157,7 @@ type
     FBookMark2:array of TQFBookMark;
     FHyperLink:array of THyperLink;
     FTablesl:array of TTableSL;
-    FTable:Array of Array of TCellType;
+    FTable:Array of Array of TCell;
     FOldFontSize:integer;
     FLineList:array of TLineType;
     FActive: boolean;
@@ -197,7 +190,7 @@ type
     function SkipIdentification(i:integer;str:string;out j:integer):string;//跳过标识
     function ReplaceCharacters(str:string):string; //删除所有特殊符号
     procedure GetTableInfo(no:integer);
-    procedure GetCellInfo(s:string;out CellType:TCellType);
+    procedure GetCellInfo(s:string;out CellType:TCell);
     procedure DrawTexts(Buffer: TBitmap;y:integer);
     procedure SetBackImageFile(AValue: String);
     procedure SetShowBackImage(AValue: Boolean);
@@ -292,19 +285,54 @@ type
 
   TQFGridPanelComponent =  class(TCustomText)
   private
-    FinitialY: Integer; // 用于存储鼠标按下时的初始位置
-    FinitialX: Integer; // 用于存储鼠标按下时的初始位置
-    FRow:integer;
-    FCol:integer;
+    FSelectRow:integer;
+    FSelectCol:integer;
+    FMVLineX:integer;
+    FMVLineY:integer;
+    FControlsList:TStringlist;
+    FColCount:integer;
+    FRowCount:integer;
+    FColSizing:Boolean;
+    FRowSizing:Boolean;
+    FCellLineColor:TColor;
+    FCellLineStyle:TFPPenStyle;
+    FinitialXY:Tpoint;//用于存储鼠标按下时的初始位置
+    FMoveRow:integer;
+    FMoveCol:integer;
     FColWidth:integer;
     FRowHeight:integer;
+    FTableWidth:integer;
+    FTableHeight:integer;
     FRun:integer;
     FGap:integer;
     FBorder:Boolean;
-    FOldP:TRect;
+    FOldR:TRect;
+    FCurrentR:TRect;
     FResultCursor:TCursor;
+    FPOpupMenu:TPopupMenu;
+    FEditFontFocusColor:TColor;
+    FEditFocusColor:TColor;
+    FOldBrushColor:TColor;
+    FOldEditFontFocusColor:TColor;
+    FOldEditFocusColor:TColor;
+    FOldFontName:string;
+    FConfigFileName:string;
+    procedure Tableiniti(Buffer: TBitmap;colWidth,h,Index,y:integer);
     procedure DisplayTable(Sender: TObject);
+    procedure SetCellLineColor(Value : TColor);
+    procedure SetEditFocusColor(Value : TColor);
+    procedure SetEditFontFocusColor(Value : TColor);
+    procedure SetCellLineStyle(Value : TFPPenStyle);
+    function FindChildControls(str:string):TControl;
     function DrawTable(Buffer: TBitmap;colWidth,h,Index, y:integer):integer;//override;
+    procedure MenuItemClick(Sender: TObject);
+    procedure EditEnter(Sender: TObject);
+    procedure EditExit(Sender: TObject);
+    procedure InitPopupMenu;
+    procedure SetCellProp;
+    procedure DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:byte=0);
+    procedure LoadJSON(jsonstr:string);
+    procedure SaveJSON(files:string);
   protected
     procedure SetLines(const AValue: TStrings);override;
     procedure DoOnChangeBounds; override;
@@ -315,12 +343,25 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Refresh;
+    procedure GetControlsList;
+    procedure SaveFile(filename:string);
+    procedure LoadFile(filename:string);
+    procedure SaveFile;
+    procedure LoadFile;
   published
-    //property Lines: TStrings read FLines write SetLines;
     property RowHeight:integer read FRowHeight write FRowHeight;
     property Gap:integer read FGap write FGap;
     property Border:Boolean read FBorder write FBorder;
+    property EditFontFocusColor:TColor read FEditFontFocusColor write SetEditFontFocusColor default clBlack;
+    property EditFocusColor:TColor read FEditFocusColor write SetEditFocusColor default clWhite;
+    property CellLineColor:TColor read FCellLineColor write SetCellLineColor default clSilver;
+    property CellLineStyle:TFPPenStyle read FCellLineStyle write SetCellLineStyle default psSolid;
     property Font;
+    property ColCount:integer read FColCount write FColCount default 5;
+    property RowCount:integer read FRowCount write FRowCount default 5;
+    property ColSizing:Boolean read FColSizing write FColSizing default true;
+    property RowSizing:Boolean read FRowSizing write FRowSizing default true;
+    property ConfigFileName:string read FConfigFileName write FConfigFileName;
   end;
 
 procedure Register;
@@ -340,7 +381,7 @@ end;
 
 procedure TCustomText.DeleteRecord(index:integer);
 var
-  FTable1:Array of Array of TCellType;
+  FTable1:Array of Array of TCell;
   i,j,i1: Integer;
 begin
   FTable1:=nil;
@@ -402,19 +443,20 @@ begin
   Canvas.Draw(0,0,FBuffer)
 end;
 
-procedure TCustomText.GetCellInfo(s:string;out CellType:TCellType);
+procedure TCustomText.GetCellInfo(s:string;out CellType:TCell);
 var s1:string;
   hlkstr:string;
   url:string;
   urldisptext:string;
   hlk,i,j,tmp,e:integer;
   FontPos1,FontPos2:integer;
-  tmp1:string;
+  tmp1,tmp2:string;
 begin
   CellType.bookmarkstr:='';
   CellType.DispType:=0;
   CellType.FontStyle:=0;
   CellType.FontName:='';
+  CellType.FontSize:=0;
   CellType.Color:=clBlack;
   CellType.ColSpan:=0;
   CellType.RowSpan:=0;
@@ -500,6 +542,40 @@ begin
     s:=s.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
     CellType.DispType:=1;
+  end;
+  if (utf8Pos('<FONTSIZE=', s.ToUpper)>0) then
+  begin
+    s1:=s;
+    FontPos1:=utf8pos('<FONTSIZE=',s1.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(s1) do
+    begin
+      if utf8copy(s1,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(s1,FontPos1+10,FontPos2-FontPos1-10);
+        val(tmp1,tmp,e);
+        CellType.FontSize:=tmp;
+
+        tmp1:=utf8copy(s1,FontPos1,FontPos2-FontPos1+1);
+        s1:=s1.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<FONTSIZE',s1.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+    s:=s1;
+    CellType.str:=s;
+    CellType.DispType:=0;//控件类
+  end;
+  if (utf8Pos('</FONTSIZE>', s.ToUpper)>0) then
+  begin
+    s1:=s;
+   // CellType.FontSize:=0;
+    s1:=s1.Replace('</FONTSIZE>','',[rfReplaceAll, rfIgnoreCase]);
+    CellType.str:=s1;
+    CellType.DispType:=0;//控件类
   end;
   if (utf8Pos('<COMPNAME=', s.ToUpper)>0) then
   begin
@@ -628,6 +704,7 @@ begin
       if utf8copy(s,i,1)='>' then
       begin
         FontPos2:=i;
+        tmp2:=utf8copy(s,FontPos1+6,FontPos2-(FontPos1+6));
         tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
         s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
         FontPos1:=utf8pos('<FONT=',s.ToUpper);
@@ -636,7 +713,7 @@ begin
       end;
       inc(i);
     end;
-    CellType.FontName:=tmp1;
+    CellType.FontName:=tmp2;
     CellType.str:=s;
   end;
   if pos('</FONT>',s.ToUpper)>0 then
@@ -689,6 +766,7 @@ begin
   Result:=Result.Replace('<HLK>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</HLK>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</FONT>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</FONTSIZE>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUB>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUP>','',[rfReplaceAll, rfIgnoreCase]);
@@ -705,6 +783,24 @@ begin
         tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
         Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
         FontPos1:=utf8pos('<FONT=',Result.ToUpper);
+        if FontPos1=0 then
+          Break;
+      end;
+      inc(i);
+    end;
+  end;
+  if utf8pos('<FONTSIZE=',Result.ToUpper)>0 then
+  begin
+    FontPos1:=utf8pos('<FONTSIZE=',Result.ToUpper);
+    i:=FontPos1;
+    while i<= utf8length(Result) do
+    begin
+      if utf8copy(Result,i,1)='>' then
+      begin
+        FontPos2:=i;
+        tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
+        Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
+        FontPos1:=utf8pos('<FONTSIZE=',Result.ToUpper);
         if FontPos1=0 then
           Break;
       end;
@@ -827,6 +923,8 @@ begin
   (pos('</SUB>',str.ToUpper)>0) or
   (pos('<FONT=',str.ToUpper)>0) or
   (pos('</FONT>',str.ToUpper)>0) or
+  (pos('<FONTSIZE=',str.ToUpper)>0) or
+  (pos('</FONTSIZE>',str.ToUpper)>0) or
   (pos('<BM',str.ToUpper)>0) or
   (pos('[BM',str.ToUpper)>0) or
   (pos('<COLSPAN=',str.ToUpper)>0) or
@@ -940,6 +1038,46 @@ begin
          and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1).ToUpper='>') then
       begin
         i:=i+7;
+      end
+      else
+      //<Fontsize=xx>
+      if (s1='<')
+         and (utf8copy(str,i+1,1).ToUpper='F')
+         and (utf8copy(str,i+2,1).ToUpper='O')
+         and (utf8copy(str,i+3,1).ToUpper='N')
+         and (utf8copy(str,i+4,1).ToUpper='T')
+         and (utf8copy(str,i+5,1).ToUpper='S')
+         and (utf8copy(str,i+6,1).ToUpper='I')
+         and (utf8copy(str,i+7,1).ToUpper='Z')
+         and (utf8copy(str,i+8,1).ToUpper='E')
+         and (utf8copy(str,i+9,1).ToUpper='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      //</Fontsize>
+      if (s1='<')
+         and (utf8copy(str,i+1,1).ToUpper='/')
+         and (utf8copy(str,i+2,1).ToUpper='F')
+         and (utf8copy(str,i+3,1).ToUpper='O')
+         and (utf8copy(str,i+4,1).ToUpper='N')
+         and (utf8copy(str,i+5,1).ToUpper='T')
+         and (utf8copy(str,i+6,1).ToUpper='S')
+         and (utf8copy(str,i+7,1).ToUpper='I')
+         and (utf8copy(str,i+8,1).ToUpper='Z')
+         and (utf8copy(str,i+9,1).ToUpper='E')
+         and (utf8copy(str,i+10,1).ToUpper='>') then
+      begin
+        i:=i+11;
       end
       else
       if (s1='<') and (utf8copy(str,i+1,1).ToUpper='H') and (utf8copy(str,i+2,1).ToUpper='L')
@@ -1560,7 +1698,7 @@ end;
 procedure TCustomText.GetTableInfo(no:integer);
 var col,row,js,i,j,dc:integer;
   s,str:string;
-  MyCellType:TCellType;
+  MyCell:TCell;
 begin
   //解释表格有几行几列
 {
@@ -1604,19 +1742,20 @@ begin
             begin
               if row<=FTablesl[no].row-1 then
               begin
-                GetCellInfo(str,MyCellType);
-                FTable[row,col].str:= MyCellType.str;
-                FTable[row,col].URL:= MyCellType.URL;
-                FTable[row,col].DispType:= MyCellType.DispType;
-                FTable[row,col].bookmarkstr:= MyCellType.bookmarkstr;
-                FTable[row,col].Align:=MyCellType.Align;
-                FTable[row,col].Color:=MyCellType.Color;
-                FTable[row,col].FontStyle:=MyCellType.FontStyle;
-                FTable[row,col].FontName:=MyCellType.FontName;
-                FTable[row,col].ColSpan:=MyCellType.ColSpan;
-                FTable[row,col].RowSpan:=MyCellType.RowSpan;
-                FTable[row,col].Visible:=MyCellType.Visible;
-                FTable[row,col].ComponentName:=MyCellType.ComponentName;
+                GetCellInfo(str,MyCell);
+                FTable[row,col].str:= MyCell.str;
+                FTable[row,col].URL:= MyCell.URL;
+                FTable[row,col].DispType:= MyCell.DispType;
+                FTable[row,col].bookmarkstr:= MyCell.bookmarkstr;
+                FTable[row,col].Align:=MyCell.Align;
+                FTable[row,col].Color:=MyCell.Color;
+                FTable[row,col].FontStyle:=MyCell.FontStyle;
+                FTable[row,col].FontName:=MyCell.FontName;
+                FTable[row,col].FontSize:=MyCell.FontSize;
+                FTable[row,col].ColSpan:=MyCell.ColSpan;
+                FTable[row,col].RowSpan:=MyCell.RowSpan;
+                FTable[row,col].Visible:=MyCell.Visible;
+                FTable[row,col].ComponentName:=MyCell.ComponentName;
               end;
             end;
           end;
@@ -1716,6 +1855,44 @@ begin
     end;
     Result:='';
     j:=(FontPos2-FontPos1)+1;
+  end
+  else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='F') and
+    (utf8copy(str,i+2,1).ToUpper='O') and
+    (utf8copy(str,i+3,1).ToUpper='N') and
+    (utf8copy(str,i+4,1).ToUpper='T') and
+    (utf8copy(str,i+5,1).ToUpper='S') and
+    (utf8copy(str,i+6,1).ToUpper='I') and
+    (utf8copy(str,i+7,1).ToUpper='Z') and
+    (utf8copy(str,i+8,1).ToUpper='E') and
+    (utf8copy(str,i+9,1).ToUpper='=') then
+  begin
+    FontPos1:=i;
+    for k:=i to utf8length(str) do
+    begin
+      if utf8copy(str,k,1)='>' then
+      begin
+        FontPos2:=k;
+        break;
+      end;
+    end;
+    Result:='';
+    j:=(FontPos2-FontPos1)+1;
+  end
+  else
+  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='/') and
+    (utf8copy(str,i+2,1).ToUpper='F') and
+    (utf8copy(str,i+3,1).ToUpper='O') and
+    (utf8copy(str,i+4,1).ToUpper='N') and
+    (utf8copy(str,i+5,1).ToUpper='T') and
+    (utf8copy(str,i+5,1).ToUpper='S') and
+    (utf8copy(str,i+6,1).ToUpper='I') and
+    (utf8copy(str,i+7,1).ToUpper='Z') and
+    (utf8copy(str,i+8,1).ToUpper='E') and
+    (utf8copy(str,i+9,1).ToUpper='>') then
+  begin
+    Result:='';
+    j:=10;
   end
   else
   if (Result='<') and (utf8copy(str,i+1,1).ToUpper='B') and
@@ -1870,14 +2047,14 @@ begin
 end;
 
 procedure TCustomText.DisplayChar(Buffer: TBitmap;x,y:integer;str:string);
-var i,j:integer;
+var i,j,s,e,fs:integer;
   DStr:string;
   zwh,ywh,k:integer;
   oldFontSize,NewFontSize:integer;
   oldColor:TColor;
   oldStyles:TFontStyles;
   oldy,supy,suby:integer;
-  NewFontName:string;
+  NewFontName,tmpstr:string;
   FontPos1,FontPos2:integer;
   FH1,FH2:integer;
 begin
@@ -1899,6 +2076,8 @@ begin
   (pos('<#>',str)>0) or
   (pos('</FONT>',str.ToUpper)>0) or
   (pos('<FONT=',str.ToUpper)>0) or
+  (pos('<FONTSIZE=',str.ToUpper)>0) or
+  (pos('</FONTSIZE>',str.ToUpper)>0) or
   (pos('<COLSPAN=',str.ToUpper)>0) or
   (pos('<ROWSPAN=',str.ToUpper)>0) or
   (FindMark1(str,DStr)) or
@@ -1952,7 +2131,7 @@ begin
         y:=y-abs(FH2-FH1) div 2;//恢复原来的显示位置
       end
       else
-      if (DStr='C') and (utf8copy(str,i+1,1).ToUpper='O')
+      if (DStr.ToUpper='C') and (utf8copy(str,i+1,1).ToUpper='O')
         and (utf8copy(str,i+2,1).ToUpper='L')
         and (utf8copy(str,i+3,1).ToUpper='S')
         and (utf8copy(str,i+4,1).ToUpper='P')
@@ -1972,7 +2151,7 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
-      if (DStr='R') and (utf8copy(str,i+1,1).ToUpper='O')
+      if (DStr.ToUpper='R') and (utf8copy(str,i+1,1).ToUpper='O')
         and (utf8copy(str,i+2,1).ToUpper='W')
         and (utf8copy(str,i+3,1).ToUpper='S')
         and (utf8copy(str,i+4,1).ToUpper='P')
@@ -1989,6 +2168,63 @@ begin
             Break;
           end;
         end;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      //<fontsize=xx>
+      if (DStr.ToUpper='<')
+        and (utf8copy(str,i+1,1).ToUpper='F')
+        and (utf8copy(str,i+2,1).ToUpper='O')
+        and (utf8copy(str,i+3,1).ToUpper='N')
+        and (utf8copy(str,i+4,1).ToUpper='T')
+        and (utf8copy(str,i+5,1).ToUpper='S')
+        and (utf8copy(str,i+6,1).ToUpper='I')
+        and (utf8copy(str,i+7,1).ToUpper='Z')
+        and (utf8copy(str,i+8,1).ToUpper='E')
+        and (utf8copy(str,i+9,1)='=') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            tmpstr:=utf8copy(str,FontPos1,FontPos2-FontPos1);
+            val(tmpstr,fs,e);
+            Break;
+          end;
+        end;
+        tmpstr:=UTF8copy(str,FontPos1+10,FontPos2-(FontPos1+10));
+        val(tmpstr,s,e);
+        Buffer.Canvas.font.Size:=s;
+        i:=i+(FontPos2-FontPos1)+1;
+      end
+      else
+      //</fontsize>
+      if (DStr.ToUpper='<')
+        and (utf8copy(str,i+1,1).ToUpper='/')
+        and (utf8copy(str,i+2,1).ToUpper='F')
+        and (utf8copy(str,i+3,1).ToUpper='O')
+        and (utf8copy(str,i+4,1).ToUpper='N')
+        and (utf8copy(str,i+5,1).ToUpper='T')
+        and (utf8copy(str,i+6,1).ToUpper='S')
+        and (utf8copy(str,i+7,1).ToUpper='I')
+        and (utf8copy(str,i+8,1).ToUpper='Z')
+        and (utf8copy(str,i+9,1).ToUpper='E') then
+      begin
+        FontPos1:=i;
+        for j:=i to  utf8length(str) do
+        begin
+          if utf8copy(str,j,1)='>' then
+          begin
+            FontPos2:=j;
+            Break;
+          end;
+        end;
+        Buffer.Canvas.font.Size:=oldFontSize;
+        //tmpstr:=copy(str,i+9,j-i+9);
+        //val(tmpstr,s,e);
+        //Buffer.Canvas.font.Size:=s;
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
@@ -2295,6 +2531,8 @@ begin
            or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
         begin
           //设置字体属性
+          if FTable[i,j+1].FontName<>'' then
+            Buffer.Canvas.Font.Name:=FTable[i,j+1].FontName;
           if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
           if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
           if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
@@ -3373,18 +3611,32 @@ begin
 end;
 
 constructor TQFGridPanelComponent.Create(AOwner: TComponent);
+var m:TMenuItem;
 begin
   inherited Create(AOwner);
 
-  FOldP.Left:=0;
-  FOldP.Top:=0;
-  FOldP.Width:=0;
-  FOldP.Height:=0;
-  OnPaint := @DisplayTable;
+  FPopupMenu:=TPopupMenu.Create(self);
+  InitPopupMenu;
+  FEditFocusColor:=clWhite;
+  FEditFontFocusColor:=clBlack;
+  FTableWidth:=0;
+  FTableHeight:=0;
+  FColCount:= 5;
+  FRowCount:= 5;
+  FColSizing:= true;
+  FRowSizing:=true;
+  FCellLineColor := clSilver;
+  FCellLineStyle := psSolid;
+  FOldR.Left:=0;
+  FOldR.Top:=0;
+  FOldR.Width:=0;
+  FOldR.Height:=0;
   FRun:=0;
   FGap:=5;
   FBorder:=true;
   FRowHeight:=30;
+  FSelectCol:=-1;
+  FSelectRow:=-1;
   Lines.Add(
   '||||||'+#13#10+
   '|:-:|:-:|:-:|:-:|:-:|'+#13#10+
@@ -3393,21 +3645,366 @@ begin
   '||||||'+#13#10+
   '||||||'+#13#10+
   '||||||'+#13#10);
+  OnPaint := @DisplayTable;
+  FOldFontName:=FBuffer.Canvas.Font.Name;
+  FConfigFileName:='QFGridPanelConfig.cfg';
 end;
 
 destructor TQFGridPanelComponent.Destroy;
 begin
   inherited Destroy;
+  if FControlsList<>nil then
+    FControlsList.Free;
+  //FPopupMenu.Free;
+end;
+
+procedure TQFGridPanelComponent.SetCellProp;
+var
+  i,j:integer;
+  Index,tmp,err: Integer;
+  CellProper :TQFCellProper;
+begin
+  GetControlsList;
+  CellProper := TQFCellProper.Create(Self);
+
+  setlength(CellProper.FTable,FRowCount+1,FColCount);
+
+
+  //根据当前单元格信息设置
+  CellProper.ColEdit.Text:=FColCount.ToString;
+  CellProper.RowEdit.Text:=FRowCount.ToString;
+  CellProper.LineColor.Color:=FCellLineColor;
+  CellProper.CbxLineStyle.ItemIndex:=ord(FCellLineStyle);
+  CellProper.ComboBox1.Items.Clear;
+  CellProper.ComboBox1.text:='';
+  CellProper.ComboBox1.Items.Assign(FControlsList);
+  CellProper.ComboBox1.ItemIndex:=
+     CellProper.ComboBox1.Items.IndexOf(FTable[FSelectRow,FSelectCol].ComponentName);
+  if FTable[FSelectRow,FSelectCol].Align=0 then FTable[FSelectRow,FSelectCol].Align:=2;
+  if FTable[FSelectRow,FSelectCol].Align>0 then
+    CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
+
+  if FTable[FSelectRow,FSelectCol].DispType<3 then
+    CellProper.CbxCellType.ItemIndex:=FTable[FSelectRow,FSelectCol].DispType
+  else
+    CellProper.CbxCellType.ItemIndex:=2;//控件
+  if (FTable[FSelectRow,FSelectCol].ColSpan<>0) or (FTable[FSelectRow,FSelectCol].RowSpan<>0) then
+    CellProper.ChkBoxMerge.Checked:=true
+  else
+    CellProper.ChkBoxMerge.Checked:=false;
+  CellProper.ChkColSizing.Checked:=self.FColSizing;
+  CellProper.ChkRowSizing.Checked:=self.FRowSizing;
+  CellProper.ColWidthEdit.Text:=FColWidth.ToString;
+  CellProper.RowHeightEdit.Text:=FRowHeight.ToString;
+  CellProper.EditFontSize.Text:=FTable[FSelectRow,FSelectCol].FontSize.ToString;
+  CellProper.LbxFontName.ItemIndex:=CellProper.LbxFontName.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontName);
+  CellProper.PanelFontPreview1.Font.Name:=FTable[FSelectRow,FSelectCol].FontName;
+  CellProper.LbxFontSize.ItemIndex:=CellProper.LbxFontSize.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontSize.ToString);
+  CellProper.PanelFontColor.Color:=FTable[FSelectRow,FSelectCol].FontColor;
+  CellProper.DrawBottomLine.Checked:=FTable[FSelectRow,FSelectCol].DrawBottom;
+  CellProper.DrawLeftLine.Checked:=FTable[FSelectRow,FSelectCol].DrawLeft;
+  CellProper.DrawRightLine.Checked:=FTable[FSelectRow,FSelectCol].DrawRight;
+  CellProper.DrawTopLine.Checked:=FTable[FSelectRow,FSelectCol].DrawTop;
+  CellProper.LeftLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].LeftLineStyle);
+  CellProper.RightLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].RightLineStyle);
+  CellProper.BottomLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].BottomLineStyle);
+  CellProper.TopLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].TopLineStyle);
+
+  CellProper.StringGrid1.RowCount:=FRowCount;
+  CellProper.StringGrid1.ColCount:=FColCount;
+
+  for i:=0 to FRowCount-1 do
+  begin
+    CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
+    for j:=1 to FColCount do
+    begin
+      CellProper.FTable[i,j-1]:=FTable[i,j-1];
+      if FTable[i,j].ComponentName<>'' then
+        CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].ComponentName
+      else
+        CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
+      CellProper.StringGrid1.ColWidths[j-1]:=FColWidth;
+    end;
+  end;
+  CellProper.ShowModal;
+  ////////////////////////////////
+  //单元格设置后
+  if QFCellProperReturn then
+  begin
+    if FCellLineColor<>CellProper.LineColor.Color then
+    begin
+      FCellLineColor:=CellProper.LineColor.Color;
+      DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+    end;
+    if FCellLineStyle<>TFPPenStyle(CellProper.CbxLineStyle.ItemIndex) then
+    begin
+      FCellLineStyle:=TFPPenStyle(CellProper.CbxLineStyle.ItemIndex);
+    end;
+
+    if CellProper.CbxHAlign.ItemIndex>=0 then
+      FTable[FSelectRow,FSelectCol].Align:=CellProper.CbxHAlign.ItemIndex+1;
+
+    if (not CellProper.ChkBoxMerge.Checked) and ((FTable[FSelectRow,FSelectCol].ColSpan<>0) or (FTable[FSelectRow,FSelectCol].RowSpan<>0))  then
+    begin
+      FTable[FSelectRow,FSelectCol].RowSpan:=0;
+      FTable[FSelectRow,FSelectCol].ColSpan:=0;
+      FTable[FSelectRow,FSelectCol].Width:= FColWidth;
+      FTable[FSelectRow,FSelectCol].Height:= FRowHeight;
+    end;
+    FColSizing:=CellProper.ChkColSizing.Checked;
+    FRowSizing:=CellProper.ChkRowSizing.Checked;
+
+    if CellProper.LbxFontName.ItemIndex>=0 then
+      FTable[FSelectRow,FSelectCol].FontName:=CellProper.LbxFontName.Items.ValueFromIndex[CellProper.LbxFontName.ItemIndex];
+    if CellProper.LbxFontSize.itemindex>=0 then
+    begin
+      val(CellProper.LbxFontSize.Items.ValueFromIndex[CellProper.LbxFontSize.itemindex],tmp,err);
+      FTable[FSelectRow,FSelectCol].FontSize:=tmp;
+    end;
+    FTable[FSelectRow,FSelectCol].FontColor:=CellProper.PanelFontColor.Color;
+
+    val(CellProper.ColWidthEdit.Text,tmp,err);
+    FColWidth:=tmp;
+    val(CellProper.RowHeightEdit.Text,tmp,err);
+    FRowHeight:=tmp;
+
+    FTable[FSelectRow,FSelectCol].DrawBottom:=CellProper.DrawBottomLine.Checked;
+    FTable[FSelectRow,FSelectCol].DrawLeft:=CellProper.DrawLeftLine.Checked;
+    FTable[FSelectRow,FSelectCol].DrawRight:=CellProper.DrawRightLine.Checked;
+    FTable[FSelectRow,FSelectCol].DrawTop:=CellProper.DrawTopLine.Checked;
+    FTable[FSelectRow,FSelectCol].LeftLineStyle:=TFPPenStyle(CellProper.LeftLineStyle.ItemIndex);
+    FTable[FSelectRow,FSelectCol].RightLineStyle:=TFPPenStyle(CellProper.RightLineStyle.ItemIndex);
+    FTable[FSelectRow,FSelectCol].BottomLineStyle:=TFPPenStyle(CellProper.BottomLineStyle.ItemIndex);
+    FTable[FSelectRow,FSelectCol].TopLineStyle:=TFPPenStyle(CellProper.TopLineStyle.ItemIndex);
+
+    val(CellProper.ColEdit.Text,tmp,err);
+    if tmp<>FColCount then
+      FColCount:=tmp;
+    val(CellProper.RowEdit.Text,tmp,err);
+    if tmp<>FRowCount then
+      FRowCount:=tmp;
+
+
+    for i:=0 to FRowCount-1 do
+    begin
+      for j:=1 to FColCount do
+      begin
+        FTable[i,j]:=CellProper.FTable[i,j-1];
+        FTable[i,j].str:=CellProper.StringGrid1.cells[j-1,i];
+      end;
+    end;
+
+    Invalidate;
+
+  end;
+  CellProper.Free;
+end;
+
+procedure TQFGridPanelComponent.MenuItemClick(Sender: TObject);
+begin
+  //selectcell:= FOnSelectCell;
+  //FOnSelectCell:=nil;
+  case TStMenuItemTag(TMenuItem(Sender).Tag) of
+    //mtCut :
+    //  CutCells(TRect(Selection));
+    //mtCopy :
+    //  CopyCells(TRect(Selection));
+    //mtPaste :
+    //  PasteCells(TPoint(FCurrent));
+    //mtInsertCol :
+    //  InsertCol(TRect(Selection));
+    //mtInsertRow :
+    //  InsertRow(TRect(Selection));
+    //mtDeleteCol :
+    //   if Selection.Left>2 then   DeleteCol(TRect(Selection));
+    //mtDeleteRow :
+    // DeleteRow(TRect(Selection));
+    //mtClearCells :
+    //  ClearCells(TRect(Selection));
+    mtSetCellProp :
+      SetCellProp;
+  end;
+  //FOnSelectCell:=selectcell;
+end;
+
+// 初始化弹出式菜单
+procedure TQFGridPanelComponent.InitPopupMenu;
+var
+  AMenuItem, BMenuItem: TMenuItem;
+begin
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '剪切(&T)';
+  AMenuItem.Tag := Ord(mtCut);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
+
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '复制(&C)';
+  AMenuItem.Tag := Ord(mtCopy);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
+
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '粘贴(&P)';
+  AMenuItem.Tag := Ord(mtPaste);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
+
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '-';
+  FPOpupMenu.Items.Add(AMenuItem);
+{
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '插入';
+  FPOpupMenu.Items.Add(AMenuItem);
+
+    BMenuItem := TMenuItem.Create(AMenuItem);
+    BMenuItem.Caption := '插入整行';
+    BMenuItem.Tag := Ord(mtInsertRow);
+    BMenuItem.OnClick := @MenuItemClick;
+    AMenuItem.Add(BMenuItem);
+
+    BMenuItem := TMenuItem.Create(AMenuItem);
+    BMenuItem.Caption := '插入整列';
+    BMenuItem.Tag := Ord(mtInsertCol);
+    BMenuItem.OnClick := @MenuItemClick;
+    AMenuItem.Add(BMenuItem);
+
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '删除';
+    FPOpupMenu.Items.Add(AMenuItem);
+
+    BMenuItem := TMenuItem.Create(AMenuItem);
+    BMenuItem.Caption := '删除整行';
+    BMenuItem.Tag := Ord(mtDeleteRow);
+    BMenuItem.OnClick := @MenuItemClick;
+    AMenuItem.Add(BMenuItem);
+
+    BMenuItem := TMenuItem.Create(AMenuItem);
+    BMenuItem.Caption := '删除整列';
+    BMenuItem.Tag := Ord(mtDeleteCol);
+    BMenuItem.OnClick := @MenuItemClick;
+    AMenuItem.Add(BMenuItem);
+}
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '清除单元格内容';
+  AMenuItem.Tag := Ord(mtClearCells);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
+
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '-';
+  FPOpupMenu.Items.Add(AMenuItem);
+
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '设置单元格';
+  AMenuItem.Tag := Ord(mtSetCellProp);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
+end;
+
+procedure TQFGridPanelComponent.EditEnter(Sender: TObject);
+begin
+  if sender is TDBEdit then
+  begin
+    (sender as TDBEdit).Color:=FEditFocusColor;
+    (sender as TDBEdit).Font.Color:=FEditFontFocusColor;
+  end;
+  if sender is TEdit then
+  begin
+    (sender as TEdit).Color:=FEditFocusColor;
+    (sender as TEdit).Font.Color:=FEditFontFocusColor;
+  end;
+end;
+
+procedure TQFGridPanelComponent.EditExit(Sender: TObject);
+begin
+  if sender is TDBEdit then
+  begin
+    (sender as TDBEdit).Color:=FOldEditFocusColor;
+    (sender as TDBEdit).Font.Color:=FOldEditFontFocusColor;
+  end;
+  if sender is TEdit then
+  begin
+    (sender as TEdit).Color:=FOldEditFocusColor;
+    (sender as TEdit).Font.Color:=FOldEditFontFocusColor;
+  end;
 end;
 
 procedure TQFGridPanelComponent.DoOnChangeBounds;
 begin
   inherited DoOnChangeBounds;
   FRun:=0;
-  FOldP.Left:=0;
-  FOldP.Top:=0;
-  FOldP.Width:=0;
-  FOldP.Height:=0;
+  FOldR.Left:=0;
+  FOldR.Top:=0;
+  FOldR.Width:=0;
+  FOldR.Height:=0;
+  //Init(FBuffer);
+  //if FTablesl<>nil then
+  //  GetTableInfo(0);
+  //Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
+  //DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+end;
+
+procedure TQFGridPanelComponent.GetControlsList;
+var
+  i:integer;
+begin
+  FControlsList:=TStringlist.Create;
+  for i:=0 to self.Parent.ControlCount-1 do
+  begin
+    if  UpperCase('QFGridPanelComponent')<>UpperCase(copy(self.Parent.Controls[i].Name,1,20)) then
+    begin
+      FControlsList.Add(self.Parent.Controls[i].Name);
+    end;
+  end;
+end;
+
+procedure TQFGridPanelComponent.LoadFile(filename:string);
+var
+  jsonFile: TStringList;
+begin
+  try
+    jsonFile:=TStringList.Create;
+    if trim(filename)='' then
+      filename:=FConfigFileName;
+
+    if  FileExists(filename) then
+    begin
+      jsonFile.LoadFromFile(filename);
+      loadjson(jsonFile.Text);
+    end;
+  finally
+    jsonFile.Free;
+  end;
+end;
+
+procedure TQFGridPanelComponent.LoadFile;
+var
+  jsonFile: TStringList;
+begin
+  try
+    jsonFile:=TStringList.Create;
+    if  FileExists(FConfigFileName) then
+    begin
+      jsonFile.LoadFromFile(FConfigFileName);
+      loadjson(jsonFile.Text);
+    end;
+  finally
+    jsonFile.Free;
+  end;
+end;
+
+procedure TQFGridPanelComponent.SaveFile(filename:string);
+begin
+  if trim(filename)='' then
+    filename:=FConfigFileName;
+  savejson(filename);
+end;
+
+procedure TQFGridPanelComponent.SaveFile;
+begin
+  savejson(FConfigFileName);
 end;
 
 procedure TQFGridPanelComponent.Refresh;
@@ -3416,8 +4013,9 @@ begin
   Init(FBuffer);
   if FTablesl<>nil then
     GetTableInfo(0);
+  Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
   DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
-  Canvas.Draw(0,0,FBuffer)
+  //Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TQFGridPanelComponent.SetLines(const AValue: TStrings);
@@ -3429,27 +4027,67 @@ begin
     Init(FBuffer);
     if FTablesl<>nil then
       GetTableInfo(0);
+    Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
     DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
-    Canvas.Draw(0,0,FBuffer)
+    //Canvas.Draw(0,0,FBuffer)
+  end;
+end;
+
+procedure TQFGridPanelComponent.SetCellLineStyle(Value : TFPPenStyle);
+begin
+  if FCellLineStyle <> Value then
+  begin
+    FCellLineStyle := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TQFGridPanelComponent.SetCellLineColor(Value : TColor);
+begin
+  if FCellLineColor <> Value then
+  begin
+    FCellLineColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TQFGridPanelComponent.SetEditFocusColor(Value : TColor);
+begin
+  if FEditFocusColor <> Value then
+  begin
+    FEditFocusColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TQFGridPanelComponent.SetEditFontFocusColor(Value : TColor);
+begin
+  if FEditFontFocusColor <> Value then
+  begin
+    FEditFontFocusColor := Value;
+    Invalidate;
   end;
 end;
 
 procedure TQFGridPanelComponent.DisplayTable(Sender: TObject);
 begin
-  Init(FBuffer);
-  if FTablesl<>nil then
-    GetTableInfo(0);
+  if FRun=0 then
+  begin
+    Init(FBuffer);
+    if FTablesl<>nil then
+      GetTableInfo(0);
+    Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
+  end;
   DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
-  Canvas.Draw(0,0,FBuffer)
+  //Canvas.Draw(0,0,FBuffer)
 end;
 
-function TQFGridPanelComponent.DrawTable(Buffer: TBitmap;colWidth,h,Index,y:integer):integer;
+procedure TQFGridPanelComponent.Tableiniti(Buffer: TBitmap;colWidth,h,Index,y:integer);
 var
   i,j,w1,h1,row,col,v:integer;
   i1:integer;
   hg:integer;
   k:integer;
-  //colWidth:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
   Span,c:integer;
@@ -3459,37 +4097,134 @@ var
   row1,col1:integer;
   kk,oo,oo1,oo2:integer;
   str:string;
+begin
+  index:=0;
+  DeleteRecord(index);//删除第2行定义单元格的对齐格式
+  row:=FTablesl[Index].row-2;
+  col:=FTablesl[Index].col-1;
+  FRowCount:=row;
+  FColCount:=col;
+  TableRowHeigth:=FTablesl[Index].RowHeight;
+  Buffer.Canvas.Font.Style:=[fsBold];
+  th:= Buffer.Canvas.TextHeight('国');
+  if (h=0) and (FRowHeight=0) then
+    h:=round(th*1.5); //表格行高
+  if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
+  if FRowHeight<=1 then FRowHeight:=h;
 
-  function FindChildControls(str:string):TControl;
-  var kk,i:integer;
+  if (colWidth=0) and (FColWidth=0) then
+    colWidth:=(Buffer.Width) div col; //单元格宽
+  if FColWidth=0 then
+    FColWidth:=colWidth;
+
+  Buffer.Canvas.Pen.Color:=FCellLineColor;//黑色画笔
+
+  //重新计算合并后单元格的width和height
+  for i:=0 to row do
   begin
-    Result:=nil;
-    kk:=self.Parent.ControlCount;
-    for i:=0 to kk-1 do
+    for j:=0 to col do
     begin
-      if UpperCase(self.Parent.Controls[i].Name) =str.ToUpper then
+      FTable[i,j].Height:=h;
+      FTable[i,j].Width:=colWidth;
+      FTable[i,j].DrawTop:=true;
+      FTable[i,j].DrawLeft:=true;
+      FTable[i,j].DrawBottom:=true;
+      FTable[i,j].DrawRight:=true;
+      FTable[i,j].LineStyle:=FCellLineStyle;
+      //FTable[i,j].TopLineStyle:=FCellLineStyle;
+      //FTable[i,j].LeftLineStyle:=FCellLineStyle;
+      //FTable[i,j].BottomLineStyle:=FCellLineStyle;
+      //FTable[i,j].RightLineStyle:=FCellLineStyle;
+
+      //竖向(row)合并单元格
+      if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
       begin
-        Result:=self.Parent.Controls[i];
-        break;
+        row1:=FTable[i,j].RowSpan+i-1;
+        if row1>row then row1:=row;
+
+        for oo:=i to row1 do
+        begin
+          col1:=FTable[i,j].ColSpan+j-1;
+          if col1>col then col1:=col;
+          for oo1:=j to col1 do
+          begin
+            FTable[oo,oo1].Visible:=false;
+          end;
+          FTable[i,j].Visible:=true;//将左上角单元格置为true
+          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
+          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+        end;
+      end
+      else
+      //竖向(row)合并单元格
+      if FTable[i,j].RowSpan>0 then
+      begin
+        FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+        row1:=FTable[i,j].RowSpan+i-1;
+        if row1>row then row1:=row;
+        for oo:=i+1 to row1 do
+        begin
+          FTable[oo,j].Visible:=false;
+        end;
+      end
+      else
+      //横向(col)合并单元格
+      if FTable[i,j].ColSpan>0 then
+      begin
+        FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
+        col1:=FTable[i,j].ColSpan+j-1;
+        if col1>col then col1:=col;
+        for oo:=j+1 to col1 do
+        begin
+          FTable[i,oo].Visible:=false;
+        end;
       end;
     end;
   end;
+end;
+
+function TQFGridPanelComponent.FindChildControls(str:string):TControl;
+var kk,i:integer;
+begin
+  Result:=nil;
+  kk:=self.Parent.ControlCount;
+  for i:=0 to kk-1 do
+  begin
+    if UpperCase(self.Parent.Controls[i].Name) =str.ToUpper then
+    begin
+      Result:=self.Parent.Controls[i];
+      break;
+    end;
+  end;
+end;
+
+function TQFGridPanelComponent.DrawTable(Buffer: TBitmap;colWidth,h,Index,y:integer):integer;
+var
+  i,j,w1,h1,row,col,v:integer;
+  i1:integer;
+  hg:integer;
+  k:integer;
+  x0,y0,x1,y1:integer;
+  TableRowHeigth:integer;
+  Span,c:integer;
+  th:integer;//文字高度
+  TabStops:integer;
+  Control: TControl;
+  row1,col1:integer;
+  kk,oo,oo1,oo2:integer;
+  str:string;
 begin
   Index:=0;
   y:=0;
   if FTablesl<>nil then
   begin
-    DeleteRecord(index);//删除第2行定义单元格的对齐格式
-    row:=FTablesl[Index].row-2;
-    col:=FTablesl[Index].col-1;
-    FRow:=row;
-    FCol:=col;
+    BackgroundRefresh(Buffer); //刷新背景
     TableRowHeigth:=FTablesl[Index].RowHeight;
     Buffer.Canvas.Font.Style:=[fsBold];
+
     th:= Buffer.Canvas.TextHeight('国');
     if (h=0) and (FRowHeight=0) then
       h:=round(th*1.5); //表格行高
-    //if TableRowHeigth>h then h:=TableRowHeigth;
     if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
     if FRowHeight=0 then FRowHeight:=h;
 
@@ -3498,104 +4233,93 @@ begin
     if FColWidth=0 then
       FColWidth:=colWidth;
 
-    Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
-
-    //重新计算合并后单元格的width和height
-    for i:=0 to row do
-    begin
-      for j:=0 to col do
-      begin
-        FTable[i,j].Height:=h;
-        FTable[i,j].Width:=colWidth;
-        //竖向(row)合并单元格
-        if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
-        begin
-          row1:=FTable[i,j].RowSpan+i-1;
-          if row1>row then row1:=row;
-
-          for oo:=i to row1 do
-          begin
-            col1:=FTable[i,j].ColSpan+j-1;
-            if col1>col then col1:=col;
-            for oo1:=j to col1 do
-            begin
-              FTable[oo,oo1].Visible:=false;
-            end;
-            FTable[i,j].Visible:=true;//将左上角单元格置为true
-            FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-            FTable[i,j].Height:=h*FTable[i,j].RowSpan;
-          end;
-        end
-        else
-        //竖向(row)合并单元格
-        if FTable[i,j].RowSpan>0 then
-        begin
-          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
-          row1:=FTable[i,j].RowSpan+i-1;
-          if row1>row then row1:=row;
-          for oo:=i+1 to row1 do
-          begin
-            FTable[oo,j].Visible:=false;
-          end;
-        end
-        else
-        //横向(col)合并单元格
-        if FTable[i,j].ColSpan>0 then
-        begin
-          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-          col1:=FTable[i,j].ColSpan+j-1;
-          if col1>col then col1:=col;
-          for oo:=j+1 to col1 do
-          begin
-            FTable[i,oo].Visible:=false;
-          end;
-        end;
-      end;
-    end;
+    Buffer.Canvas.Pen.Color:=FCellLineColor;  //边框颜色
+    Buffer.Canvas.Pen.Style:=FCellLineStyle;  //边框线条样式
 
     //画单元格
     hg:=0;
-    for i:=0 to row do
+    x0:=0;
+    for i:=0 to FRowCount do
     begin
-      for j:=1 to col do
+      x0:=0;
+      for j:=1 to FColCount do
       begin
         if FTable[i,j].Visible then
         begin
-          x0:=(j-1)*FTable[i,j-1].Width;
+          if j>1 then
+            x0:=x0+FTable[i,j-1].Width;
+
           if FTable[i,j-1].Height>h then
             y0:=i*h
           else
             y0:=i*FTable[i,j-1].Height;
+
+          FTable[i,j].x:=x0;
+          FTable[i,j].y:=y0;
+
           x1:=x0+FTable[i,j].Width;
           y1:=y0+FTable[i,j].Height;
+
           if x0>=Buffer.Width then
             x0:=Buffer.Width-1;
           if x1>=Buffer.Width then
             x1:=Buffer.Width-1;
-          Buffer.Canvas.Line(x0,y0,x1,y0);//顶横线
-          Buffer.Canvas.Line(x1,y0,x1,y1);//右竖线
-          Buffer.Canvas.Line(x1,y1,x0,y1);//底横线
-          Buffer.Canvas.Line(x0,y1,x0,y0);//左竖线
+          if FTable[i,j].DrawTop then
+          begin
+            if FTable[i,j].TopLineStyle<>FCellLineStyle then
+              Buffer.Canvas.Pen.Style:=FTable[i,j].TopLineStyle
+            else
+              Buffer.Canvas.Pen.Style:=FCellLineStyle;
+            Buffer.Canvas.Line(x0,y0,x1,y0);//顶横线
+          end;
+          if FTable[i,j].DrawRight then
+          begin
+            if FTable[i,j].RightLineStyle<>FCellLineStyle then
+              Buffer.Canvas.Pen.Style:=FTable[i,j].RightLineStyle
+            else
+              Buffer.Canvas.Pen.Style:=FCellLineStyle;
+            Buffer.Canvas.Line(x1,y0,x1,y1);//右竖线
+          end;
+          if FTable[i,j].DrawBottom then
+          begin
+            if FTable[i,j].BottomLineStyle<>FCellLineStyle then
+              Buffer.Canvas.Pen.Style:=FTable[i,j].BottomLineStyle
+            else
+              Buffer.Canvas.Pen.Style:=FCellLineStyle;
+            Buffer.Canvas.Line(x1,y1,x0,y1);//底横线
+          end;
+          if FTable[i,j].DrawLeft then
+          begin
+            if FTable[i,j].LeftLineStyle<>FCellLineStyle then
+              Buffer.Canvas.Pen.Style:=FTable[i,j].LeftLineStyle
+            else
+              Buffer.Canvas.Pen.Style:=FCellLineStyle;
+            Buffer.Canvas.Line(x0,y1,x0,y0);//左竖线
+          end;
         end;
       end;
     end;
+    FTableWidth:=x1;
+    FTableHeight:=y1;
 
-    //开始画表格边框
+    //开始画表格最外框边框
+    Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
+    Buffer.Canvas.Pen.Style:=psSolid;
     if FBorder then
     begin
-      Buffer.Canvas.Pen.Width:=1;
-      Buffer.Canvas.MoveTo(2,1);
-      if FColWidth*FCol>=Buffer.Canvas.Width then
+      Buffer.Canvas.Pen.Width:=2;
+      Buffer.Canvas.MoveTo(1,1);
+      if FColWidth*FColCount>=Buffer.Canvas.Width then
       begin
-        Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,1);  //顶
-        Buffer.Canvas.LineTo(Buffer.Canvas.Width-2,h*(row+1)-1);//右;
+        Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,1);  //顶
+        Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,h*(FRowCount+1));//右;
       end
       else
       begin
-        Buffer.Canvas.LineTo(FColWidth*FCol-1,1);
-        Buffer.Canvas.LineTo(FColWidth*FCol-1,h*(row+1)-1);
+        Buffer.Canvas.LineTo(FColWidth*FColCount-1,1);
+        Buffer.Canvas.LineTo(FColWidth*FColCount-1,h*(FRowCount+1));
       end;
-      Buffer.Canvas.LineTo(1,h*(row+1)-1); //底
+      Buffer.Canvas.LineTo(1,h*(FRowCount+1)); //底
       Buffer.Canvas.LineTo(1,1);//左
       Buffer.Canvas.Pen.Width:=1;
     end;
@@ -3604,9 +4328,11 @@ begin
     //绘表格内容（文字/图像/控件)
     Buffer.Canvas.Brush.Style := bsClear;//透明文字
     TabStops:=0;
-    for i:=0 to row do
+    x0:=0;
+    for i:=0 to FRowCount do
     begin
-      for j:=1 to col do
+      x0:=0;
+      for j:=1 to FColCount do
       begin
         if FTable[i,j].Visible then
         begin
@@ -3614,20 +4340,25 @@ begin
              or (FTable[i,j].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
           begin
             //设置字体属性
+            if FTable[i,j].FontName<>'' then
+              Buffer.Canvas.Font.Name:=FTable[i,j].FontName
+            else
+              Buffer.Canvas.Font.Name:=FOldFontName;
             if FTable[i,j].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
             if FTable[i,j].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
             if FTable[i,j].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
             if FTable[i,j].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
             if FTable[i,j].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
-            if FTable[i,j].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
+            if (FTable[i,j].DispType>1) and (FTable[i,j].DispType<5) then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
             else Buffer.Canvas.Font.Color:=FTable[i,j].Color;
+            Buffer.Canvas.Font.Size:=FTable[i,j].FontSize;
+            th:= Buffer.Canvas.TextHeight('国');
             //设置字体属性
 
-            x0:=(j-1)*colWidth;
+            x0:=FTable[i,j].x;
+
             h1:=h;
-            w1:=colWidth;
-            if FTable[i,j].Width>0 then
-              colWidth:=FTable[i,j].Width;
+            w1:=FTable[i,j].Width;
 
             if FTable[i,j].Height>0 then
                h:=FTable[i,j].Height;
@@ -3635,62 +4366,57 @@ begin
             x1:=x0; //居左
             if FTable[0,j].Align=1 then
               x1:=x0 ;//居左
-           if FTable[0,j].Align=2 then
-              x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j].str,colWidth))) div 2; //居中
+            if FTable[0,j].Align=2 then
+              x1:=x0+(FTable[i,j].Width-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j].str,FTable[i,j].Width))) div 2; //居中
             if FTable[0,j].Align=3 then
-               x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j].str,colWidth)))-5; //居右
+               x1:=x0+(FTable[i,j].Width-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j].str,FTable[i,j].Width)))-5; //居右
+
             if i=0 then
             begin
-              y0:=y+i*h+abs(h- th) div 2;//垂直居中
+              y0:=y+i*FTable[i,j].Height+abs(FTable[i,j].Height- th) div 2;//垂直居中
               Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
-              DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j].str,colWidth));//截断超过单元格宽度的字符串
+              DisplayChar(Buffer,x1+2, y0,TruncationStr(Buffer,FTable[i,j].str,FTable[i,j].Width));//截断超过单元格宽度的字符串
             end
             else
             begin
-               if h1<>h then
-                 y0:=y + (i)* h1 + abs (h-th) div 2//垂直居中
+               if FTable[i,j].Height>FRowHeight then
+                 y0:=y + i* FRowHeight + abs (FTable[i,j].Height-th) div 2//垂直居中
                else
-                 y0:=y + (i)* h1 + abs(h1- th) div 2;//垂直居中
-               DisplayChar(Buffer,x1+2, y0+5,TruncationStr(Buffer,FTable[i,j].str,colWidth));
+                 y0:=y + i* FTable[i,j].Height + abs(FTable[i,j].Height- th) div 2;//垂直居中
+               DisplayChar(Buffer,x1+2, y0,TruncationStr(Buffer,FTable[i,j].str,FTable[i,j].Width));
             end;
-            colWidth:=w1;
             h:=h1;
           end;
           if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
           begin
             Control:=FindChildControls(FTable[i,j].ComponentName);//查找控件
-             if Control<>nil then
+            if Control<>nil then
             begin
-              x0:=(j-1)*colWidth+1+FGap;
-              if i=0 then
-                y0:=y+FGap
-              else
-                y0:=y+(i)*h+FGap;
-              if FTable[i,j].Width=0 then
-                Control.Width:=ColWidth-FGap*2
-              else
-                Control.Width:=FTable[i,j].Width-FGap*2;
+              Control.Width:=FTable[i,j].Width-FGap*2;
               Control.Height:= FTable[i,j].Height-FGap*2;
               y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
-              Control.Left:=x0+self.Left;
-              Control.Top:=y0+self.Top+y1;//垂直居中显示控件
+              Control.Left:=FTable[i,j].x+FGap+self.Left;
+              Control.Top:=FTable[i,j].y+FGap+self.Top+y1;//垂直居中显示控件
               if (Control is TEdit) or (Control is TDBEdit) or
                  (Control is TMemo) or
                  (Control is TDBMemo) or
                  (Control is TComboBox) or (Control is TDBComboBox) then
               begin
+                FOldEditFocusColor:=TEdit(Control).Color;
+                FOldEditFontFocusColor:=TEdit(Control).Font.Color;
                 TEdit(Control).BorderStyle:=bsNone;
                 TEdit(Control).TabOrder:= TabStops;
+                TEdit(Control).OnEnter:=@EditEnter;
+                TEdit(Control).OnExit:=@EditExit;
               end;
               inc(TabStops);
             end;
           end;
           if FTable[i,j].DispType=1 then  //显示图形
           begin
-            x0:=(j-1)*colWidth+1;
-            if i=0 then  y0:=y+2
-            else
-            y0:=y+(i)*h+4;
+            x0:=FTable[i,j].x+1;
+            y0:=FTable[i,j].y+1;
+
             if  FileExists(FTable[i,j].str) then
             begin
               IMG.Picture.LoadFromFile(FTable[i,j].str);
@@ -3715,11 +4441,11 @@ begin
           end;
         end;
       end;
-      FTable[i,0].Height:=Buffer.Canvas.TextHeight('国')+2;
     end;
     FRun:=1;
-    y:=y+(row)*h+5;
+    y:=y+(FRowCount)*h+5;
     Result:=y;
+    Canvas.Draw(0,0,Buffer);
   end;
 end;
 
@@ -3731,44 +4457,292 @@ begin
   begin
     // 处理左键按下
     FisLeftButtonDown := True;
-    FinitialY := Y;
-    FinitialX := X;
+    FinitialXY.X := X;
+    FinitialXY.Y := Y;
+    if FTable[FSelectRow,FSelectCol].DispType=5 then
+      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+    else
+      DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
   end;
+end;
+
+function ControlToScreenX(AControl: TControl): Integer;
+var
+  ParentControl: TControl;
+begin
+  Result := AControl.Left;
+  ParentControl := AControl.Parent;
+  while (ParentControl <> nil) and not (ParentControl is TCustomForm) do
+  begin
+    Result := Result + ParentControl.Left;
+    ParentControl := ParentControl.Parent;
+  end;
+  if ParentControl <> nil then
+    Result := Result + TCustomForm(ParentControl).Left;
+end;
+
+function ControlToScreenY(AControl: TControl): Integer;
+var
+  ParentControl: TControl;
+begin
+  Result := AControl.Top;
+  ParentControl := AControl.Parent;
+  while (ParentControl <> nil) and not (ParentControl is TCustomForm) do
+  begin
+    Result := Result + ParentControl.Top;
+    ParentControl := ParentControl.Parent;
+  end;
+  if ParentControl <> nil then
+    Result := Result + TCustomForm(ParentControl).Top;
+end;
+
+procedure TQFGridPanelComponent.DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:byte=0);
+var
+  CellControl:TControl;
+  linestyle:TFPPenStyle;
+
+  function isCellComponent(Rect:TRect;out Control: TControl):Boolean;
+  var
+    i,j,x0,x1,y0,y1:integer;
+  begin
+    Result:=false;
+    for i:=0 to FRowCount do
+    begin
+      for j:=1 to FColCount do
+      begin
+        if (FTable[i,j].Visible)  then
+        begin
+          x0:=FTable[i,j].x;
+          x1:=x0+FTable[i,j].Width;
+
+          y0:=FTable[i,j].y;// i*FRowHeight;
+          y1:=y0+FTable[i,j].Height;
+
+          if (Rect.Left>=x0) and (Rect.Left+Rect.Width<=x1) and (Rect.top>=y0) and (Rect.top+Rect.Height<=y1) then
+          begin
+            if FTable[i,j].DispType=5 then
+            begin
+              Control:= FindChildControls(FTable[i,j].ComponentName);
+              Result:=true;
+            end;
+            Break;
+          end;
+        end;
+      end;
+    end;
+  end;
+begin
+  Canvas.Pen.Width:=Linewidth;
+  if isCellComponent(rect,CellControl) then //判断画框是不否有控件
+  begin
+    FOldBrushColor:=self.Color;
+    if colors=FCellLineColor then
+      Canvas.Brush.Color:=FOldBrushColor
+    else
+      Canvas.Brush.Color:=FEditFocusColor;
+    Canvas.FillRect(rect);
+    if CellControl<>nil then
+    begin
+      if (CellControl is TEdit) or
+         (CellControl is TDBEdit) or
+         (CellControl is TMemo) or
+         (CellControl is TDBMemo) or
+         (CellControl is TComboBox) or
+         (CellControl is TDBComboBox) then
+      begin
+        FOldEditFocusColor:=TEdit(CellControl).Color;
+        FOldEditFontFocusColor:=TEdit(CellControl).Font.Color;
+        TEdit(CellControl).Color:=Canvas.Brush.Color;
+      end;
+    end;
+    Canvas.Brush.Color:=FoldEditFocusColor;
+  end;
+  Canvas.Pen.Color:=colors;
+  Canvas.MoveTo(rect.Left,rect.Top);
+  if rect.Left+rect.Width>=FBuffer.Width then
+  rect.Width:=rect.Width-1;
+  //顶
+  if (rect.Top=0) and (FBorder) then
+  begin
+    Canvas.Pen.Style:=psSolid;
+    if Canvas.Pen.Color=FCellLineColor then
+      Canvas.Pen.Color:=clBlack;
+    Canvas.Pen.Width:=3;
+  end
+  else
+  begin
+    if RepaintRect=1 then//重绘单元格
+    begin
+      Canvas.Pen.Style:=FTable[x,y].TopLineStyle;
+      Canvas.Pen.Color:=FCellLineColor;
+    end
+    else
+    begin
+      Canvas.Pen.Style:=psSolid;
+      Canvas.Pen.Color:=colors;
+    end;
+    Canvas.Pen.Width:=1;
+  end;
+  Canvas.LineTo(rect.Left+rect.Width,rect.Top);  //顶
+  //右;
+  if (rect.Left+rect.Width=FTableWidth)  and (FBorder) then
+  begin
+    Canvas.Pen.Style:=psSolid;
+    if Canvas.Pen.Color=FCellLineColor then
+      Canvas.Pen.Color:=clBlack;
+    Canvas.Pen.Width:=2;
+  end
+  else
+  begin
+    if RepaintRect=1 then
+    begin
+      Canvas.Pen.Style:=FTable[x,y].RightLineStyle;
+      Canvas.Pen.Color:=FCellLineColor;
+    end
+    else
+    begin
+      Canvas.Pen.Style:=psSolid;
+      Canvas.Pen.Color:=colors;
+    end;
+    Canvas.Pen.Width:=1;
+  end;
+  Canvas.LineTo(rect.Left+rect.Width,rect.Top+rect.Height);//右;
+  //底
+  if (rect.Top+rect.Height=FTableHeight) and (FBorder)  then
+  begin
+    Canvas.Pen.Style:=psSolid;
+    if Canvas.Pen.Color=FCellLineColor then
+      Canvas.Pen.Color:=clBlack;
+    Canvas.Pen.Width:=2;
+  end
+  else
+  begin
+    if RepaintRect=1 then
+    begin
+      Canvas.Pen.Style:=FTable[x,y].BottomLineStyle;
+      Canvas.Pen.Color:=FCellLineColor;
+    end
+    else
+    begin
+      Canvas.Pen.Style:=psSolid;
+      Canvas.Pen.Color:=colors;
+    end;
+    Canvas.Pen.Width:=1;
+  end;
+  Canvas.LineTo(rect.Left,rect.Top+rect.Height); //底
+  //左
+  if (rect.Left=0) and (FBorder)  then
+  begin
+    Canvas.Pen.Style:=psSolid;
+    if Canvas.Pen.Color=FCellLineColor then
+      Canvas.Pen.Color:=clBlack;
+    Canvas.Pen.Width:=2;
+  end
+  else
+  begin
+    if RepaintRect=1 then
+    begin
+      Canvas.Pen.Style:=FTable[x,y].LeftLineStyle;
+      Canvas.Pen.Color:=FCellLineColor;
+    end
+    else
+    begin
+      Canvas.Pen.Style:=psSolid;
+      Canvas.Pen.Color:=colors;
+    end;
+    Canvas.Pen.Width:=1;
+  end;
+  Canvas.LineTo(rect.Left,rect.Top);//左
+  Canvas.Pen.Width:=1;
+  //Canvas.Draw(0,0,FBuffer);
 end;
 
 procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 var movedX:integer;
   movedY:integer;
+  i,j:integer;
 begin
   if FisLeftButtonDown then  //按下鼠标左键
   begin
     if FResultCursor=crVSplit then //调整单元格高度
     begin
-      FOldP.Left:=0;
-      FOldP.Top:=0;
-      FOldP.Width:=0;
-      FOldP.Height:=0;
-      movedY := Y - FinitialY; // 计算Y轴上的移动距离
+      FOldR.Left:=0;
+      FOldR.Top:=0;
+      FOldR.Width:=0;
+      FOldR.Height:=0;
+      movedY := Y - FinitialXY.Y; // 计算Y轴上的移动距离
       FRowHeight:=FRowHeight+movedY;
       FRun:=0;
-      Init(FBuffer);
-      if FTablesl<>nil then
-        GetTableInfo(0);
+      //Init(FBuffer);
+      //if FTablesl<>nil then
+      //  GetTableInfo(0);
       DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
-      Canvas.Draw(0,0,FBuffer)
+      //Canvas.Draw(0,0,FBuffer)
     end;
     if FResultCursor=crHSplit then //调整单元格宽度
     begin
-      FOldP.Left:=0;
-      FOldP.Top:=0;
-      FOldP.Width:=0;
-      FOldP.Height:=0;
-      movedX := X - FinitialX; // 计算Y轴上的移动距离
-      FColWidth:=FColWidth+movedX;
+      FOldR.Left:=0;
+      FOldR.Top:=0;
+      FOldR.Width:=0;
+      FOldR.Height:=0;
+      movedX := X - FinitialXY.X; // 计算Y轴的移动距离
+      if ssCtrl in Shift then
+      begin
+        for i:=0 to FRowCount do
+        begin
+          if movedX>0 then
+          begin
+            if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
+              FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+            if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX<FBuffer.Width then
+              FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width-movedX;
+            FTable[i,FMoveCol].x:=FTable[i,FMoveCol-1].x+movedX;
+          end
+          else
+          begin
+            if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
+              FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+            if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width+abs(movedX)<FBuffer.Width then
+              FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
+            FTable[i,FMoveCol].x:=FTable[i,FMoveCol].x-abs(movedX);
+          end;
+        end;
+      end
+      else
+      begin
+        if movedX>0 then
+        begin
+          if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FBuffer.Width then
+            FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width+movedX;
+
+          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX=FBuffer.Width then
+            FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+movedX
+          else
+          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX<FBuffer.Width then
+            FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width-movedX;
+
+          FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol-1].x+movedX;
+        end
+        else
+        begin
+          if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width=FBuffer.Width then
+          begin
+            FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width-abs(movedX);
+            FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+abs(movedX);
+            FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol].x-abs(movedX);
+          end
+          else
+          begin
+            if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FBuffer.Width then
+              FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width+movedX;
+
+            if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width+abs(movedX)<FBuffer.Width then
+              FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+abs(movedX);
+            FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol].x-abs(movedX);
+          end;
+        end;
+      end;
       FRun:=0;
-      Init(FBuffer);
-      if FTablesl<>nil then
-        GetTableInfo(0);
       DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
       Canvas.Draw(0,0,FBuffer)
     end;
@@ -3780,39 +4754,50 @@ begin
     Cursor := crDefault;
     FResultCursor:=Cursor;
   end;
+  if Button=mbRight then
+  begin
+    if FTable[FSelectRow,FSelectCol].DispType=5 then
+      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+    else
+      DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+     FPopupMenu.PopUp(ControlToScreenX(self)+x,ControlToScreenY(self)+y);
+  end;
+  inherited MouseUP(Button,Shift, X, Y);
 end;
 
 procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
-var p:TRect;
+var
   i,j:integer;
 
-  function isCell(x,y:integer;out p:TRect):Boolean;
+  function isCell(x,y:integer;out Rect:TRect):Boolean;
   var
     i,j,x0,x1,y0,y1:integer;
   begin
     Result:=false;
-    p.Left:=0;
-    p.Top:=0;
-    p.Width:=0;
-    p.Height:=0;
-    for i:=0 to FRow do
+    Rect.Left:=0;
+    Rect.Top:=0;
+    Rect.Width:=0;
+    Rect.Height:=0;
+    for i:=0 to FRowCount do
     begin
-      for j:=1 to FCol do
+      for j:=1 to FColCount do
       begin
-        if (FTable[i,j].Visible) and (FTable[i,j].DispType=5) then
+        if (FTable[i,j].Visible)  then
         begin
-          x0:=(j-1)*FColWidth;
+          x0:=FTable[i,j].x;
           x1:=x0+FTable[i,j].Width;
 
-          y0:=i*FRowHeight;
+          y0:=FTable[i,j].y;// i*FRowHeight;
           y1:=y0+FTable[i,j].Height;
 
           if (x>=x0) and (x<=x1) and (y>=y0) and (y<=y1) then
           begin
-            p.Left:=x0;
-            p.Top:=y0;
-            p.Width:=FTable[i,j].Width;
-            p.Height:=FTable[i,j].Height;
+            Rect.Left:=x0;
+            Rect.Top:=y0;
+            Rect.Width:=FTable[i,j].Width;
+            Rect.Height:=FTable[i,j].Height;
+            FSelectCol:=j;
+            FSelectRow:=i;
             Result:=true;
             Break;
           end;
@@ -3827,67 +4812,244 @@ var p:TRect;
   begin
     Cursor:=crDefault;
     Result:=Cursor;
-    for i:=0 to FRow do
+    for i:=0 to FRowCount do
     begin
-      for j:=1 to FCol do
+      for j:=1 to FColCount do
       begin
           if FTable[i,j].Visible then
           begin
-            x0:=(j-1)*FColWidth;
+            x0:=FTable[i,j].x;
             y0:=i*FRowHeight;
             x1:=x0+FTable[i,j].Width;
             y1:=y0+FTable[i,j].Height;
             if (x>=x0-2) and (x<=x0+2) and (y>y0) and (y<y1) then
             begin
-              Cursor :=crHSplit;
-              Result:=Cursor;  //水平线
-              i0:=i;
-              j0:=j;
+              if FColSizing then
+              begin
+                Cursor :=crHSplit;
+                Result:=Cursor;  //水平线
+                i0:=i;
+                j0:=j;
+              end;
               Break;
             end;
             if (x>x0) and (x<x1) and (y>=y0-2) and (y<=y0+2) then
             begin
-              Cursor := crVSplit; //垂线
-              Result:=Cursor;
-              i0:=i;
-              j0:=j;
+              if FRowSizing then
+              begin
+                Cursor := crVSplit; //垂线
+                Result:=Cursor;
+                i0:=i;
+                j0:=j;
+              end;
               Break;
             end
           end;
       end;
     end;
   end;
-
-  procedure DrawLine(p:TRect;color:TColor;pw:integer);
-  begin
-    FBuffer.Canvas.Pen.Width:=pw;
-    FBuffer.Canvas.Pen.Color:=color;
-    FBuffer.Canvas.MoveTo(p.Left,p.Top);
-    if p.Left+p.Width>=FBuffer.Width then
-    p.Width:=p.Width-1;
-
-    FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top);  //顶
-    FBuffer.Canvas.LineTo(p.Left+p.Width,p.Top+p.Height);//右;
-    FBuffer.Canvas.LineTo(p.Left,p.Top+p.Height); //底
-    FBuffer.Canvas.LineTo(p.Left,p.Top);//左
-    FBuffer.Canvas.Pen.Width:=1;
-    Canvas.Draw(0,0,FBuffer);
-  end;
 begin
   inherited MouseMove(Shift, X, Y);
 
-  DrawLine(FoldP,clBlack,1);
-  if isCell(x,y,p) then
+  if isCell(x,y,FCurrentR) then
   begin
-    FOldP:=p;
-    DrawLine(p,clred,1);
+    DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,1);
+    FOldR:=FCurrentR;
+    if FTable[FSelectRow,FSelectCol].DispType=5 then
+      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+    else
+      DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
   end;
-
   if FisLeftButtonDown then
-    FResultCursor:=Cursor
+  begin
+    FCurrentR.Left:=0;
+    FCurrentR.Top:=0;
+    FCurrentR.Width:=0;
+    FCurrentR.Width:=0;
+    FResultCursor:=Cursor;
+  end
   else
-    FResultCursor:=isLine(x,y,i,j);
+  begin
+    FResultCursor:=isLine(x,y,FMoveRow,FMoveCol);
+  end;
+  if FResultCursor=crHSplit then
+  begin
+     //FMVLineX:=x;
+     //Canvas.Pen.Color:=clNone;
+     //Canvas.Line(x,0,x,y+Canvas.Height);
+  end;
 end;
+
+procedure TQFGridPanelComponent.LoadJSON(jsonstr:string);
+var
+  jsonRoot: TJSONObject;
+  jData : TJSONData;
+  jItem,kItem,litem : TJSONData;
+  i,j,k,no: Integer;
+  Versions,str:string;
+  //object_name: String;
+begin
+  jData := GetJSON(utf8toansi(jsonstr));
+  jsonRoot:=TJSONObject(jData);
+
+  if jsonRoot.get('TQFGridPanelComponent')='TQFGridPanelComponent配置' then
+  begin
+    Versions:= jsonRoot.get('Version');
+    for i := 0 to jData.Count - 1 do
+    begin
+      jItem := jData.Items[i];
+
+      no:=0;
+      for j := 0 to jItem.Count - 1 do  //row
+      begin
+        kItem:=jItem.Items[j];
+
+        str := TJSONObject(jItem).Names[j];
+        FRowcount:= TJSONObject(jItem).get('FRowcount');
+        FColcount:=TJSONObject(jItem).get('FColcount');
+        FCellLineColor:=TJSONObject(jItem).get('FCellLineColor');
+        FColSizing:=TJSONObject(jItem).get('FColSizing');
+        FRowSizing:=TJSONObject(jItem).get('FRowSizing');
+        FCellLineStyle:=TJSONObject(jItem).get('FCellLineStyle');
+        FColWidth:=TJSONObject(jItem).get('FColWidth');
+        FRowHeight:=TJSONObject(jItem).get('FRowHeight');
+        FTableWidth:=TJSONObject(jItem).get('FTableWidth');
+        FTableHeight:=TJSONObject(jItem).get('FTableHeight');
+        FGap:=TJSONObject(jItem).get('FGap');
+        FBorder:=TJSONObject(jItem).get('FBorder');
+        FEditFontFocusColor:=TJSONObject(jItem).get('FEditFontFocusColor');
+        FEditFocusColor:=TJSONObject(jItem).get('FEditFocusColor');
+        if str.ToUpper='ROW0' then no:=j;
+
+        for k := 0 to kItem.Count - 1 do //col
+        begin
+          lItem:=kItem.Items[k];
+
+          FTable[j-no,k].x:=TJSONObject(lItem.Items[0]).Get('x');
+          FTable[j-no,k].y:=TJSONObject(lItem.Items[0]).Get('y');
+          FTable[j-no,k].Width:=TJSONObject(lItem.Items[0]).Get('Width');
+          FTable[j-no,k].Height:=TJSONObject(lItem.Items[0]).Get('Height');
+          FTable[j-no,k].ColSpan:=TJSONObject(lItem.Items[0]).Get('ColSpan');
+          FTable[j-no,k].RowSpan:=TJSONObject(lItem.Items[0]).Get('RowSpan');
+          FTable[j-no,k].DispType:=TJSONObject(lItem.Items[0]).Get('DispType');
+          FTable[j-no,k].str:=TJSONObject(lItem.Items[0]).Get('str');
+          FTable[j-no,k].Color:=TJSONObject(lItem.Items[0]).Get('Color');
+          FTable[j-no,k].Align:=TJSONObject(lItem.Items[0]).Get('Align');
+          FTable[j-no,k].FontName:=TJSONObject(lItem.Items[0]).Get('FontName');
+          FTable[j-no,k].FontSize:=TJSONObject(lItem.Items[0]).Get('FontSize');
+          FTable[j-no,k].FontStyle:=TJSONObject(lItem.Items[0]).Get('FontStyle');
+          FTable[j-no,k].FontColor:=TJSONObject(lItem.Items[0]).Get('FontColor');
+          FTable[j-no,k].ComponentType:=TJSONObject(lItem.Items[0]).Get('ComponentType');
+          FTable[j-no,k].ComponentName:=TJSONObject(lItem.Items[0]).Get('FontSComponentNametyle');
+          //FTable[j-no,k].Width:=TJSONObject(lItem.Items[l]).Get('ComponentDataSource', TJSONObject.Create(FTable[i,j].ComponentDataSource));
+          //FTable[j-no,k].Width:=TJSONObject(lItem.Items[l]).Get('ComponentDataFieldName',TJSONObjectClass.Create(FTable[i,j].ComponentDataFieldName.ClassName));
+          FTable[j-no,k].Visible:=TJSONObject(lItem.Items[0]).Get('Visible');
+          FTable[j-no,k].DrawTop:=TJSONObject(lItem.Items[0]).Get('DrawTop');
+          FTable[j-no,k].DrawLeft:=TJSONObject(lItem.Items[0]).Get('DrawLeft');
+          FTable[j-no,k].DrawBottom:=TJSONObject(lItem.Items[0]).Get('DrawBottom');
+          FTable[j-no,k].DrawRight:=TJSONObject(lItem.Items[0]).Get('DrawRight');
+          FTable[j-no,k].LineStyle:=TJSONObject(lItem.Items[0]).Get('LineStyle');
+          FTable[j-no,k].TopLineStyle:=TJSONObject(lItem.Items[0]).Get('TopLineStyle');
+          FTable[j-no,k].LeftLineStyle:=TJSONObject(lItem.Items[0]).Get('LeftLineStyle');
+          FTable[j-no,k].BottomLineStyle:=TJSONObject(lItem.Items[0]).Get('BottomLineStyle');
+          FTable[j-no,k].RightLineStyle:=TJSONObject(lItem.Items[0]).Get('RightLineStyle');
+        end;
+      end;
+    end;
+    Frun:=0;
+    DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+  end;
+  jData.Free;
+  jsonRoot:=nil;
+end;
+
+procedure TQFGridPanelComponent.SaveJSON(files:string);
+VAR
+jsonRoot,jsoncomp, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
+jsonCol: TJSONArray;
+i,j: Integer;
+savejsonfile: TStringList ;
+str:string;
+begin
+  // 现在，我们创建一个新的JSON对象来写入数据
+  jsonRoot := TJSONObject.Create;
+  jsonRoot.Add('TQFGridPanelComponent', utf8toansi('TQFGridPanelComponent配置'));
+  jsonRoot.Add('Version', Version);
+
+  jsonGrid := TJSONObject.Create;
+  jsonRoot.Add(self.Name, jsonGrid);//grid
+
+  jsonGrid.Add('ComponentName', self.Name);
+  jsonGrid.Add('FRowcount', FRowcount);
+  jsonGrid.Add('FColcount', FColcount);
+  jsonGrid.Add('FCellLineColor', FCellLineColor);
+  jsonGrid.Add('FColSizing', FColSizing);
+  jsonGrid.Add('FRowSizing', FRowSizing);
+  jsonGrid.Add('FCellLineStyle', ord(FCellLineStyle));
+  jsonGrid.Add('FColWidth', FColWidth);
+  jsonGrid.Add('FRowHeight', FRowHeight);
+  jsonGrid.Add('FTableWidth', FTableWidth);
+  jsonGrid.Add('FTableHeight', FTableHeight);
+  jsonGrid.Add('FGap', FGap);
+  jsonGrid.Add('FBorder', FBorder);
+  jsonGrid.Add('FEditFontFocusColor', FEditFontFocusColor);
+  jsonGrid.Add('FEditFocusColor', FEditFocusColor);
+
+  for i := 0 to FRowCount do
+  begin
+    jsonRow := TJSONObject.Create;
+    jsonGrid.Add(Format('row%d', [i]), jsonRow);
+    for j := 0 to FColCount do
+    begin
+      jsonCol := TJSONArray.Create;
+      jsonRow.Add(Format('col%d', [j]), jsonCol);
+
+      jsonParamObj := TJSONObject.Create;
+      jsonParamObj.Add('x', FTable[i,j].x);
+      jsonParamObj.Add('y', FTable[i,j].y);
+      jsonParamObj.Add('Width', FTable[i,j].Width);
+      jsonParamObj.Add('Height', FTable[i,j].Height);
+      jsonParamObj.Add('ColSpan', FTable[i,j].ColSpan);
+      jsonParamObj.Add('RowSpan', FTable[i,j].RowSpan);
+      jsonParamObj.Add('DispType', FTable[i,j].DispType);
+      jsonParamObj.Add('str', FTable[i,j].str);
+      jsonParamObj.Add('Color', FTable[i,j].Color);
+      jsonParamObj.Add('Align', FTable[i,j].Align);
+      jsonParamObj.Add('FontName', FTable[i,j].FontName);
+      jsonParamObj.Add('FontSize', FTable[i,j].FontSize);
+      jsonParamObj.Add('FontStyle', FTable[i,j].FontStyle);
+      jsonParamObj.Add('FontColor', FTable[i,j].FontColor);
+      jsonParamObj.Add('ComponentType', FTable[i,j].ComponentType);
+      jsonParamObj.Add('FontSComponentNametyle', FTable[i,j].ComponentName);
+      //jsonParamObj.Add('ComponentDataSource', TJSONObject.Create(FTable[i,j].ComponentDataSource));
+      //jsonParamObj.Add('ComponentDataFieldName',TJSONObjectClass.Create(FTable[i,j].ComponentDataFieldName.ClassName));
+      jsonParamObj.Add('Visible', FTable[i,j].Visible);
+      jsonParamObj.Add('DrawTop', FTable[i,j].DrawTop);
+      jsonParamObj.Add('DrawLeft', FTable[i,j].DrawLeft);
+      jsonParamObj.Add('DrawBottom', FTable[i,j].DrawBottom);
+      jsonParamObj.Add('DrawRight', FTable[i,j].DrawRight);
+      jsonParamObj.Add('LineStyle', ord(FTable[i,j].LineStyle));
+      jsonParamObj.Add('TopLineStyle', ord(FTable[i,j].TopLineStyle));
+      jsonParamObj.Add('LeftLineStyle', ord(FTable[i,j].LeftLineStyle));
+      jsonParamObj.Add('BottomLineStyle', ord(FTable[i,j].BottomLineStyle));
+      jsonParamObj.Add('RightLineStyle', ord(FTable[i,j].RightLineStyle));
+
+      jsonCol.Add(jsonParamObj);
+      jsonParamObj:=nil;
+      jsonCol:=nil;
+    end;
+  end;
+  str:=jsonRoot.FormatJSON;
+  savejsonfile:=TStringList.Create;
+  savejsonfile.add(str);
+  savejsonfile.SaveToFile(files);
+  savejsonfile.Free;
+
+  jsonGrid:=nil;
+  jsonRow:=nil;
+  jsonRoot:=nil;
+end;
+
 
 initialization
 //

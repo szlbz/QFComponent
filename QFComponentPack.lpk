@@ -78,6 +78,14 @@
         <Filename Value="setfont.pas"/>
         <UnitName Value="setfont"/>
       </Item>
+      <Item>
+        <Filename Value="QFCellProper.pas"/>
+        <UnitName Value="QFCellProper"/>
+      </Item>
+      <Item>
+        <Filename Value="PublicDefinition.pas"/>
+        <UnitName Value="PublicDefinition"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
