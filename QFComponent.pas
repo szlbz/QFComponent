@@ -344,10 +344,10 @@ type
     destructor Destroy; override;
     procedure Refresh;
     procedure GetControlsList;
-    procedure SaveFile(filename:string);
-    procedure LoadFile(filename:string);
-    procedure SaveFile;
-    procedure LoadFile;
+    procedure SaveQFConfig(filename:string);
+    procedure LoadQFConfig(filename:string);
+    procedure SaveQFConfig;
+    procedure LoadQFConfig;
   published
     property RowHeight:integer read FRowHeight write FRowHeight;
     property Gap:integer read FGap write FGap;
@@ -3960,7 +3960,7 @@ begin
   end;
 end;
 
-procedure TQFGridPanelComponent.LoadFile(filename:string);
+procedure TQFGridPanelComponent.LoadQFConfig(filename:string);
 var
   jsonFile: TStringList;
 begin
@@ -3979,7 +3979,7 @@ begin
   end;
 end;
 
-procedure TQFGridPanelComponent.LoadFile;
+procedure TQFGridPanelComponent.LoadQFConfig;
 var
   jsonFile: TStringList;
 begin
@@ -3995,14 +3995,14 @@ begin
   end;
 end;
 
-procedure TQFGridPanelComponent.SaveFile(filename:string);
+procedure TQFGridPanelComponent.SaveQFConfig(filename:string);
 begin
   if trim(filename)='' then
     filename:=FConfigFileName;
   savejson(filename);
 end;
 
-procedure TQFGridPanelComponent.SaveFile;
+procedure TQFGridPanelComponent.SaveQFConfig;
 begin
   savejson(FConfigFileName);
 end;
@@ -4099,7 +4099,7 @@ var
   str:string;
 begin
   if  FileExists(FConfigFileName) then//如果当前目录有FConfigFileName文件，则直接调用配置文件
-    Loadfile
+    LoadQFConfig
   else
   begin
     index:=0;
