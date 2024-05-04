@@ -4661,6 +4661,7 @@ procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState;
 var movedX:integer;
   movedY:integer;
   i,j:integer;
+  X1:integer;
 begin
   if FisLeftButtonDown then  //按下鼠标左键
   begin
@@ -4686,25 +4687,48 @@ begin
       FOldR.Width:=0;
       FOldR.Height:=0;
       movedX := X - FinitialXY.X; // 计算Y轴的移动距离
-      if ssCtrl in Shift then
+      if ssShift in Shift then
       begin
+        x1:=FTable[FSelectRow,FSelectCol].x;
+        j:=FSelectCol;
+        if x1=0 then
+        begin
+          x1:=FTable[FSelectRow,FSelectCol+1].x;
+          j:=FSelectCol+1;
+        end;
         for i:=0 to FRowCount do
         begin
-          if movedX>0 then
+          if FTable[i,j].x=x1 then
           begin
-            if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
-              FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
-            if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX<FBuffer.Width then
-              FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width-movedX;
-            FTable[i,FMoveCol].x:=FTable[i,FMoveCol-1].x+movedX;
-          end
-          else
-          begin
-            if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
-              FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
-            if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width+abs(movedX)<FBuffer.Width then
-              FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
-            FTable[i,FMoveCol].x:=FTable[i,FMoveCol].x-abs(movedX);
+            if movedX>0 then
+            begin
+              if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
+                FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+
+              if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX=FBuffer.Width then
+                FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+movedX
+              else
+              if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX<FBuffer.Width then
+                FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width-movedX;
+              FTable[i,FMoveCol].x:=FTable[i,FMoveCol-1].x+movedX;
+            end
+            else
+            begin
+              if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width=FBuffer.Width then
+              begin
+                FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width-abs(movedX);
+                FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
+                FTable[i,FMoveCol].x:=FTable[i,FMoveCol].x-abs(movedX);
+              end
+              else
+              begin
+                if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
+                  FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+                if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width+abs(movedX)<FBuffer.Width then
+                  FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
+                FTable[i,FMoveCol].x:=FTable[i,FMoveCol].x-abs(movedX);
+              end;
+            end;
           end;
         end;
       end
