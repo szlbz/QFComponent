@@ -3710,19 +3710,46 @@ begin
   CellProper.BottomLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].BottomLineStyle);
   CellProper.TopLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].TopLineStyle);
 
-  CellProper.StringGrid1.RowCount:=FRowCount;
+  CellProper.StringGrid1.RowCount:=FRowCount+1;
   CellProper.StringGrid1.ColCount:=FColCount;
 
-  for i:=0 to FRowCount-1 do
+  for i:=0 to FRowCount do
   begin
     CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
     for j:=1 to FColCount do
     begin
-      CellProper.FTable[i,j-1]:=FTable[i,j-1];
-      if FTable[i,j].ComponentName<>'' then
-        CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].ComponentName
-      else
-        CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
+      CellProper.FTable[i,j-1].Align:=FTable[i,j-1].Align;
+      CellProper.FTable[i,j-1].BottomLineStyle:=FTable[i,j-1].BottomLineStyle;
+      CellProper.FTable[i,j-1].Color:=FTable[i,j-1].Color;
+      CellProper.FTable[i,j-1].ColSpan:=FTable[i,j-1].ColSpan;
+      CellProper.FTable[i,j-1].ComponentDataFieldName:=FTable[i,j-1].ComponentDataFieldName;
+      CellProper.FTable[i,j-1].ComponentName:=FTable[i,j-1].ComponentName;
+      CellProper.FTable[i,j-1].ComponentDataSource:=FTable[i,j-1].ComponentDataSource;
+      CellProper.FTable[i,j-1].ComponentType:=FTable[i,j-1].ComponentType;
+      CellProper.FTable[i,j-1].DispType:=FTable[i,j-1].DispType;
+      CellProper.FTable[i,j-1].DrawBottom:=FTable[i,j-1].DrawBottom;
+      CellProper.FTable[i,j-1].DrawLeft:=FTable[i,j-1].DrawLeft;
+      CellProper.FTable[i,j-1].DrawRight:=FTable[i,j-1].DrawRight;
+      CellProper.FTable[i,j-1].DrawTop:=FTable[i,j-1].DrawTop;
+      CellProper.FTable[i,j-1].FontColor:=FTable[i,j-1].FontColor;
+      CellProper.FTable[i,j-1].FontName:=FTable[i,j-1].FontName;
+      CellProper.FTable[i,j-1].FontSize:=FTable[i,j-1].FontSize;
+      CellProper.FTable[i,j-1].FontStyle:=FTable[i,j-1].FontStyle;
+      CellProper.FTable[i,j-1].Height:=FTable[i,j-1].Height;
+      CellProper.FTable[i,j-1].LeftLineStyle:=FTable[i,j-1].LeftLineStyle;
+      CellProper.FTable[i,j-1].LineStyle:=FTable[i,j-1].LineStyle;
+      CellProper.FTable[i,j-1].RightLineStyle:=FTable[i,j-1].RightLineStyle;
+      CellProper.FTable[i,j-1].RowSpan:=FTable[i,j-1].RowSpan;
+      CellProper.FTable[i,j-1].str:=FTable[i,j-1].str;
+      CellProper.FTable[i,j-1].TopLineStyle:=FTable[i,j-1].TopLineStyle;
+      CellProper.FTable[i,j-1].Visible:=FTable[i,j-1].Visible;
+      CellProper.FTable[i,j-1].Width:=FTable[i,j-1].Width;
+      CellProper.FTable[i,j-1].x:=FTable[i,j-1].x;
+      CellProper.FTable[i,j-1].y:=FTable[i,j-1].y;
+      //if FTable[i,j].ComponentName<>'' then
+      //  CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].ComponentName
+      //else
+      CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
       CellProper.StringGrid1.ColWidths[j-1]:=FColWidth;
     end;
   end;
@@ -3789,9 +3816,37 @@ begin
     begin
       for j:=1 to FColCount do
       begin
-        FTable[i,j]:=CellProper.FTable[i,j-1];
+        //FTable[i,j]:=CellProper.FTable[i,j-1];
+        //FTable[i,j].str:=CellProper.StringGrid1.cells[j-1,i];
+        FTable[i,j-1].Align:=CellProper.FTable[i,j-1].Align;
+        FTable[i,j-1].BottomLineStyle:=CellProper.FTable[i,j-1].BottomLineStyle;
+        FTable[i,j-1].Color:=CellProper.FTable[i,j-1].Color;
+        FTable[i,j-1].ColSpan:=CellProper.FTable[i,j-1].ColSpan;
+        FTable[i,j-1].ComponentDataFieldName:=CellProper.FTable[i,j-1].ComponentDataFieldName;
+        FTable[i,j-1].ComponentName:=CellProper.FTable[i,j-1].ComponentName;
+        FTable[i,j-1].ComponentDataSource:=CellProper.FTable[i,j-1].ComponentDataSource;
+        FTable[i,j-1].ComponentType:=CellProper.FTable[i,j-1].ComponentType;
+        FTable[i,j-1].DispType:=CellProper.FTable[i,j-1].DispType;
+        FTable[i,j-1].DrawBottom:=CellProper.FTable[i,j-1].DrawBottom;
+        FTable[i,j-1].DrawLeft:=CellProper.FTable[i,j-1].DrawLeft;
+        FTable[i,j-1].DrawRight:=CellProper.FTable[i,j-1].DrawRight;
+        FTable[i,j-1].DrawTop:=CellProper.FTable[i,j-1].DrawTop;
+        FTable[i,j-1].FontColor:=CellProper.FTable[i,j-1].FontColor;
+        FTable[i,j-1].FontName:=CellProper.FTable[i,j-1].FontName;
+        FTable[i,j-1].FontSize:=CellProper.FTable[i,j-1].FontSize;
+        FTable[i,j-1].FontStyle:=CellProper.FTable[i,j-1].FontStyle;
+        FTable[i,j-1].Height:=CellProper.FTable[i,j-1].Height;
+        FTable[i,j-1].LeftLineStyle:=CellProper.FTable[i,j-1].LeftLineStyle;
+        FTable[i,j-1].LineStyle:=CellProper.FTable[i,j-1].LineStyle;
+        FTable[i,j-1].RightLineStyle:=CellProper.FTable[i,j-1].RightLineStyle;
+        FTable[i,j-1].RowSpan:=CellProper.FTable[i,j-1].RowSpan;
+        FTable[i,j-1].TopLineStyle:=CellProper.FTable[i,j-1].TopLineStyle;
+        FTable[i,j-1].Visible:=CellProper.FTable[i,j-1].Visible;
+        FTable[i,j-1].Width:=CellProper.FTable[i,j-1].Width;
+        FTable[i,j-1].x:=CellProper.FTable[i,j-1].x;
+        FTable[i,j-1].y:=CellProper.FTable[i,j-1].y;
         FTable[i,j].str:=CellProper.StringGrid1.cells[j-1,i];
-      end;
+     end;
     end;
 
     Invalidate;
@@ -4426,16 +4481,16 @@ begin
             begin
               IMG.Picture.LoadFromFile(FTable[i,j].str);
               //设置图像显示位置及尺寸（单元格大小）
-              FRect.Top:=y0+1;
-              FRect.Left:=x0+1;
+              FRect.Top:=y0+FGap;
+              FRect.Left:=x0+FGap;
               if FTable[i,j].Width<>0 then
-                FRect.Width:=FTable[i,j].Width-4
+                FRect.Width:=FTable[i,j].Width-FGap*2
               else
-                FRect.Width:=colWidth-3;
+                FRect.Width:=colWidth-FGap*2;
               if FTable[i,j].Height<>0 then
-                FRect.Height:=FTable[i,j].Height-4
+                FRect.Height:=FTable[i,j].Height-FGap*2
               else
-                FRect.Height:=h-3;
+                FRect.Height:=h-FGap*2;
               Buffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
             end
             else
