@@ -4098,85 +4098,90 @@ var
   kk,oo,oo1,oo2:integer;
   str:string;
 begin
-  index:=0;
-  DeleteRecord(index);//删除第2行定义单元格的对齐格式
-  row:=FTablesl[Index].row-2;
-  col:=FTablesl[Index].col-1;
-  FRowCount:=row;
-  FColCount:=col;
-  TableRowHeigth:=FTablesl[Index].RowHeight;
-  Buffer.Canvas.Font.Style:=[fsBold];
-  th:= Buffer.Canvas.TextHeight('国');
-  if (h=0) and (FRowHeight=0) then
-    h:=round(th*1.5); //表格行高
-  if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
-  if FRowHeight<=1 then FRowHeight:=h;
-
-  if (colWidth=0) and (FColWidth=0) then
-    colWidth:=(Buffer.Width) div col; //单元格宽
-  if FColWidth=0 then
-    FColWidth:=colWidth;
-
-  Buffer.Canvas.Pen.Color:=FCellLineColor;//黑色画笔
-
-  //重新计算合并后单元格的width和height
-  for i:=0 to row do
+  if  FileExists(FConfigFileName) then//如果当前目录有FConfigFileName文件，则直接调用配置文件
+    Loadfile
+  else
   begin
-    for j:=0 to col do
+    index:=0;
+    DeleteRecord(index);//删除第2行定义单元格的对齐格式
+    row:=FTablesl[Index].row-2;
+    col:=FTablesl[Index].col-1;
+    FRowCount:=row;
+    FColCount:=col;
+    TableRowHeigth:=FTablesl[Index].RowHeight;
+    Buffer.Canvas.Font.Style:=[fsBold];
+    th:= Buffer.Canvas.TextHeight('国');
+    if (h=0) and (FRowHeight=0) then
+      h:=round(th*1.5); //表格行高
+    if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
+    if FRowHeight<=1 then FRowHeight:=h;
+
+    if (colWidth=0) and (FColWidth=0) then
+      colWidth:=(Buffer.Width) div col; //单元格宽
+    if FColWidth=0 then
+      FColWidth:=colWidth;
+
+    Buffer.Canvas.Pen.Color:=FCellLineColor;//黑色画笔
+
+    //重新计算合并后单元格的width和height
+    for i:=0 to row do
     begin
-      FTable[i,j].Height:=h;
-      FTable[i,j].Width:=colWidth;
-      FTable[i,j].DrawTop:=true;
-      FTable[i,j].DrawLeft:=true;
-      FTable[i,j].DrawBottom:=true;
-      FTable[i,j].DrawRight:=true;
-      FTable[i,j].LineStyle:=FCellLineStyle;
-      //FTable[i,j].TopLineStyle:=FCellLineStyle;
-      //FTable[i,j].LeftLineStyle:=FCellLineStyle;
-      //FTable[i,j].BottomLineStyle:=FCellLineStyle;
-      //FTable[i,j].RightLineStyle:=FCellLineStyle;
-
-      //竖向(row)合并单元格
-      if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
+      for j:=0 to col do
       begin
-        row1:=FTable[i,j].RowSpan+i-1;
-        if row1>row then row1:=row;
+        FTable[i,j].Height:=h;
+        FTable[i,j].Width:=colWidth;
+        FTable[i,j].DrawTop:=true;
+        FTable[i,j].DrawLeft:=true;
+        FTable[i,j].DrawBottom:=true;
+        FTable[i,j].DrawRight:=true;
+        FTable[i,j].LineStyle:=FCellLineStyle;
+        //FTable[i,j].TopLineStyle:=FCellLineStyle;
+        //FTable[i,j].LeftLineStyle:=FCellLineStyle;
+        //FTable[i,j].BottomLineStyle:=FCellLineStyle;
+        //FTable[i,j].RightLineStyle:=FCellLineStyle;
 
-        for oo:=i to row1 do
+        //竖向(row)合并单元格
+        if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
         begin
+          row1:=FTable[i,j].RowSpan+i-1;
+          if row1>row then row1:=row;
+
+          for oo:=i to row1 do
+          begin
+            col1:=FTable[i,j].ColSpan+j-1;
+            if col1>col then col1:=col;
+            for oo1:=j to col1 do
+            begin
+              FTable[oo,oo1].Visible:=false;
+            end;
+            FTable[i,j].Visible:=true;//将左上角单元格置为true
+            FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
+            FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+          end;
+        end
+        else
+        //竖向(row)合并单元格
+        if FTable[i,j].RowSpan>0 then
+        begin
+          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+          row1:=FTable[i,j].RowSpan+i-1;
+          if row1>row then row1:=row;
+          for oo:=i+1 to row1 do
+          begin
+            FTable[oo,j].Visible:=false;
+          end;
+        end
+        else
+        //横向(col)合并单元格
+        if FTable[i,j].ColSpan>0 then
+        begin
+          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
           col1:=FTable[i,j].ColSpan+j-1;
           if col1>col then col1:=col;
-          for oo1:=j to col1 do
+          for oo:=j+1 to col1 do
           begin
-            FTable[oo,oo1].Visible:=false;
+            FTable[i,oo].Visible:=false;
           end;
-          FTable[i,j].Visible:=true;//将左上角单元格置为true
-          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
-        end;
-      end
-      else
-      //竖向(row)合并单元格
-      if FTable[i,j].RowSpan>0 then
-      begin
-        FTable[i,j].Height:=h*FTable[i,j].RowSpan;
-        row1:=FTable[i,j].RowSpan+i-1;
-        if row1>row then row1:=row;
-        for oo:=i+1 to row1 do
-        begin
-          FTable[oo,j].Visible:=false;
-        end;
-      end
-      else
-      //横向(col)合并单元格
-      if FTable[i,j].ColSpan>0 then
-      begin
-        FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-        col1:=FTable[i,j].ColSpan+j-1;
-        if col1>col then col1:=col;
-        for oo:=j+1 to col1 do
-        begin
-          FTable[i,oo].Visible:=false;
         end;
       end;
     end;
