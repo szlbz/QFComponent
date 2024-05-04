@@ -143,12 +143,12 @@ end;
 
 procedure TForm1.Button10Click(Sender: TObject);
 begin
-   QFGridPanelComponent1.SaveFile;//('g.json');
+   QFGridPanelComponent1.SaveQFConfig;//('g.json');
 end;
 
 procedure TForm1.Button11Click(Sender: TObject);
 begin
-  QFGridPanelComponent1.LoadFile;//('g.json');
+  QFGridPanelComponent1.LoadQFConfig;//('g.json');
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
