@@ -32,6 +32,7 @@ type
     RightLineStyle: TComboBox;
     RowEdit: TLabeledEdit;
     RowHeightEdit: TLabeledEdit;
+    StatusBar1: TStatusBar;
     StringGrid1: TStringGrid;
     TopLineStyle: TComboBox;
     BottomLineStyle: TComboBox;
@@ -251,6 +252,8 @@ begin
   BottomLineStyle.ItemIndex:=ord(FTable[Row,Col].BottomLineStyle);
   TopLineStyle.ItemIndex:=ord(FTable[Row,Col].TopLineStyle);
   PanelFontPreview1.Font.Name:=FTable[Row,Col].FontName;
+  StatusBar1.Panels[0].Text:='行:'+row.ToString+'  列:'+col.ToString;
+  StatusBar1.Panels[1].Text:=StringGrid1.Cells[col-1,row];// FTable[Row,Col].str;
 end;
 
 procedure TQFCellProper.UpDownClick(Sender: TObject; Button: TUDBtnType);

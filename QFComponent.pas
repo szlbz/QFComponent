@@ -3725,7 +3725,7 @@ begin
   GetControlsList;
   CellProper := TQFCellProper.Create(Self);
 
-  setlength(CellProper.FTable,FRowCount+1,FColCount);
+  setlength(CellProper.FTable,FRowCount+1,FColCount+2);
 
 
   //根据当前单元格信息设置
@@ -3772,7 +3772,7 @@ begin
   for i:=0 to FRowCount do
   begin
     CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
-    for j:=1 to FColCount do
+    for j:=1 to FColCount+1 do
     begin
       CellProper.FTable[i,j-1].Align:=FTable[i,j-1].Align;
       CellProper.FTable[i,j-1].BottomLineStyle:=FTable[i,j-1].BottomLineStyle;
@@ -3802,11 +3802,11 @@ begin
       CellProper.FTable[i,j-1].Width:=FTable[i,j-1].Width;
       CellProper.FTable[i,j-1].x:=FTable[i,j-1].x;
       CellProper.FTable[i,j-1].y:=FTable[i,j-1].y;
-      //if FTable[i,j].ComponentName<>'' then
-      //  CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].ComponentName
-      //else
-      CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
-      CellProper.StringGrid1.ColWidths[j-1]:=FColWidth;
+      if j<=FColCount then
+      begin
+        CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
+        CellProper.StringGrid1.ColWidths[j-1]:=FColWidth;
+      end;
     end;
   end;
   CellProper.ShowModal;
@@ -3869,10 +3869,8 @@ begin
 
     for i:=0 to FRowCount-1 do
     begin
-      for j:=1 to FColCount do
+      for j:=1 to FColCount+1 do
       begin
-        //FTable[i,j]:=CellProper.FTable[i,j-1];
-        //FTable[i,j].str:=CellProper.StringGrid1.cells[j-1,i];
         FTable[i,j-1].Align:=CellProper.FTable[i,j-1].Align;
         FTable[i,j-1].BottomLineStyle:=CellProper.FTable[i,j-1].BottomLineStyle;
         FTable[i,j-1].Color:=CellProper.FTable[i,j-1].Color;
@@ -3900,7 +3898,8 @@ begin
         FTable[i,j-1].Width:=CellProper.FTable[i,j-1].Width;
         FTable[i,j-1].x:=CellProper.FTable[i,j-1].x;
         FTable[i,j-1].y:=CellProper.FTable[i,j-1].y;
-        FTable[i,j].str:=CellProper.StringGrid1.cells[j-1,i];
+        if j<=FColCount then
+          FTable[i,j].str:=CellProper.StringGrid1.cells[j-1,i];
      end;
     end;
 
@@ -5044,20 +5043,25 @@ begin
         kItem:=jItem.Items[j];
 
         str := TJSONObject(jItem).Names[j];
-        FRowcount:= TJSONObject(jItem).get('FRowcount');
-        FColcount:=TJSONObject(jItem).get('FColcount');
-        FCellLineColor:=TJSONObject(jItem).get('FCellLineColor');
-        FColSizing:=TJSONObject(jItem).get('FColSizing');
-        FRowSizing:=TJSONObject(jItem).get('FRowSizing');
-        FCellLineStyle:=TJSONObject(jItem).get('FCellLineStyle');
-        FColWidth:=TJSONObject(jItem).get('FColWidth');
-        FRowHeight:=TJSONObject(jItem).get('FRowHeight');
-        FTableWidth:=TJSONObject(jItem).get('FTableWidth');
-        FTableHeight:=TJSONObject(jItem).get('FTableHeight');
-        FGap:=TJSONObject(jItem).get('FGap');
-        FBorder:=TJSONObject(jItem).get('FBorder');
-        FEditFontFocusColor:=TJSONObject(jItem).get('FEditFontFocusColor');
-        FEditFocusColor:=TJSONObject(jItem).get('FEditFocusColor');
+        if j=0 then
+        begin
+          FRowcount:= TJSONObject(jItem).get('FRowcount');
+          FColcount:=TJSONObject(jItem).get('FColcount');
+          FCellLineColor:=TJSONObject(jItem).get('FCellLineColor');
+          FColSizing:=TJSONObject(jItem).get('FColSizing');
+          FRowSizing:=TJSONObject(jItem).get('FRowSizing');
+          FCellLineStyle:=TJSONObject(jItem).get('FCellLineStyle');
+          FColWidth:=TJSONObject(jItem).get('FColWidth');
+          FRowHeight:=TJSONObject(jItem).get('FRowHeight');
+          FTableWidth:=TJSONObject(jItem).get('FTableWidth');
+          FTableHeight:=TJSONObject(jItem).get('FTableHeight');
+          FGap:=TJSONObject(jItem).get('FGap');
+          FBorder:=TJSONObject(jItem).get('FBorder');
+          FEditFontFocusColor:=TJSONObject(jItem).get('FEditFontFocusColor');
+          FEditFocusColor:=TJSONObject(jItem).get('FEditFocusColor');
+          FTable:=nil;
+          setlength(FTable,FRowcount+1,FColcount+1);
+        end;
         if str.ToUpper='ROW0' then no:=j;
 
         for k := 0 to kItem.Count - 1 do //col

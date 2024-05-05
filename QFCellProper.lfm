@@ -1,11 +1,11 @@
 object QFCellProper: TQFCellProper
   Left = 249
-  Height = 803
+  Height = 865
   Top = 168
   Width = 822
   BorderStyle = bsDialog
   Caption = '单元格格式'
-  ClientHeight = 803
+  ClientHeight = 865
   ClientWidth = 822
   Color = clBtnFace
   DesignTimePPI = 144
@@ -193,7 +193,7 @@ object QFCellProper: TQFCellProper
       object ChkColSizing: TCheckBox
         Left = 357
         Height = 24
-        Top = 256
+        Top = 267
         Width = 187
         Caption = '允许调整单元格宽度'
         TabOrder = 6
@@ -201,7 +201,7 @@ object QFCellProper: TQFCellProper
       object ChkRowSizing: TCheckBox
         Left = 357
         Height = 24
-        Top = 304
+        Top = 301
         Width = 187
         Caption = '允许调整单元格高度'
         TabOrder = 7
@@ -621,6 +621,20 @@ object QFCellProper: TQFCellProper
     ModalResult = 2
     TabOrder = 2
     OnClick = BtnCancelClick
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 34
+    Top = 831
+    Width = 822
+    Panels = <    
+      item
+        Width = 300
+      end    
+      item
+        Width = 50
+      end>
+    SimplePanel = False
   end
   object ColorDialogCellProp: TColorDialog
     Color = clBlack
