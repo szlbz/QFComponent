@@ -5,7 +5,7 @@ object QFRichEditor: TQFRichEditor
   Width = 1412
   AllowDropFiles = True
   Caption = 'QFRichEditor'
-  ClientHeight = 1410
+  ClientHeight = 1466
   ClientWidth = 1412
   DesignTimePPI = 144
   Menu = MainMenu1
@@ -13,6 +13,7 @@ object QFRichEditor: TQFRichEditor
   OnCreate = FormCreate
   OnDropFiles = FormDropFiles
   Position = poScreenCenter
+  LCLVersion = '3.0.0.3'
   WindowState = wsMaximized
   object StatusBar1: TStatusBar
     Left = 0
@@ -68,7 +69,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton4: TToolButton
       Left = 106
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton4'
       Style = tbsDivider
@@ -85,7 +86,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton7: TToolButton
       Left = 146
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton7'
       Style = tbsDivider
@@ -102,7 +103,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton10: TToolButton
       Left = 221
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton10'
       Style = tbsDivider
@@ -139,7 +140,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton14: TToolButton
       Left = 366
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton14'
       Style = tbsDivider
@@ -166,7 +167,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton23: TToolButton
       Left = 632
-      Height = 33
+      Height = 5
       Top = 2
       Caption = 'ToolButton23'
       Style = tbsDivider
@@ -213,7 +214,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton3: TToolButton
       Left = 441
-      Height = 33
+      Height = 8
       Top = 2
       Caption = 'ToolButton3'
       Style = tbsSeparator
@@ -229,7 +230,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton2: TToolButton
       Left = 484
-      Height = 33
+      Height = 8
       Top = 2
       Caption = 'ToolButton2'
       Style = tbsSeparator

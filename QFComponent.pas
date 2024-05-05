@@ -695,19 +695,19 @@ begin
     CellType.RowMerge:=tmp;
     CellType.str:=s;
   end;
-  if utf8pos('<FONT=',s.ToUpper)>0 then
+  if utf8pos('<FONTNAME=',s.ToUpper)>0 then
   begin
-    FontPos1:=utf8pos('<FONT=',s.ToUpper);
+    FontPos1:=utf8pos('<FONTNAME=',s.ToUpper);
     i:=FontPos1;
     while i<= utf8length(s) do
     begin
       if utf8copy(s,i,1)='>' then
       begin
         FontPos2:=i;
-        tmp2:=utf8copy(s,FontPos1+6,FontPos2-(FontPos1+6));
+        tmp2:=utf8copy(s,FontPos1+10,FontPos2-(FontPos1+10));
         tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
         s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
-        FontPos1:=utf8pos('<FONT=',s.ToUpper);
+        FontPos1:=utf8pos('<FONTNAME=',s.ToUpper);
         if FontPos1=0 then
           Break;
       end;
@@ -716,9 +716,9 @@ begin
     CellType.FontName:=tmp2;
     CellType.str:=s;
   end;
-  if pos('</FONT>',s.ToUpper)>0 then
+  if pos('</FONTNAME>',s.ToUpper)>0 then
   begin
-    s:=s.Replace('</FONT>','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
+    s:=s.Replace('</FONTNAME>','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
   end;
   if (pos('<HLK>',s.ToUpper)>0) and (pos('</HLK>',s.ToUpper)>0) then
@@ -765,15 +765,15 @@ begin
   Result:=Result.Replace('</C>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<HLK>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</HLK>','',[rfReplaceAll, rfIgnoreCase]);
-  Result:=Result.Replace('</FONT>','',[rfReplaceAll, rfIgnoreCase]);
+  Result:=Result.Replace('</FONTNAME>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</FONTSIZE>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('<SUB>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUP>','',[rfReplaceAll, rfIgnoreCase]);
   Result:=Result.Replace('</SUB>','',[rfReplaceAll, rfIgnoreCase]);
-  if utf8pos('<FONT=',Result.ToUpper)>0 then
+  if utf8pos('<FONTNAME=',Result.ToUpper)>0 then
   begin
-    FontPos1:=utf8pos('<FONT=',Result.ToUpper);
+    FontPos1:=utf8pos('<FONTNAME=',Result.ToUpper);
     i:=FontPos1;
     while i<= utf8length(Result) do
     begin
@@ -782,7 +782,7 @@ begin
         FontPos2:=i;
         tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
         Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
-        FontPos1:=utf8pos('<FONT=',Result.ToUpper);
+        FontPos1:=utf8pos('<FONTNAME=',Result.ToUpper);
         if FontPos1=0 then
           Break;
       end;
@@ -921,8 +921,8 @@ begin
   (pos('<SUB>',str.ToUpper)>0) or
   (pos('</SUP>',str.ToUpper)>0) or
   (pos('</SUB>',str.ToUpper)>0) or
-  (pos('<FONT=',str.ToUpper)>0) or
-  (pos('</FONT>',str.ToUpper)>0) or
+  (pos('<FONTNAME=',str.ToUpper)>0) or
+  (pos('</FONTNAME>',str.ToUpper)>0) or
   (pos('<FONTSIZE=',str.ToUpper)>0) or
   (pos('</FONTSIZE>',str.ToUpper)>0) or
   (pos('<BM',str.ToUpper)>0) or
@@ -1025,10 +1025,17 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
-      //<Font=xx>
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='F') and (utf8copy(str,i+2,1).ToUpper='O')
-         and (utf8copy(str,i+3,1).ToUpper='N') and (utf8copy(str,i+4,1).ToUpper='T')
-         and (utf8copy(str,i+5,1).ToUpper='=') then
+      //<FontName=xx>
+      if (s1='<')
+         and (utf8copy(str,i+1,1).ToUpper='F')
+         and (utf8copy(str,i+2,1).ToUpper='O')
+         and (utf8copy(str,i+3,1).ToUpper='N')
+         and (utf8copy(str,i+4,1).ToUpper='T')
+         and (utf8copy(str,i+5,1).ToUpper='N')
+         and (utf8copy(str,i+6,1).ToUpper='A')
+         and (utf8copy(str,i+7,1).ToUpper='M')
+         and (utf8copy(str,i+8,1).ToUpper='E')
+         and (utf8copy(str,i+9,1).ToUpper='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -1042,12 +1049,20 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
-      //</Font>
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='F')
-         and (utf8copy(str,i+3,1).ToUpper='O') and (utf8copy(str,i+4,1).ToUpper='N')
-         and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1).ToUpper='>') then
+      //</FontName>
+      if (s1='<')
+         and (utf8copy(str,i+1,1).ToUpper='/')
+         and (utf8copy(str,i+2,1).ToUpper='F')
+         and (utf8copy(str,i+3,1).ToUpper='O')
+         and (utf8copy(str,i+4,1).ToUpper='N')
+         and (utf8copy(str,i+5,1).ToUpper='T')
+         and (utf8copy(str,i+6,1).ToUpper='N')
+         and (utf8copy(str,i+7,1).ToUpper='A')
+         and (utf8copy(str,i+8,1).ToUpper='M')
+         and (utf8copy(str,i+9,1).ToUpper='E')
+         and (utf8copy(str,i+10,1).ToUpper='>') then
       begin
-        i:=i+7;
+        i:=i+11;
       end
       else
       //<Fontsize=xx>
@@ -1791,22 +1806,32 @@ var k:integer;
 begin
   Result:=utf8copy(str,i,1);
   j:=0;
-  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='/') and
+  if (Result='<') and
+    (utf8copy(str,i+1,1).ToUpper='/') and
     (utf8copy(str,i+2,1).ToUpper='F') and
     (utf8copy(str,i+3,1).ToUpper='O') and
     (utf8copy(str,i+4,1).ToUpper='N') and
     (utf8copy(str,i+5,1).ToUpper='T') and
-    (utf8copy(str,i+6,1).ToUpper='>') then
+    (utf8copy(str,i+6,1).ToUpper='N') and
+    (utf8copy(str,i+7,1).ToUpper='A') and
+    (utf8copy(str,i+8,1).ToUpper='M') and
+    (utf8copy(str,i+9,1).ToUpper='E') and
+    (utf8copy(str,i+10,1).ToUpper='>') then
   begin
     Result:='';
-    j:=7;
+    j:=11;
   end
   else
-  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='F') and
+  if (Result='<') and
+    (utf8copy(str,i+1,1).ToUpper='F') and
     (utf8copy(str,i+2,1).ToUpper='O') and
     (utf8copy(str,i+3,1).ToUpper='N') and
     (utf8copy(str,i+4,1).ToUpper='T') and
-    (utf8copy(str,i+5,1).ToUpper='=') then
+    (utf8copy(str,i+5,1).ToUpper='N') and
+    (utf8copy(str,i+6,1).ToUpper='A') and
+    (utf8copy(str,i+7,1).ToUpper='M') and
+    (utf8copy(str,i+8,1).ToUpper='E') and
+    (utf8copy(str,i+9,1).ToUpper='=') then
   begin
     FontPos1:=i;
     for k:=i to utf8length(str) do
@@ -2088,8 +2113,8 @@ begin
   (pos('<$>',str)>0) or
   (pos('<@>',str)>0) or
   (pos('<#>',str)>0) or
-  (pos('</FONT>',str.ToUpper)>0) or
-  (pos('<FONT=',str.ToUpper)>0) or
+  (pos('</FONTNAME>',str.ToUpper)>0) or
+  (pos('<FONTNAME=',str.ToUpper)>0) or
   (pos('<FONTSIZE=',str.ToUpper)>0) or
   (pos('</FONTSIZE>',str.ToUpper)>0) or
   (pos('<COLMERGE=',str.ToUpper)>0) or
@@ -2114,10 +2139,17 @@ begin
     while i<=utf8length(str) do
     begin
       DStr:=utf8copy(str,i,1);
-      //<Font=xx>
-      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='F')
-      and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='N')
-      and (utf8copy(str,i+4,1).ToUpper='T') and (utf8copy(str,i+5,1)='=') then
+      //<FontName=xx>
+      if (DStr='<')
+         and (utf8copy(str,i+1,1).ToUpper='F')
+         and (utf8copy(str,i+2,1).ToUpper='O')
+         and (utf8copy(str,i+3,1).ToUpper='N')
+         and (utf8copy(str,i+4,1).ToUpper='T')
+         and (utf8copy(str,i+5,1).ToUpper='N')
+         and (utf8copy(str,i+6,1).ToUpper='A')
+         and (utf8copy(str,i+7,1).ToUpper='M')
+         and (utf8copy(str,i+8,1).ToUpper='E')
+         and (utf8copy(str,i+9,1)='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -2129,18 +2161,26 @@ begin
           end;
         end;
         i:=i+(FontPos2-FontPos1)+1;
-        NewFontName:=utf8copy(str,FontPos1+6,FontPos2-FontPos1-6);
+        NewFontName:=utf8copy(str,FontPos1+10,FontPos2-FontPos1-10);
         FH1:=Buffer.Canvas.GetTextHeight(NewFontName);
         Buffer.Canvas.font.Name:=NewFontName;//设为新字体
         FH2:=Buffer.Canvas.GetTextHeight(NewFontName);
         y:=y+abs(FH2-FH1) div 2;//修正字体不同时的高度差
       end
       else
-      if (DStr='<') and (utf8copy(str,i+1,1).ToUpper='/') and (utf8copy(str,i+2,1).ToUpper='F')
-       and (utf8copy(str,i+3,1).ToUpper='O') and (utf8copy(str,i+4,1).ToUpper='N')
-       and (utf8copy(str,i+5,1).ToUpper='T') and (utf8copy(str,i+6,1)='>') then
+      if (DStr='<')
+         and (utf8copy(str,i+1,1).ToUpper='/')
+         and (utf8copy(str,i+2,1).ToUpper='F')
+         and (utf8copy(str,i+3,1).ToUpper='O')
+         and (utf8copy(str,i+4,1).ToUpper='N')
+         and (utf8copy(str,i+5,1).ToUpper='T')
+         and (utf8copy(str,i+6,1).ToUpper='N')
+         and (utf8copy(str,i+7,1).ToUpper='A')
+         and (utf8copy(str,i+8,1).ToUpper='M')
+         and (utf8copy(str,i+9,1).ToUpper='E')
+         and (utf8copy(str,i+10,1)='>') then
       begin
-        i:=i+7;
+        i:=i+11;
         Buffer.Canvas.font.Name:=FDefaultFontName;//恢复默认字体
         y:=y-abs(FH2-FH1) div 2;//恢复原来的显示位置
       end

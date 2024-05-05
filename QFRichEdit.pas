@@ -931,7 +931,7 @@ begin
   if tools.ButtonPress = 1 then
   begin
     if tools.FontName<>'' then
-      RichEdit.SelText :='<Font='+tools.FontName+'>'+RichEdit.SelText+'</Font>';
+      RichEdit.SelText :='<FontName='+tools.FontName+'>'+RichEdit.SelText+'</FontName>';
   end;
   sfz.Free;
   RichEdit.SetFocus;
