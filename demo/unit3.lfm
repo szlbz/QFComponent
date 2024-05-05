@@ -114,7 +114,7 @@ object Form1: TForm1
         Align = alClient
         LineSpacing = 0
         Lines.Strings = (
-          '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+          '[s5][c2]<fontname=楷体>测试</fontname>QF<C1>R</C><!>ich<#>V</>iew<C5><fontname=方正舒体>使用</fontname></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
           '[s5][c2]测试QF<C1>RichView<C5><@>使用</></C>说明测试[c]'
           '[2line][c2]'
           '<hlk>(文心一言)https://yiyan.baidu.com/</hlk>'
@@ -298,14 +298,14 @@ object Form1: TForm1
         Width = 480
         LineSpacing = 0
         Lines.Strings = (
-          '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+          '[s5][c2]<fontname=楷体>测试</fontname>QF<C1>R</C><!>ich<#>V</>iew<C5><fontname=方正舒体>使用</fontname></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
         )
         GapX = 0
         GapY = 0
         Color = clWhite
         BackImageFile = 'bg.jpg'
         ShowBackImage = True
-        ScrollingText = '[s5][c2]<font=楷体>测试</font>QF<C1>R</C><!>ich<#>V</>iew<C5><font=方正舒体>使用</font></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
+        ScrollingText = '[s5][c2]<fontname=楷体>测试</fontname>QF<C1>R</C><!>ich<#>V</>iew<C5><fontname=方正舒体>使用</fontname></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
         Active = False
       end
       object CheckBox2: TCheckBox
@@ -341,7 +341,7 @@ object Form1: TForm1
         Anchors = [akTop, akLeft, akRight]
         LineSpacing = 0
         Lines.Strings = (
-          '|<colmerge=4><font=楷体><fontsize=16>界面动态调整Demo</font></fontsize>||||'
+          '|<colmerge=4><fontname=楷体><fontsize=16>界面动态调整Demo</fontname></fontsize>||||'
           '|:-:|:-:|:-:|:-:|'
           '|单位名称|<compname=name1>|按键测试|<rowmerge=3>[img]cl.png|'
           '|单位地址|<compname=eeee>|<rowmerge=2><compname=name3>|2|'
@@ -451,7 +451,7 @@ object Form1: TForm1
         Left = 259
         Height = 70
         Top = 647
-        Width = 212
+        Width = 656
         BorderStyle = bsNone
         Lines.Strings = (
           'TQFGridPanelComponent控件支持在单元格绑定可视控件，运行时单元格绑定的控件会吸附到相应的单元格里。绑定后，控件的TabOrder从表格第1行第1列开始从左到右，从上到下重新编排。控件的宽和高自动适配单元格的尺寸。'
@@ -568,9 +568,9 @@ object Form1: TForm1
       end
       object Grid1: TStringGrid
         Left = 259
-        Height = 70
+        Height = 230
         Top = 407
-        Width = 212
+        Width = 656
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
         TabOrder = 9
       end
