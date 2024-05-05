@@ -458,8 +458,8 @@ begin
   CellType.FontName:='';
   CellType.FontSize:=0;
   CellType.Color:=clBlack;
-  CellType.ColSpan:=0;
-  CellType.RowSpan:=0;
+  CellType.ColMerge:=0;
+  CellType.RowMerge:=0;
   CellType.str:=s;
   CellType.Visible:=true;
   CellType.URL:='';
@@ -649,50 +649,50 @@ begin
     CellType.str:=s1;
     CellType.DispType:=3;
   end;
-  if utf8pos('<COLSPAN=',s.ToUpper)>0 then
+  if utf8pos('<COLMERGE=',s.ToUpper)>0 then
   begin
-    FontPos1:=utf8pos('<COLSPAN=',s.ToUpper);
+    FontPos1:=utf8pos('<COLMERGE=',s.ToUpper);
     i:=FontPos1;
     while i<= utf8length(s) do
     begin
       if utf8copy(s,i,1)='>' then
       begin
         FontPos2:=i;
-        tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+        tmp1:=utf8copy(s,FontPos1+10,FontPos2-FontPos1-10);
         val(tmp1,tmp,e);
 
         tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
         s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
-        FontPos1:=utf8pos('<COLSPAN=',s.ToUpper);
+        FontPos1:=utf8pos('<COLMERGE=',s.ToUpper);
         if FontPos1=0 then
           Break;
       end;
       inc(i);
     end;
-    CellType.ColSpan:=tmp;
+    CellType.ColMerge:=tmp;
     CellType.str:=s;
   end;
-  if utf8pos('<ROWSPAN=',s.ToUpper)>0 then
+  if utf8pos('<ROWMERGE=',s.ToUpper)>0 then
   begin
-    FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
+    FontPos1:=utf8pos('<ROWMERGE=',s.ToUpper);
     i:=FontPos1;
     while i<= utf8length(s) do
     begin
       if utf8copy(s,i,1)='>' then
       begin
         FontPos2:=i;
-        tmp1:=utf8copy(s,FontPos1+9,FontPos2-FontPos1-9);
+        tmp1:=utf8copy(s,FontPos1+10,FontPos2-FontPos1-10);
         val(tmp1,tmp,e);
 
         tmp1:=utf8copy(s,FontPos1,FontPos2-FontPos1+1);
         s:=s.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
-        FontPos1:=utf8pos('<ROWSPAN=',s.ToUpper);
+        FontPos1:=utf8pos('<ROWMERGE=',s.ToUpper);
         if FontPos1=0 then
           Break;
       end;
       inc(i);
     end;
-    CellType.RowSpan:=tmp;
+    CellType.RowMerge:=tmp;
     CellType.str:=s;
   end;
   if utf8pos('<FONT=',s.ToUpper)>0 then
@@ -807,9 +807,9 @@ begin
       inc(i);
     end;
   end;
-  if utf8pos('<COLSPAN=',Result.ToUpper)>0 then
+  if utf8pos('<COLMERGE=',Result.ToUpper)>0 then
   begin
-    FontPos1:=utf8pos('<COLSPAN=',Result.ToUpper);
+    FontPos1:=utf8pos('<COLMERGE=',Result.ToUpper);
     i:=FontPos1;
     while i<= utf8length(Result) do
     begin
@@ -818,16 +818,16 @@ begin
         FontPos2:=i;
         tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
         Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
-        FontPos1:=utf8pos('<COLSPAN=',Result.ToUpper);
+        FontPos1:=utf8pos('<COLMERGE=',Result.ToUpper);
         if FontPos1=0 then
           Break;
       end;
       inc(i);
     end;
   end;
-  if utf8pos('<ROWSPAN=',Result.ToUpper)>0 then
+  if utf8pos('<ROWMERGE=',Result.ToUpper)>0 then
   begin
-    FontPos1:=utf8pos('<ROWSPAN=',Result.ToUpper);
+    FontPos1:=utf8pos('<ROWMERGE=',Result.ToUpper);
     i:=FontPos1;
     while i<= utf8length(Result) do
     begin
@@ -836,7 +836,7 @@ begin
         FontPos2:=i;
         tmp1:=utf8copy(Result,FontPos1,FontPos2-FontPos1+1);
         Result:=Result.Replace(tmp1,'',[rfReplaceAll, rfIgnoreCase]);
-        FontPos1:=utf8pos('<ROWSPAN=',Result.ToUpper);
+        FontPos1:=utf8pos('<ROWMERGE=',Result.ToUpper);
         if FontPos1=0 then
           Break;
       end;
@@ -927,8 +927,8 @@ begin
   (pos('</FONTSIZE>',str.ToUpper)>0) or
   (pos('<BM',str.ToUpper)>0) or
   (pos('[BM',str.ToUpper)>0) or
-  (pos('<COLSPAN=',str.ToUpper)>0) or
-  (pos('<ROWSPAN=',str.ToUpper)>0) or
+  (pos('<COLMERGE=',str.ToUpper)>0) or
+  (pos('<ROWMERGE=',str.ToUpper)>0) or
   (pos('</C>',str.ToUpper)>0) or
   (pos('<$>',str)>0) or
   (pos('<!>',str)>0) or
@@ -977,12 +977,17 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
-      //ColSpan
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='C')
-         and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='L')
-         and (utf8copy(str,i+4,1).ToUpper='S') and (utf8copy(str,i+5,1).ToUpper='P')
-         and (utf8copy(str,i+6,1).ToUpper='A') and (utf8copy(str,i+7,1).ToUpper='N')
-         and (utf8copy(str,i+8,1).ToUpper='=') then
+      //ColMerge
+      if (s1='<')
+         and (utf8copy(str,i+1,1).ToUpper='C')
+         and (utf8copy(str,i+2,1).ToUpper='O')
+         and (utf8copy(str,i+3,1).ToUpper='L')
+         and (utf8copy(str,i+4,1).ToUpper='M')
+         and (utf8copy(str,i+5,1).ToUpper='E')
+         and (utf8copy(str,i+6,1).ToUpper='R')
+         and (utf8copy(str,i+7,1).ToUpper='G')
+         and (utf8copy(str,i+8,1).ToUpper='E')
+         and (utf8copy(str,i+9,1).ToUpper='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -996,12 +1001,17 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
-      //RowSpan
-      if (s1='<') and (utf8copy(str,i+1,1).ToUpper='R')
-         and (utf8copy(str,i+2,1).ToUpper='O') and (utf8copy(str,i+3,1).ToUpper='W')
-         and (utf8copy(str,i+3,1).ToUpper='S') and (utf8copy(str,i+5,1).ToUpper='P')
-         and (utf8copy(str,i+6,1).ToUpper='A') and (utf8copy(str,i+7,1).ToUpper='N')
-         and (utf8copy(str,i+8,1).ToUpper='=') then
+      //RowMerge
+      if (s1='<')
+         and (utf8copy(str,i+1,1).ToUpper='R')
+         and (utf8copy(str,i+2,1).ToUpper='O')
+         and (utf8copy(str,i+3,1).ToUpper='w')
+         and (utf8copy(str,i+3,1).ToUpper='M')
+         and (utf8copy(str,i+5,1).ToUpper='E')
+         and (utf8copy(str,i+6,1).ToUpper='R')
+         and (utf8copy(str,i+7,1).ToUpper='G')
+         and (utf8copy(str,i+8,1).ToUpper='E')
+         and (utf8copy(str,i+9,1).ToUpper='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -1752,8 +1762,8 @@ begin
                 FTable[row,col].FontStyle:=MyCell.FontStyle;
                 FTable[row,col].FontName:=MyCell.FontName;
                 FTable[row,col].FontSize:=MyCell.FontSize;
-                FTable[row,col].ColSpan:=MyCell.ColSpan;
-                FTable[row,col].RowSpan:=MyCell.RowSpan;
+                FTable[row,col].ColMerge:=MyCell.ColMerge;
+                FTable[row,col].RowMerge:=MyCell.RowMerge;
                 FTable[row,col].Visible:=MyCell.Visible;
                 FTable[row,col].ComponentName:=MyCell.ComponentName;
               end;
@@ -1811,15 +1821,17 @@ begin
     j:=(FontPos2-FontPos1)+1;
   end
   else
-  //ColSpan=
-  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='C') and
+  //ColMerge=    MERGE
+  if (Result='<') and
+    (utf8copy(str,i+1,1).ToUpper='C') and
     (utf8copy(str,i+2,1).ToUpper='O') and
     (utf8copy(str,i+3,1).ToUpper='L') and
-    (utf8copy(str,i+4,1).ToUpper='S') and
-    (utf8copy(str,i+5,1).ToUpper='P') and
-    (utf8copy(str,i+6,1).ToUpper='A') and
-    (utf8copy(str,i+7,1).ToUpper='N') and
-    (utf8copy(str,i+8,1).ToUpper='=') then
+    (utf8copy(str,i+4,1).ToUpper='M') and
+    (utf8copy(str,i+5,1).ToUpper='E') and
+    (utf8copy(str,i+6,1).ToUpper='R') and
+    (utf8copy(str,i+7,1).ToUpper='G') and
+    (utf8copy(str,i+8,1).ToUpper='E') and
+    (utf8copy(str,i+9,1).ToUpper='=') then
   begin
     FontPos1:=i;
     for k:=i to utf8length(str) do
@@ -1834,15 +1846,17 @@ begin
     j:=(FontPos2-FontPos1)+1;
   end
   else
-  //RowSpan=
-  if (Result='<') and (utf8copy(str,i+1,1).ToUpper='R') and
+  //RowMerge=
+  if (Result='<') and
+    (utf8copy(str,i+1,1).ToUpper='R') and
     (utf8copy(str,i+2,1).ToUpper='O') and
     (utf8copy(str,i+3,1).ToUpper='W') and
-    (utf8copy(str,i+4,1).ToUpper='S') and
-    (utf8copy(str,i+5,1).ToUpper='P') and
-    (utf8copy(str,i+6,1).ToUpper='A') and
-    (utf8copy(str,i+7,1).ToUpper='N') and
-    (utf8copy(str,i+8,1).ToUpper='=') then
+    (utf8copy(str,i+4,1).ToUpper='M') and
+    (utf8copy(str,i+5,1).ToUpper='E') and
+    (utf8copy(str,i+6,1).ToUpper='R') and
+    (utf8copy(str,i+7,1).ToUpper='G') and
+    (utf8copy(str,i+8,1).ToUpper='E') and
+    (utf8copy(str,i+9,1).ToUpper='=') then
   begin
     FontPos1:=i;
     for k:=i to utf8length(str) do
@@ -2078,8 +2092,8 @@ begin
   (pos('<FONT=',str.ToUpper)>0) or
   (pos('<FONTSIZE=',str.ToUpper)>0) or
   (pos('</FONTSIZE>',str.ToUpper)>0) or
-  (pos('<COLSPAN=',str.ToUpper)>0) or
-  (pos('<ROWSPAN=',str.ToUpper)>0) or
+  (pos('<COLMERGE=',str.ToUpper)>0) or
+  (pos('<ROWMERGE=',str.ToUpper)>0) or
   (FindMark1(str,DStr)) or
   (FindMark2(str,DStr)) or
   (pos('</>',str)>0)
@@ -2131,13 +2145,15 @@ begin
         y:=y-abs(FH2-FH1) div 2;//恢复原来的显示位置
       end
       else
-      if (DStr.ToUpper='C') and (utf8copy(str,i+1,1).ToUpper='O')
+      if (DStr.ToUpper='C')
+        and (utf8copy(str,i+1,1).ToUpper='O')
         and (utf8copy(str,i+2,1).ToUpper='L')
-        and (utf8copy(str,i+3,1).ToUpper='S')
-        and (utf8copy(str,i+4,1).ToUpper='P')
-        and (utf8copy(str,i+5,1).ToUpper='A')
-        and (utf8copy(str,i+6,1).ToUpper='N')
-        and (utf8copy(str,i+7,1)='=') then
+        and (utf8copy(str,i+3,1).ToUpper='M')
+        and (utf8copy(str,i+4,1).ToUpper='E')
+        and (utf8copy(str,i+5,1).ToUpper='R')
+        and (utf8copy(str,i+6,1).ToUpper='G')
+        and (utf8copy(str,i+7,1).ToUpper='E')
+        and (utf8copy(str,i+8,1)='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -2151,13 +2167,15 @@ begin
         i:=i+(FontPos2-FontPos1)+1;
       end
       else
-      if (DStr.ToUpper='R') and (utf8copy(str,i+1,1).ToUpper='O')
+      if (DStr.ToUpper='R')
+        and (utf8copy(str,i+1,1).ToUpper='O')
         and (utf8copy(str,i+2,1).ToUpper='W')
-        and (utf8copy(str,i+3,1).ToUpper='S')
-        and (utf8copy(str,i+4,1).ToUpper='P')
-        and (utf8copy(str,i+5,1).ToUpper='A')
-        and (utf8copy(str,i+6,1).ToUpper='N')
-        and (utf8copy(str,i+7,1)='=') then
+        and (utf8copy(str,i+3,1).ToUpper='M')
+        and (utf8copy(str,i+4,1).ToUpper='E')
+        and (utf8copy(str,i+5,1).ToUpper='R')
+        and (utf8copy(str,i+6,1).ToUpper='G')
+        and (utf8copy(str,i+7,1).ToUpper='E')
+        and (utf8copy(str,i+8,1)='=') then
       begin
         FontPos1:=i;
         for j:=i to  utf8length(str) do
@@ -2411,7 +2429,7 @@ var
   colWidth:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
-  Span,c:integer;
+  c:integer;
   th:integer;//文字高度
   row1,col1,oo,oo1:integer;
 begin
@@ -2435,30 +2453,30 @@ begin
       FTable[i,j].Height:=h;
       FTable[i,j].Width:=colWidth;
       //竖向合并单元格
-      if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
+      if (FTable[i,j].RowMerge>0) and (FTable[i,j].ColMerge>0) then
       begin
-        row1:=FTable[i,j].RowSpan+i-1;
+        row1:=FTable[i,j].RowMerge+i-1;
         if row1>row then row1:=row;
 
         for oo:=i to row1 do
         begin
-          col1:=FTable[i,j].ColSpan+j-1;
+          col1:=FTable[i,j].ColMerge+j-1;
           if col1>col then col1:=col;
           for oo1:=j to col1 do
           begin
             FTable[oo,oo1].Visible:=false;
           end;
           FTable[i,j].Visible:=true;//将左上角单元格置为true
-          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+          FTable[i,j].Width:=colWidth*FTable[i,j].ColMerge;
+          FTable[i,j].Height:=h*FTable[i,j].RowMerge;
         end;
       end
       else
       //竖向合并单元格
-      if FTable[i,j].RowSpan>0 then
+      if FTable[i,j].RowMerge>0 then
       begin
-        FTable[i,j].Height:=h*FTable[i,j].RowSpan;
-        row1:=FTable[i,j].RowSpan+i-1;
+        FTable[i,j].Height:=h*FTable[i,j].RowMerge;
+        row1:=FTable[i,j].RowMerge+i-1;
         if row1>row then row1:=row;
         for oo:=i+1 to row1 do
         begin
@@ -2467,10 +2485,10 @@ begin
       end
       else
       //横向合并单元格
-      if FTable[i,j].ColSpan>0 then
+      if FTable[i,j].ColMerge>0 then
       begin
-        FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-        col1:=FTable[i,j].ColSpan+j-1;
+        FTable[i,j].Width:=colWidth*FTable[i,j].ColMerge;
+        col1:=FTable[i,j].ColMerge+j-1;
         if col1>col then col1:=col;
         for oo:=j+1 to col1 do
         begin
@@ -3688,10 +3706,8 @@ begin
     CellProper.CbxCellType.ItemIndex:=FTable[FSelectRow,FSelectCol].DispType
   else
     CellProper.CbxCellType.ItemIndex:=2;//控件
-  if (FTable[FSelectRow,FSelectCol].ColSpan<>0) or (FTable[FSelectRow,FSelectCol].RowSpan<>0) then
-    CellProper.ChkBoxMerge.Checked:=true
-  else
-    CellProper.ChkBoxMerge.Checked:=false;
+  CellProper.RowMerge.text:=FTable[FSelectRow,FSelectCol].RowMerge.ToString;
+  CellProper.ColMerge.text:=FTable[FSelectRow,FSelectCol].ColMerge.ToString;
   CellProper.ChkColSizing.Checked:=self.FColSizing;
   CellProper.ChkRowSizing.Checked:=self.FRowSizing;
   CellProper.ColWidthEdit.Text:=FColWidth.ToString;
@@ -3721,7 +3737,7 @@ begin
       CellProper.FTable[i,j-1].Align:=FTable[i,j-1].Align;
       CellProper.FTable[i,j-1].BottomLineStyle:=FTable[i,j-1].BottomLineStyle;
       CellProper.FTable[i,j-1].Color:=FTable[i,j-1].Color;
-      CellProper.FTable[i,j-1].ColSpan:=FTable[i,j-1].ColSpan;
+      CellProper.FTable[i,j-1].ColMerge:=FTable[i,j-1].ColMerge;
       CellProper.FTable[i,j-1].ComponentDataFieldName:=FTable[i,j-1].ComponentDataFieldName;
       CellProper.FTable[i,j-1].ComponentName:=FTable[i,j-1].ComponentName;
       CellProper.FTable[i,j-1].ComponentDataSource:=FTable[i,j-1].ComponentDataSource;
@@ -3739,7 +3755,7 @@ begin
       CellProper.FTable[i,j-1].LeftLineStyle:=FTable[i,j-1].LeftLineStyle;
       CellProper.FTable[i,j-1].LineStyle:=FTable[i,j-1].LineStyle;
       CellProper.FTable[i,j-1].RightLineStyle:=FTable[i,j-1].RightLineStyle;
-      CellProper.FTable[i,j-1].RowSpan:=FTable[i,j-1].RowSpan;
+      CellProper.FTable[i,j-1].RowMerge:=FTable[i,j-1].RowMerge;
       CellProper.FTable[i,j-1].str:=FTable[i,j-1].str;
       CellProper.FTable[i,j-1].TopLineStyle:=FTable[i,j-1].TopLineStyle;
       CellProper.FTable[i,j-1].Visible:=FTable[i,j-1].Visible;
@@ -3771,13 +3787,12 @@ begin
     if CellProper.CbxHAlign.ItemIndex>=0 then
       FTable[FSelectRow,FSelectCol].Align:=CellProper.CbxHAlign.ItemIndex+1;
 
-    if (not CellProper.ChkBoxMerge.Checked) and ((FTable[FSelectRow,FSelectCol].ColSpan<>0) or (FTable[FSelectRow,FSelectCol].RowSpan<>0))  then
-    begin
-      FTable[FSelectRow,FSelectCol].RowSpan:=0;
-      FTable[FSelectRow,FSelectCol].ColSpan:=0;
-      FTable[FSelectRow,FSelectCol].Width:= FColWidth;
-      FTable[FSelectRow,FSelectCol].Height:= FRowHeight;
-    end;
+    val(CellProper.RowMerge.Text,tmp,err);
+    FTable[FSelectRow,FSelectCol].RowMerge:=tmp;
+    val(CellProper.ColMerge.Text,tmp,err);
+    FTable[FSelectRow,FSelectCol].ColMerge:=tmp;
+    //FTable[FSelectRow,FSelectCol].Width:= FColWidth;
+    //FTable[FSelectRow,FSelectCol].Height:= FRowHeight;
     FColSizing:=CellProper.ChkColSizing.Checked;
     FRowSizing:=CellProper.ChkRowSizing.Checked;
 
@@ -3821,7 +3836,7 @@ begin
         FTable[i,j-1].Align:=CellProper.FTable[i,j-1].Align;
         FTable[i,j-1].BottomLineStyle:=CellProper.FTable[i,j-1].BottomLineStyle;
         FTable[i,j-1].Color:=CellProper.FTable[i,j-1].Color;
-        FTable[i,j-1].ColSpan:=CellProper.FTable[i,j-1].ColSpan;
+        FTable[i,j-1].ColMerge:=CellProper.FTable[i,j-1].ColMerge;
         FTable[i,j-1].ComponentDataFieldName:=CellProper.FTable[i,j-1].ComponentDataFieldName;
         FTable[i,j-1].ComponentName:=CellProper.FTable[i,j-1].ComponentName;
         FTable[i,j-1].ComponentDataSource:=CellProper.FTable[i,j-1].ComponentDataSource;
@@ -3839,7 +3854,7 @@ begin
         FTable[i,j-1].LeftLineStyle:=CellProper.FTable[i,j-1].LeftLineStyle;
         FTable[i,j-1].LineStyle:=CellProper.FTable[i,j-1].LineStyle;
         FTable[i,j-1].RightLineStyle:=CellProper.FTable[i,j-1].RightLineStyle;
-        FTable[i,j-1].RowSpan:=CellProper.FTable[i,j-1].RowSpan;
+        FTable[i,j-1].RowMerge:=CellProper.FTable[i,j-1].RowMerge;
         FTable[i,j-1].TopLineStyle:=CellProper.FTable[i,j-1].TopLineStyle;
         FTable[i,j-1].Visible:=CellProper.FTable[i,j-1].Visible;
         FTable[i,j-1].Width:=CellProper.FTable[i,j-1].Width;
@@ -4145,7 +4160,7 @@ var
   k:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
-  Span,c:integer;
+  merge,c:integer;
   th:integer;//文字高度
   TabStops:integer;
   Control: TControl;
@@ -4196,30 +4211,30 @@ begin
         //FTable[i,j].RightLineStyle:=FCellLineStyle;
 
         //竖向(row)合并单元格
-        if (FTable[i,j].RowSpan>0) and (FTable[i,j].ColSpan>0) then
+        if (FTable[i,j].RowMerge>0) and (FTable[i,j].ColMerge>0) then
         begin
-          row1:=FTable[i,j].RowSpan+i-1;
+          row1:=FTable[i,j].RowMerge+i-1;
           if row1>row then row1:=row;
 
           for oo:=i to row1 do
           begin
-            col1:=FTable[i,j].ColSpan+j-1;
+            col1:=FTable[i,j].ColMerge+j-1;
             if col1>col then col1:=col;
             for oo1:=j to col1 do
             begin
               FTable[oo,oo1].Visible:=false;
             end;
             FTable[i,j].Visible:=true;//将左上角单元格置为true
-            FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-            FTable[i,j].Height:=h*FTable[i,j].RowSpan;
+            FTable[i,j].Width:=colWidth*FTable[i,j].ColMerge;
+            FTable[i,j].Height:=h*FTable[i,j].RowMerge;
           end;
         end
         else
         //竖向(row)合并单元格
-        if FTable[i,j].RowSpan>0 then
+        if FTable[i,j].RowMerge>0 then
         begin
-          FTable[i,j].Height:=h*FTable[i,j].RowSpan;
-          row1:=FTable[i,j].RowSpan+i-1;
+          FTable[i,j].Height:=h*FTable[i,j].RowMerge;
+          row1:=FTable[i,j].RowMerge+i-1;
           if row1>row then row1:=row;
           for oo:=i+1 to row1 do
           begin
@@ -4228,10 +4243,10 @@ begin
         end
         else
         //横向(col)合并单元格
-        if FTable[i,j].ColSpan>0 then
+        if FTable[i,j].ColMerge>0 then
         begin
-          FTable[i,j].Width:=colWidth*FTable[i,j].ColSpan;
-          col1:=FTable[i,j].ColSpan+j-1;
+          FTable[i,j].Width:=colWidth*FTable[i,j].ColMerge;
+          col1:=FTable[i,j].ColMerge+j-1;
           if col1>col then col1:=col;
           for oo:=j+1 to col1 do
           begin
@@ -4266,7 +4281,7 @@ var
   k:integer;
   x0,y0,x1,y1:integer;
   TableRowHeigth:integer;
-  Span,c:integer;
+  c:integer;
   th:integer;//文字高度
   TabStops:integer;
   Control: TControl;
@@ -5013,8 +5028,8 @@ begin
           FTable[j-no,k].y:=TJSONObject(lItem.Items[0]).Get('y');
           FTable[j-no,k].Width:=TJSONObject(lItem.Items[0]).Get('Width');
           FTable[j-no,k].Height:=TJSONObject(lItem.Items[0]).Get('Height');
-          FTable[j-no,k].ColSpan:=TJSONObject(lItem.Items[0]).Get('ColSpan');
-          FTable[j-no,k].RowSpan:=TJSONObject(lItem.Items[0]).Get('RowSpan');
+          FTable[j-no,k].ColMerge:=TJSONObject(lItem.Items[0]).Get('ColMerge');
+          FTable[j-no,k].RowMerge:=TJSONObject(lItem.Items[0]).Get('RowMerge');
           FTable[j-no,k].DispType:=TJSONObject(lItem.Items[0]).Get('DispType');
           FTable[j-no,k].str:=TJSONObject(lItem.Items[0]).Get('str');
           FTable[j-no,k].Color:=TJSONObject(lItem.Items[0]).Get('Color');
@@ -5093,8 +5108,8 @@ begin
       jsonParamObj.Add('y', FTable[i,j].y);
       jsonParamObj.Add('Width', FTable[i,j].Width);
       jsonParamObj.Add('Height', FTable[i,j].Height);
-      jsonParamObj.Add('ColSpan', FTable[i,j].ColSpan);
-      jsonParamObj.Add('RowSpan', FTable[i,j].RowSpan);
+      jsonParamObj.Add('ColMerge', FTable[i,j].ColMerge);
+      jsonParamObj.Add('RowMerge', FTable[i,j].RowMerge);
       jsonParamObj.Add('DispType', FTable[i,j].DispType);
       jsonParamObj.Add('str', FTable[i,j].str);
       jsonParamObj.Add('Color', FTable[i,j].Color);

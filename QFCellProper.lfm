@@ -58,14 +58,6 @@ object QFCellProper: TQFCellProper
         OnChange = RightLineStyleChange
         OnClick = CbxHAlignClick
       end
-      object ChkBoxMerge: TCheckBox
-        Left = 24
-        Height = 24
-        Top = 256
-        Width = 115
-        Caption = '合并单元格'
-        TabOrder = 1
-      end
       object LabelControl1: TLabel
         Left = 24
         Height = 18
@@ -87,7 +79,7 @@ object QFCellProper: TQFCellProper
         ParentBackground = False
         ParentColor = False
         ParentFont = False
-        TabOrder = 2
+        TabOrder = 1
       end
       object BevelCellType1: TBevel
         Left = 24
@@ -107,7 +99,7 @@ object QFCellProper: TQFCellProper
         Font.Height = -18
         Font.Name = '宋体'
         ParentFont = False
-        TabOrder = 3
+        TabOrder = 2
         OnClick = BtnSetCellLineColor1Click
       end
       object CbxCellType: TComboBox
@@ -122,7 +114,7 @@ object QFCellProper: TQFCellProper
           '控件'
         )
         Style = csDropDownList
-        TabOrder = 4
+        TabOrder = 3
         OnChange = RightLineStyleChange
         OnClick = CbxHAlignClick
       end
@@ -147,7 +139,7 @@ object QFCellProper: TQFCellProper
         Width = 171
         ItemHeight = 18
         Style = csOwnerDrawFixed
-        TabOrder = 5
+        TabOrder = 4
         OnChange = RightLineStyleChange
       end
       object LabelControl3: TLabel
@@ -181,7 +173,7 @@ object QFCellProper: TQFCellProper
           '无线条或透明'
         )
         Style = csDropDownList
-        TabOrder = 6
+        TabOrder = 5
         OnClick = CbxHAlignClick
       end
       object LabelCellType1: TLabel
@@ -199,20 +191,20 @@ object QFCellProper: TQFCellProper
         Shape = bsBottomLine
       end
       object ChkColSizing: TCheckBox
-        Left = 216
+        Left = 357
         Height = 24
         Top = 256
         Width = 187
         Caption = '允许调整单元格宽度'
-        TabOrder = 7
+        TabOrder = 6
       end
       object ChkRowSizing: TCheckBox
-        Left = 472
+        Left = 357
         Height = 24
-        Top = 256
+        Top = 304
         Width = 187
         Caption = '允许调整单元格高度'
-        TabOrder = 8
+        TabOrder = 7
       end
       object DrawLeftLine: TCheckBox
         Left = 432
@@ -222,7 +214,7 @@ object QFCellProper: TQFCellProper
         Caption = '左边边框'
         Checked = True
         State = cbChecked
-        TabOrder = 9
+        TabOrder = 8
       end
       object DrawRightLine: TCheckBox
         Left = 432
@@ -232,7 +224,7 @@ object QFCellProper: TQFCellProper
         Caption = '右边边框'
         Checked = True
         State = cbChecked
-        TabOrder = 10
+        TabOrder = 9
       end
       object DrawTopLine: TCheckBox
         Left = 432
@@ -242,7 +234,7 @@ object QFCellProper: TQFCellProper
         Caption = '顶部边框'
         Checked = True
         State = cbChecked
-        TabOrder = 11
+        TabOrder = 10
       end
       object DrawBottomLine: TCheckBox
         Left = 432
@@ -252,7 +244,7 @@ object QFCellProper: TQFCellProper
         Caption = '底部边框'
         Checked = True
         State = cbChecked
-        TabOrder = 12
+        TabOrder = 11
       end
       object LeftLineStyle: TComboBox
         Left = 536
@@ -271,7 +263,7 @@ object QFCellProper: TQFCellProper
           '无线条或透明'
         )
         Style = csDropDownList
-        TabOrder = 13
+        TabOrder = 12
         OnChange = RightLineStyleChange
         OnClick = CbxHAlignClick
       end
@@ -292,7 +284,7 @@ object QFCellProper: TQFCellProper
           '无线条或透明'
         )
         Style = csDropDownList
-        TabOrder = 14
+        TabOrder = 13
         OnChange = RightLineStyleChange
         OnClick = CbxHAlignClick
       end
@@ -313,7 +305,7 @@ object QFCellProper: TQFCellProper
           '无线条或透明'
         )
         Style = csDropDownList
-        TabOrder = 15
+        TabOrder = 14
         OnChange = RightLineStyleChange
         OnClick = CbxHAlignClick
       end
@@ -334,20 +326,20 @@ object QFCellProper: TQFCellProper
           '无线条或透明'
         )
         Style = csDropDownList
-        TabOrder = 16
+        TabOrder = 15
         OnChange = RightLineStyleChange
         OnClick = CbxHAlignClick
       end
       object StringGrid1: TStringGrid
         Left = 16
-        Height = 400
-        Top = 296
+        Height = 352
+        Top = 344
         Width = 753
         Anchors = [akTop, akLeft, akRight, akBottom]
         FixedCols = 0
         FixedRows = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goEditing, goColSpanning, goSmoothScroll]
-        TabOrder = 17
+        TabOrder = 16
         OnClick = StringGrid1Click
       end
       object ColEdit: TLabeledEdit
@@ -358,7 +350,7 @@ object QFCellProper: TQFCellProper
         EditLabel.Height = 18
         EditLabel.Width = 80
         EditLabel.Caption = '列数'
-        TabOrder = 18
+        TabOrder = 17
       end
       object RowEdit: TLabeledEdit
         Left = 312
@@ -368,7 +360,7 @@ object QFCellProper: TQFCellProper
         EditLabel.Height = 18
         EditLabel.Width = 80
         EditLabel.Caption = '行数'
-        TabOrder = 19
+        TabOrder = 18
       end
       object RowHeightEdit: TLabeledEdit
         Left = 408
@@ -378,7 +370,7 @@ object QFCellProper: TQFCellProper
         EditLabel.Height = 18
         EditLabel.Width = 96
         EditLabel.Caption = '单元格高度'
-        TabOrder = 20
+        TabOrder = 19
       end
       object ColWidthEdit: TLabeledEdit
         Left = 520
@@ -388,7 +380,7 @@ object QFCellProper: TQFCellProper
         EditLabel.Height = 18
         EditLabel.Width = 96
         EditLabel.Caption = '单元格宽度'
-        TabOrder = 21
+        TabOrder = 20
       end
       object Button1: TButton
         Left = 632
@@ -396,7 +388,7 @@ object QFCellProper: TQFCellProper
         Top = 176
         Width = 128
         Caption = '调整表格'
-        TabOrder = 22
+        TabOrder = 21
         OnClick = Button1Click
       end
       object BevelCellType5: TBevel
@@ -412,6 +404,37 @@ object QFCellProper: TQFCellProper
         Top = 162
         Width = 544
         Shape = bsBottomLine
+      end
+      object GroupBox1: TGroupBox
+        Left = 24
+        Height = 88
+        Top = 248
+        Width = 312
+        Caption = '合并单元格'
+        ClientHeight = 65
+        ClientWidth = 308
+        ParentBackground = False
+        TabOrder = 22
+        object ColMerge: TLabeledEdit
+          Left = 24
+          Height = 26
+          Top = 32
+          Width = 80
+          EditLabel.Height = 18
+          EditLabel.Width = 80
+          EditLabel.Caption = '合并列数'
+          TabOrder = 0
+        end
+        object RowMerge: TLabeledEdit
+          Left = 184
+          Height = 26
+          Top = 32
+          Width = 80
+          EditLabel.Height = 18
+          EditLabel.Width = 80
+          EditLabel.Caption = '合并行数'
+          TabOrder = 1
+        end
       end
     end
     object TabSheetFont: TTabSheet

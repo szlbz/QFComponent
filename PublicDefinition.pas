@@ -11,8 +11,8 @@ type
      y:integer;
      Width:integer;
      Height:integer;
-     ColSpan:integer; //从当前单元格向右合并n个单元格
-     RowSpan:integer; //从当单元格向下合并n个单元格
+     ColMerge:integer; //从当前单元格向右合并n个单元格
+     RowMerge:integer; //从当单元格向下合并n个单元格
      DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
      str:string[255];
      URL:string[200];

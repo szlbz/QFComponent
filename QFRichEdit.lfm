@@ -1,25 +1,24 @@
 object QFRichEditor: TQFRichEditor
   Left = -11
-  Height = 1417
+  Height = 1466
   Top = -11
-  Width = 1368
+  Width = 1412
   AllowDropFiles = True
   Caption = 'QFRichEditor'
-  ClientHeight = 1417
-  ClientWidth = 1368
+  ClientHeight = 1410
+  ClientWidth = 1412
   DesignTimePPI = 144
   Menu = MainMenu1
   OnClose = FormClose
   OnCreate = FormCreate
   OnDropFiles = FormDropFiles
   Position = poScreenCenter
-  LCLVersion = '3.0.0.3'
   WindowState = wsMaximized
   object StatusBar1: TStatusBar
     Left = 0
     Height = 34
     Top = 1376
-    Width = 1368
+    Width = 1412
     Panels = <    
       item
         Width = 400
@@ -33,7 +32,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 36
     Top = 0
-    Width = 1368
+    Width = 1412
     Caption = 'ToolBar1'
     Images = ImageList1
     TabOrder = 1
@@ -69,7 +68,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton4: TToolButton
       Left = 106
-      Height = 5
+      Height = 33
       Top = 2
       Caption = 'ToolButton4'
       Style = tbsDivider
@@ -86,7 +85,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton7: TToolButton
       Left = 146
-      Height = 5
+      Height = 33
       Top = 2
       Caption = 'ToolButton7'
       Style = tbsDivider
@@ -103,7 +102,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton10: TToolButton
       Left = 221
-      Height = 5
+      Height = 33
       Top = 2
       Caption = 'ToolButton10'
       Style = tbsDivider
@@ -140,7 +139,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton14: TToolButton
       Left = 366
-      Height = 5
+      Height = 33
       Top = 2
       Caption = 'ToolButton14'
       Style = tbsDivider
@@ -167,7 +166,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton23: TToolButton
       Left = 632
-      Height = 5
+      Height = 33
       Top = 2
       Caption = 'ToolButton23'
       Style = tbsDivider
@@ -214,7 +213,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton3: TToolButton
       Left = 441
-      Height = 8
+      Height = 33
       Top = 2
       Caption = 'ToolButton3'
       Style = tbsSeparator
@@ -230,7 +229,7 @@ object QFRichEditor: TQFRichEditor
     end
     object ToolButton2: TToolButton
       Left = 484
-      Height = 8
+      Height = 33
       Top = 2
       Caption = 'ToolButton2'
       Style = tbsSeparator
@@ -270,7 +269,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 1332
     Top = 44
-    Width = 1368
+    Width = 1412
     Align = alClient
     Color = clWhite
     Font.CharSet = ANSI_CHARSET
@@ -292,7 +291,7 @@ object QFRichEditor: TQFRichEditor
     Left = 0
     Height = 8
     Top = 36
-    Width = 1368
+    Width = 1412
     Align = alTop
     Shape = bsTopLine
   end

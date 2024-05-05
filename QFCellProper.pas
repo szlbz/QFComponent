@@ -24,7 +24,10 @@ type
     CbxCellType: TComboBox;
     CbxLineStyle: TComboBox;
     ColEdit: TLabeledEdit;
+    ColMerge: TLabeledEdit;
+    RowMerge: TLabeledEdit;
     ColWidthEdit: TLabeledEdit;
+    GroupBox1: TGroupBox;
     LeftLineStyle: TComboBox;
     RightLineStyle: TComboBox;
     RowEdit: TLabeledEdit;
@@ -66,7 +69,6 @@ type
     EditFontSize: TEdit;
     ColorDialogCellProp: TColorDialog;
     CbxHAlign: TComboBox;
-    ChkBoxMerge: TCheckBox;
     procedure BtnCancelClick(Sender: TObject);
     procedure BtnOkClick(Sender: TObject);
     procedure BtnSetCellLineColor1Click(Sender: TObject);
@@ -195,13 +197,10 @@ begin
   if CbxHAlign.ItemIndex>=0 then
     FTable[Row,Col].Align:=CbxHAlign.ItemIndex+1;
 
-  if (not ChkBoxMerge.Checked) and ((FTable[Row,Col].ColSpan<>0) or (FTable[Row,Col].RowSpan<>0))  then
-  begin
-    FTable[Row,Col].RowSpan:=0;
-    FTable[Row,Col].ColSpan:=0;
-    //FTable[Row,Col].Width:= FColWidth;
-    //FTable[Row,Col].Height:= FRowHeight;
-  end;
+  val(ColMerge.Text,tmp,err);
+  FTable[Row,Col].RowMerge:=tmp;
+  val(RowMerge.Text,tmp,err);
+  FTable[Row,Col].ColMerge:=tmp;
 
   if LbxFontName.ItemIndex>=0 then
     FTable[Row,Col].FontName:=LbxFontName.Items.ValueFromIndex[LbxFontName.ItemIndex];
@@ -237,10 +236,8 @@ begin
     CbxCellType.ItemIndex:=FTable[Row,Col].DispType
   else
     CbxCellType.ItemIndex:=2;//控件
-  if (FTable[Row,Col].ColSpan<>0) or (FTable[Row,Col].RowSpan<>0) then
-    ChkBoxMerge.Checked:=true
-  else
-    ChkBoxMerge.Checked:=false;
+  ColMerge.Text:=FTable[Row,Col].ColMerge.ToString;
+  RowMerge.Text:=FTable[Row,Col].RowMerge.ToString;
   EditFontSize.Text:=FTable[Row,Col].FontSize.ToString;
   LbxFontName.ItemIndex:=LbxFontName.Items.IndexOf(FTable[Row,Col].FontName);
   LbxFontSize.ItemIndex:=LbxFontSize.Items.IndexOf(FTable[Row,Col].FontSize.ToString);
