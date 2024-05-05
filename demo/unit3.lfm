@@ -10,7 +10,6 @@ object Form1: TForm1
   Font.Height = -18
   OnCreate = FormCreate
   Position = poScreenCenter
-  LCLVersion = '3.0.0.3'
   object PageControl1: TPageControl
     Left = 0
     Height = 1015
@@ -123,13 +122,13 @@ object Form1: TForm1
           '<bm2>书签目录测试2'
           '<bm3>书签目录测试3'
           '[s2]以下为<C2>markdown</C><sup>格式</sup>的表格：'
-          '<rowh=70>|姓名|[#][C2]<colspan=2>单位|办公地址|[l]电话(手机号码)|备注|'
+          '<rowh=70>|姓名|[#][C2]<colmerge=2>单位|办公地址|[l]电话(手机号码)|备注|'
           '|:-:|-:|-:|:-:|:-|'
-          '|<rowspan=3>秋风1|<rowspan=2><colspan=2>[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
-          '|秋风2|<colspan=2>[r]检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
-          '|[c2]秋风3|检测中心3|南山建工村3|383233647|<rowspan=3>[img]3.png|'
-          '|<colspan=3>秋风4|检测中心4|南山建工村4|483233646||'
-          '|秋风5|<rowspan=2>检测中心5|南山建工村5|583233645||'
+          '|<rowmerge=3>秋风1|<rowmerge=2><colmerge=2>[$][c2]<bm4>检测中心1|南山建工村1|183233649|2030年13月33日入职|'
+          '|秋风2|<colmerge=2>[r]检测中心2|[#][c4]南山建工村2|283233648|[img]2.bmp|'
+          '|[c2]秋风3|检测中心3|南山建工村3|383233647|<rowmerge=3>[img]3.png|'
+          '|<colmerge=3>秋风4|检测中心4|南山建工村4|483233646||'
+          '|秋风5|<rowmerge=2>检测中心5|南山建工村5|583233645||'
           '|秋风6|检测中心6|南山建工村6|583233645|<hlk>(盒子论坛)http://bbs.2ccc.com/</hlk>|'
           '|秋风7|检测中心7|南山建工村7|583233645||'
           '|姓名|[#][C2]单位|办公地址|'
@@ -193,8 +192,8 @@ object Form1: TForm1
     end
     object TabSheet2: TTabSheet
       Caption = 'QFScrollingText Demo'
-      ClientHeight = 0
-      ClientWidth = 0
+      ClientHeight = 1007
+      ClientWidth = 969
       object ScrollingText1: TQFScrollingText
         Left = 0
         Height = 932
@@ -290,8 +289,8 @@ object Form1: TForm1
       end
     end
     object TabSheet3: TTabSheet
-      ClientHeight = 0
-      ClientWidth = 0
+      ClientHeight = 1007
+      ClientWidth = 969
       object QFHorizontalScrollingText1: TQFHorizontalScrollingText
         Left = 128
         Height = 110
@@ -332,8 +331,8 @@ object Form1: TForm1
     end
     object TabSheet4: TTabSheet
       Caption = 'TabSheet4'
-      ClientHeight = 0
-      ClientWidth = 0
+      ClientHeight = 1007
+      ClientWidth = 969
       object QFGridPanelComponent1: TQFGridPanelComponent
         Left = 32
         Height = 721
@@ -342,16 +341,16 @@ object Form1: TForm1
         Anchors = [akTop, akLeft, akRight]
         LineSpacing = 0
         Lines.Strings = (
-          '|<colspan=4><font=楷体><fontsize=16>界面动态调整Demo</font></fontsize>||||'
+          '|<colmerge=4><font=楷体><fontsize=16>界面动态调整Demo</font></fontsize>||||'
           '|:-:|:-:|:-:|:-:|'
-          '|单位名称|<compname=name1>|按键测试|<rowspan=3>[img]cl.png|'
-          '|单位地址|<compname=eeee>|<rowspan=2><compname=name3>|2|'
+          '|单位名称|<compname=name1>|按键测试|<rowmerge=3>[img]cl.png|'
+          '|单位地址|<compname=eeee>|<rowmerge=2><compname=name3>|2|'
           '|联系电话|<compname=tel>||3|'
-          '|联系人|<compname=name2>|<colspan=2><compname=dateEdit1>|4|'
-          '|<rowspan=3>表格控件|<rowspan=3><colspan=3><compname=grid1>|1|5|'
+          '|联系人|<compname=name2>|<colmerge=2><compname=dateEdit1>|4|'
+          '|<rowmerge=3>表格控件|<rowmerge=3><colmerge=3><compname=grid1>|1|5|'
           '|||2|6|'
           '|||3|7|'
-          '|[c2]说明|<colspan=3><compname=Memo1>|4|8|'
+          '|[c2]说明|<colmerge=3><compname=Memo1>|4|8|'
           ''
         )
         GapX = 0
@@ -452,7 +451,7 @@ object Form1: TForm1
         Left = 259
         Height = 70
         Top = 647
-        Width = 656
+        Width = 212
         BorderStyle = bsNone
         Lines.Strings = (
           'TQFGridPanelComponent控件支持在单元格绑定可视控件，运行时单元格绑定的控件会吸附到相应的单元格里。绑定后，控件的TabOrder从表格第1行第1列开始从左到右，从上到下重新编排。控件的宽和高自动适配单元格的尺寸。'
@@ -461,20 +460,20 @@ object Form1: TForm1
       end
       object Panel3: TPanel
         Left = 0
-        Height = 267
-        Top = 744
-        Width = 967
-        Anchors = [akLeft, akBottom]
-        Caption = 'Panel3'
-        ClientHeight = 267
-        ClientWidth = 967
+        Height = 207
+        Top = 800
+        Width = 969
+        Align = alBottom
+        BevelOuter = bvNone
+        ClientHeight = 207
+        ClientWidth = 969
         TabOrder = 8
         object Memo2: TMemo
-          Left = 32
-          Height = 144
-          Top = 8
-          Width = 888
-          Anchors = [akLeft, akRight, akBottom]
+          Left = 40
+          Height = 88
+          Top = -3
+          Width = 890
+          Anchors = [akLeft, akRight]
           Lines.Strings = (
             'Memo2'
           )
@@ -482,44 +481,46 @@ object Form1: TForm1
           WordWrap = False
         end
         object Button7: TButton
-          Left = 32
+          Left = 40
           Height = 46
-          Top = 208
-          Width = 232
-          Anchors = [akLeft, akBottom]
+          Top = 88
+          Width = 234
           Caption = '更新'
           TabOrder = 1
           OnClick = Button7Click
         end
         object LabeledEdit1: TLabeledEdit
-          Left = 456
+          Left = 200
           Height = 32
-          Top = 222
-          Width = 120
+          Top = 168
+          Width = 122
+          Anchors = [akLeft, akRight]
           EditLabel.Height = 24
-          EditLabel.Width = 120
+          EditLabel.Width = 122
           EditLabel.Caption = '表格行高'
           TabOrder = 2
           Text = '80'
           OnKeyPress = LabeledEdit1KeyPress
         end
         object LabeledEdit2: TLabeledEdit
-          Left = 608
+          Left = 352
           Height = 32
-          Top = 222
-          Width = 312
+          Top = 168
+          Width = 314
+          Anchors = [akLeft, akRight]
           EditLabel.Height = 24
-          EditLabel.Width = 312
+          EditLabel.Width = 314
           EditLabel.Caption = 'QFGridPanelComponent控件高度'
           TabOrder = 3
           Text = '646'
           OnKeyPress = LabeledEdit2KeyPress
         end
         object CheckBox4: TCheckBox
-          Left = 296
+          Left = 40
           Height = 28
-          Top = 215
-          Width = 133
+          Top = 165
+          Width = 135
+          Anchors = [akLeft, akRight]
           Caption = '表格边框加粗'
           Checked = True
           State = cbChecked
@@ -527,47 +528,49 @@ object Form1: TForm1
           OnClick = CheckBox4Click
         end
         object Button8: TButton
-          Left = 90
-          Height = 38
-          Top = 163
-          Width = 110
+          Left = 664
+          Height = 46
+          Top = 88
+          Width = 112
           Caption = 'Button8'
           TabOrder = 5
+          Visible = False
           OnClick = Button8Click
         end
         object Button9: TButton
-          Left = 248
-          Height = 31
-          Top = 160
-          Width = 142
+          Left = 786
+          Height = 46
+          Top = 88
+          Width = 144
           Caption = 'Button9'
           TabOrder = 6
+          Visible = False
           OnClick = Button9Click
         end
         object Button10: TButton
-          Left = 417
-          Height = 38
-          Top = 156
-          Width = 113
-          Caption = '保存设置'
+          Left = 296
+          Height = 46
+          Top = 88
+          Width = 115
+          Caption = '保存配置'
           TabOrder = 7
           OnClick = Button10Click
         end
         object Button11: TButton
-          Left = 544
-          Height = 38
-          Top = 156
-          Width = 113
-          Caption = '调用设置'
+          Left = 424
+          Height = 46
+          Top = 88
+          Width = 115
+          Caption = '调用配置'
           TabOrder = 8
           OnClick = Button11Click
         end
       end
       object Grid1: TStringGrid
         Left = 259
-        Height = 230
+        Height = 70
         Top = 407
-        Width = 656
+        Width = 212
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
         TabOrder = 9
       end
