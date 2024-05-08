@@ -74,6 +74,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure LabeledEdit1KeyPress(Sender: TObject; var Key: char);
     procedure LabeledEdit2KeyPress(Sender: TObject; var Key: char);
+    procedure name3Click(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     //procedure UniQuery1nameGetText(Sender: TField; var aText: string;
     //  DisplayText: Boolean);
@@ -114,6 +115,11 @@ end;
 procedure TForm1.LabeledEdit2KeyPress(Sender: TObject; var Key: char);
 begin
   if key=#13 then Button7Click(self);
+end;
+
+procedure TForm1.name3Click(Sender: TObject);
+begin
+  showmessage('QFGridPanelComponent演示！');
 end;
 
 procedure TForm1.TabControl1Change(Sender: TObject);

@@ -1,0 +1,253 @@
+object Form1: TForm1
+  Left = 397
+  Height = 1047
+  Top = 36
+  Width = 981
+  Caption = 'QFComponent Demo'
+  ClientHeight = 1047
+  ClientWidth = 981
+  DesignTimePPI = 144
+  Font.Height = -18
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object QFGridPanelComponent1: TQFGridPanelComponent
+    Left = 32
+    Height = 753
+    Top = 2
+    Width = 909
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    LineSpacing = 0
+    Lines.Strings = (
+      '|<colmerge=4><fontname=楷体><fontsize=16>界面动态调整Demo</fontname></fontsize>||||'
+      '|:-:|:-:|:-:|:-:|'
+      '|单位名称|<compname=name1>|按键测试|<rowmerge=3>[img]cl.png|'
+      '|单位地址|<compname=eeee>|<rowmerge=2><compname=name3>|2|'
+      '|联系电话|<compname=tel>||3|'
+      '|联系人|<compname=name2>|<colmerge=2><compname=dateEdit1>|4|'
+      '|<rowmerge=3>表格控件|<rowmerge=3><colmerge=3><compname=grid1>|1|5|'
+      '|||2|6|'
+      '|||3|7|'
+      '|[c2]说明|<colmerge=3><compname=Memo1>|4|8|'
+      ''
+    )
+    GapX = 0
+    GapY = 0
+    Color = clWhite
+    ShowBackImage = True
+    RowHeight = 83
+    Gap = 5
+    Border = True
+    EditFocusColor = clCream
+    CellLineStyle = psPattern
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -24
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ColCount = 4
+    RowCount = 9
+    ConfigFileName = 'QFGridPanelConfig.cfg'
+  end
+  object name1: TEdit
+    Left = 264
+    Height = 31
+    Top = 111
+    Width = 217
+    BorderStyle = bsNone
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -24
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+    TabOrder = 0
+    TextHint = '请输入单位名称'
+  end
+  object name3: TButton
+    Left = 491
+    Height = 156
+    Top = 173
+    Width = 217
+    Caption = 'Button'
+    TabOrder = 5
+    OnClick = name3Click
+  end
+  object DateEdit1: TDateEdit
+    Left = 491
+    Height = 32
+    Top = 359
+    Width = 444
+    CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
+    DateOrder = doNone
+    ButtonWidth = 34
+    NumGlyphs = 1
+    MaxLength = 0
+    TabOrder = 6
+    Text = 'DateEdit1'
+  end
+  object tel: TEdit
+    Left = 264
+    Height = 31
+    Top = 277
+    Width = 217
+    BorderStyle = bsNone
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -24
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+    TabOrder = 3
+    TextHint = '请输入联系电话'
+  end
+  object name2: TEdit
+    Left = 264
+    Height = 31
+    Top = 360
+    Width = 217
+    BorderStyle = bsNone
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -24
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+    TabOrder = 4
+    TextHint = '请输入联系人'
+  end
+  object eeee: TEdit
+    Left = 264
+    Height = 31
+    Top = 194
+    Width = 217
+    BorderStyle = bsNone
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -24
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+    TabOrder = 1
+    TextHint = '请输入单位地址'
+  end
+  object Memo1: TMemo
+    Left = 264
+    Height = 73
+    Top = 671
+    Width = 671
+    BorderStyle = bsNone
+    Lines.Strings = (
+      'TQFGridPanelComponent控件支持在单元格绑定可视控件，运行时单元格绑定的控件会吸附到相应的单元格里。绑定后，控件的TabOrder从表格第1行第1列开始从左到右，从上到下重新编排。控件的宽和高自动适配单元格的尺寸。'
+    )
+    TabOrder = 7
+  end
+  object Panel3: TPanel
+    Left = 0
+    Height = 207
+    Top = 840
+    Width = 981
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 207
+    ClientWidth = 981
+    TabOrder = 8
+    object Memo2: TMemo
+      Left = 40
+      Height = 88
+      Top = -3
+      Width = 902
+      Anchors = [akLeft, akRight]
+      Lines.Strings = (
+        'Memo2'
+      )
+      TabOrder = 0
+      WordWrap = False
+    end
+    object Button7: TButton
+      Left = 40
+      Height = 46
+      Top = 88
+      Width = 234
+      Caption = '更新'
+      TabOrder = 1
+      OnClick = Button7Click
+    end
+    object LabeledEdit1: TLabeledEdit
+      Left = 200
+      Height = 32
+      Top = 168
+      Width = 134
+      Anchors = [akLeft, akRight]
+      EditLabel.Height = 24
+      EditLabel.Width = 134
+      EditLabel.Caption = '表格行高'
+      TabOrder = 2
+      Text = '80'
+      OnKeyPress = LabeledEdit1KeyPress
+    end
+    object LabeledEdit2: TLabeledEdit
+      Left = 352
+      Height = 32
+      Top = 168
+      Width = 326
+      Anchors = [akLeft, akRight]
+      EditLabel.Height = 24
+      EditLabel.Width = 326
+      EditLabel.Caption = 'QFGridPanelComponent控件高度'
+      TabOrder = 3
+      Text = '646'
+      OnKeyPress = LabeledEdit2KeyPress
+    end
+    object CheckBox4: TCheckBox
+      Left = 40
+      Height = 28
+      Top = 165
+      Width = 147
+      Anchors = [akLeft, akRight]
+      Caption = '表格边框加粗'
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+      OnClick = CheckBox4Click
+    end
+    object Button8: TButton
+      Left = 664
+      Height = 46
+      Top = 88
+      Width = 112
+      Caption = 'Button8'
+      TabOrder = 5
+      Visible = False
+    end
+    object Button9: TButton
+      Left = 786
+      Height = 46
+      Top = 88
+      Width = 144
+      Caption = 'Button9'
+      TabOrder = 6
+      Visible = False
+    end
+    object Button10: TButton
+      Left = 296
+      Height = 46
+      Top = 88
+      Width = 115
+      Caption = '保存配置'
+      TabOrder = 7
+      OnClick = Button10Click
+    end
+    object Button11: TButton
+      Left = 424
+      Height = 46
+      Top = 88
+      Width = 115
+      Caption = '调用配置'
+      TabOrder = 8
+      OnClick = Button11Click
+    end
+  end
+  object Grid1: TStringGrid
+    Left = 264
+    Height = 239
+    Top = 422
+    Width = 671
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
+    TabOrder = 9
+  end
+end

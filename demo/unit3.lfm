@@ -2,10 +2,10 @@ object Form1: TForm1
   Left = 397
   Height = 1047
   Top = 36
-  Width = 977
+  Width = 981
   Caption = 'QFComponent Demo'
   ClientHeight = 1047
-  ClientWidth = 977
+  ClientWidth = 981
   DesignTimePPI = 144
   Font.Height = -18
   OnCreate = FormCreate
@@ -14,7 +14,7 @@ object Form1: TForm1
     Left = 0
     Height = 1015
     Top = 32
-    Width = 977
+    Width = 981
     ActivePage = TabSheet4
     Align = alClient
     ShowTabs = False
@@ -24,15 +24,15 @@ object Form1: TForm1
     object TabSheet1: TTabSheet
       Caption = 'QFRichView Demo'
       ClientHeight = 1007
-      ClientWidth = 969
+      ClientWidth = 973
       object Panel1: TPanel
         Left = 0
         Height = 75
         Top = 0
-        Width = 969
+        Width = 973
         Align = alTop
         ClientHeight = 75
-        ClientWidth = 969
+        ClientWidth = 973
         TabOrder = 0
         object Button1: TButton
           Left = 8
@@ -110,7 +110,7 @@ object Form1: TForm1
         Left = 0
         Height = 932
         Top = 75
-        Width = 969
+        Width = 973
         Align = alClient
         LineSpacing = 0
         Lines.Strings = (
@@ -193,12 +193,12 @@ object Form1: TForm1
     object TabSheet2: TTabSheet
       Caption = 'QFScrollingText Demo'
       ClientHeight = 1007
-      ClientWidth = 969
+      ClientWidth = 973
       object ScrollingText1: TQFScrollingText
         Left = 0
         Height = 932
         Top = 75
-        Width = 969
+        Width = 973
         Align = alClient
         Anchors = [akTop, akLeft, akRight]
         LineSpacing = 0
@@ -272,10 +272,10 @@ object Form1: TForm1
         Left = 0
         Height = 75
         Top = 0
-        Width = 969
+        Width = 973
         Align = alTop
         ClientHeight = 75
-        ClientWidth = 969
+        ClientWidth = 973
         TabOrder = 1
         object CheckBox1: TCheckBox
           Left = 48
@@ -290,7 +290,7 @@ object Form1: TForm1
     end
     object TabSheet3: TTabSheet
       ClientHeight = 1007
-      ClientWidth = 969
+      ClientWidth = 973
       object QFHorizontalScrollingText1: TQFHorizontalScrollingText
         Left = 128
         Height = 110
@@ -332,19 +332,19 @@ object Form1: TForm1
     object TabSheet4: TTabSheet
       Caption = 'TabSheet4'
       ClientHeight = 1007
-      ClientWidth = 969
+      ClientWidth = 973
       object QFGridPanelComponent1: TQFGridPanelComponent
         Left = 32
         Height = 721
         Top = 2
         Width = 888
-        Anchors = [akTop, akLeft, akRight]
+        Anchors = [akTop, akLeft, akRight, akBottom]
         LineSpacing = 0
         Lines.Strings = (
           '|<colmerge=4><fontname=楷体><fontsize=16>界面动态调整Demo</fontname></fontsize>||||'
           '|:-:|:-:|:-:|:-:|'
           '|单位名称|<compname=name1>|按键测试|<rowmerge=3>[img]cl.png|'
-          '|单位地址|<compname=eeee>|<rowmerge=2><compname=name3>|2|'
+          '|单位地址|<compname=eeee>|<compname=name3>|2|'
           '|联系电话|<compname=tel>||3|'
           '|联系人|<compname=name2>|<colmerge=2><compname=dateEdit1>|4|'
           '|<rowmerge=3>表格控件|<rowmerge=3><colmerge=3><compname=grid1>|1|5|'
@@ -367,7 +367,7 @@ object Form1: TForm1
         Font.Pitch = fpVariable
         Font.Quality = fqDraft
         ColCount = 4
-        RowCount = 8
+        RowCount = 9
         ConfigFileName = 'QFGridPanelConfig.cfg'
       end
       object name1: TEdit
@@ -386,11 +386,12 @@ object Form1: TForm1
       end
       object name3: TButton
         Left = 481
-        Height = 150
+        Height = 70
         Top = 167
         Width = 212
         Caption = 'Button'
         TabOrder = 5
+        OnClick = name3Click
       end
       object DateEdit1: TDateEdit
         Left = 481
@@ -462,17 +463,17 @@ object Form1: TForm1
         Left = 0
         Height = 207
         Top = 800
-        Width = 969
+        Width = 973
         Align = alBottom
         BevelOuter = bvNone
         ClientHeight = 207
-        ClientWidth = 969
+        ClientWidth = 973
         TabOrder = 8
         object Memo2: TMemo
           Left = 40
           Height = 88
           Top = -3
-          Width = 890
+          Width = 894
           Anchors = [akLeft, akRight]
           Lines.Strings = (
             'Memo2'
@@ -493,10 +494,9 @@ object Form1: TForm1
           Left = 200
           Height = 32
           Top = 168
-          Width = 122
-          Anchors = [akLeft, akRight]
+          Width = 126
           EditLabel.Height = 24
-          EditLabel.Width = 122
+          EditLabel.Width = 126
           EditLabel.Caption = '表格行高'
           TabOrder = 2
           Text = '80'
@@ -506,10 +506,9 @@ object Form1: TForm1
           Left = 352
           Height = 32
           Top = 168
-          Width = 314
-          Anchors = [akLeft, akRight]
+          Width = 318
           EditLabel.Height = 24
-          EditLabel.Width = 314
+          EditLabel.Width = 318
           EditLabel.Caption = 'QFGridPanelComponent控件高度'
           TabOrder = 3
           Text = '646'
@@ -519,8 +518,7 @@ object Form1: TForm1
           Left = 40
           Height = 28
           Top = 165
-          Width = 135
-          Anchors = [akLeft, akRight]
+          Width = 133
           Caption = '表格边框加粗'
           Checked = True
           State = cbChecked
@@ -580,7 +578,7 @@ object Form1: TForm1
     Left = 0
     Height = 32
     Top = 0
-    Width = 977
+    Width = 981
     OnChange = TabControl1Change
     TabIndex = 0
     Tabs.Strings = (
