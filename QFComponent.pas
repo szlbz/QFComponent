@@ -78,7 +78,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
-  OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,  FPCanvas,
+  OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,Grids,DBGrids,  FPCanvas,
   fpjson,lazutf8,PublicDefinition,
   lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit;
 
@@ -2468,7 +2468,7 @@ var
   i1,k:integer;
   colWidth:integer;
   x0,y0,x1,y1:integer;
-  TableRowHeigth:integer;
+  TableRowHeight:integer;
   c:integer;
   th:integer;//文字高度
   row1,col1,oo,oo1:integer;
@@ -2478,11 +2478,11 @@ begin
 
   row:=FTablesl[Index].row-2;
   col:=FTablesl[Index].col-1;
-  TableRowHeigth:=FTablesl[Index].RowHeight;
+  TableRowHeight:=FTablesl[Index].RowHeight;
   Buffer.Canvas.Font.Style:=[fsBold];
   th:= Buffer.Canvas.TextHeight('国');
   h:=round(th*1.5); //表格行高
-  if TableRowHeigth>h then h:=TableRowHeigth;
+  if TableRowHeight>h then h:=TableRowHeight;
   colWidth:=(Buffer.Width-FGapX*2) div col; //单元格宽
   Buffer.Canvas.Pen.Color:=clBlack;//黑色画笔
   //重新计算合并后单元格的width和height
@@ -3721,13 +3721,15 @@ var
   i,j:integer;
   Index,tmp,err: Integer;
   CellProper :TQFCellProper;
+  oldRowCount,oldColCount:integer;
 begin
   GetControlsList;
   CellProper := TQFCellProper.Create(Self);
 
   setlength(CellProper.FTable,FRowCount+1,FColCount+2);
 
-
+  oldRowCount:= FRowCount;
+  oldColCount:= FColCount;
   //根据当前单元格信息设置
   CellProper.ColEdit.Text:=FColCount.ToString;
   CellProper.RowEdit.Text:=FRowCount.ToString;
@@ -3769,7 +3771,7 @@ begin
   CellProper.StringGrid1.RowCount:=FRowCount+1;
   CellProper.StringGrid1.ColCount:=FColCount;
 
-  for i:=0 to FRowCount do
+  for i:=0 to FRowCount-1 do
   begin
     CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
     for j:=1 to FColCount+1 do
@@ -3814,6 +3816,21 @@ begin
   //单元格设置后
   if QFCellProperReturn then
   begin
+    val(CellProper.ColEdit.Text,tmp,err);
+    if tmp<>FColCount then
+      FColCount:=tmp;
+    val(CellProper.RowEdit.Text,tmp,err);
+    if tmp<>FRowCount then
+      FRowCount:=tmp;
+
+    if (FColCount<>oldColCount) or (FRowCount<>oldRowCount) then
+    begin
+      FTable:=nil;
+      setlength(FTable,FRowcount+1,FColcount+1);
+      if FRowcount<>oldRowcount then
+      FRowHeight:=FBuffer.Height div FRowcount;
+
+    end;
     if FCellLineColor<>CellProper.LineColor.Color then
     begin
       FCellLineColor:=CellProper.LineColor.Color;
@@ -3858,13 +3875,6 @@ begin
     FTable[FSelectRow,FSelectCol].RightLineStyle:=TFPPenStyle(CellProper.RightLineStyle.ItemIndex);
     FTable[FSelectRow,FSelectCol].BottomLineStyle:=TFPPenStyle(CellProper.BottomLineStyle.ItemIndex);
     FTable[FSelectRow,FSelectCol].TopLineStyle:=TFPPenStyle(CellProper.TopLineStyle.ItemIndex);
-
-    val(CellProper.ColEdit.Text,tmp,err);
-    if tmp<>FColCount then
-      FColCount:=tmp;
-    val(CellProper.RowEdit.Text,tmp,err);
-    if tmp<>FRowCount then
-      FRowCount:=tmp;
 
 
     for i:=0 to FRowCount-1 do
@@ -4041,18 +4051,49 @@ begin
 end;
 
 procedure TQFGridPanelComponent.DoOnChangeBounds;
+var
+  WidthFactor,HeightFactor:double;
+  NewColWidth,NewRowHeight,row,col:integer;
 begin
   inherited DoOnChangeBounds;
-  FRun:=0;
+
   FOldR.Left:=0;
   FOldR.Top:=0;
   FOldR.Width:=0;
   FOldR.Height:=0;
-  //Init(FBuffer);
-  //if FTablesl<>nil then
-  //  GetTableInfo(0);
-  //Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
-  //DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+  NewColWidth:=0;
+  NewRowHeight:=0;
+  if FRun=1 then
+  begin
+    FRun:=0;
+    if FColCount<>0 then
+      NewColWidth:= FBuffer.Width div FColCount;
+    if FRowCount<>0 then
+      NewRowHeight:= FBuffer.Height div FRowCount;
+    if (NewColWidth<> FColWidth) or  (NewRowHeight<>FRowHeight) then
+    begin
+      WidthFactor:=1;
+      HeightFactor:=1;
+      if FColWidth<>0 then
+        WidthFactor:= NewColWidth / FColWidth;
+      if FRowHeight<>0 then
+        HeightFactor:= NewRowHeight / FRowHeight;
+      for row:=0 to FRowCount-1 do
+      begin
+        for col:=0 to FColCount do
+        begin
+           FTable[row,col].x:=round(FTable[row,col].x * WidthFactor);
+           FTable[row,col].Width:=round(FTable[row,col].Width * WidthFactor);
+           FTable[row,col].y:=round(FTable[row,col].y * HeightFactor);
+           FTable[row,col].height:=round(FTable[row,col].height * HeightFactor);
+        end;
+      end;
+      FColWidth:= NewColWidth;
+      FRowHeight:=NewRowHeight;
+      if (FRowHeight<>0) and (NewColWidth<>0) then
+        DrawTable(FBuffer,NewColWidth,FRowHeight,0,0);
+    end;
+  end;
 end;
 
 procedure TQFGridPanelComponent.GetControlsList;
@@ -4198,9 +4239,9 @@ var
   hg:integer;
   k:integer;
   x0,y0,x1,y1:integer;
-  TableRowHeigth:integer;
+  TableRowHeight:integer;
   merge,c:integer;
-  th:integer;//文字高度
+  texth:integer;//文字高度
   TabStops:integer;
   Control: TControl;
   row1,col1:integer;
@@ -4213,15 +4254,15 @@ begin
   begin
     index:=0;
     DeleteRecord(index);//删除第2行定义单元格的对齐格式
-    row:=FTablesl[Index].row-2;
+    row:=FTablesl[Index].row-1;
     col:=FTablesl[Index].col-1;
     FRowCount:=row;
     FColCount:=col;
-    TableRowHeigth:=FTablesl[Index].RowHeight;
+    TableRowHeight:=FTablesl[Index].RowHeight;
     Buffer.Canvas.Font.Style:=[fsBold];
-    th:= Buffer.Canvas.TextHeight('国');
+    texth:= Buffer.Canvas.TextHeight('国');
     if (h=0) and (FRowHeight=0) then
-      h:=round(th*1.5); //表格行高
+      h:=round(texth*1.5); //表格行高
     if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
     if FRowHeight<=1 then FRowHeight:=h;
 
@@ -4233,7 +4274,7 @@ begin
     Buffer.Canvas.Pen.Color:=FCellLineColor;//黑色画笔
 
     //重新计算合并后单元格的width和height
-    for i:=0 to row do
+    for i:=0 to row-1 do
     begin
       for j:=0 to col do
       begin
@@ -4314,14 +4355,13 @@ end;
 
 function TQFGridPanelComponent.DrawTable(Buffer: TBitmap;colWidth,h,Index,y:integer):integer;
 var
-  i,j,w1,h1,row,col,v:integer;
+  i,j,w1,h1,row,v:integer;
   i1:integer;
   hg:integer;
   k:integer;
   x0,y0,x1,y1:integer;
-  TableRowHeigth:integer;
   c:integer;
-  th:integer;//文字高度
+  Texth:integer;//文字高度
   TabStops:integer;
   Control: TControl;
   row1,col1:integer;
@@ -4333,17 +4373,16 @@ begin
   if FTablesl<>nil then
   begin
     BackgroundRefresh(Buffer); //刷新背景
-    TableRowHeigth:=FTablesl[Index].RowHeight;
     Buffer.Canvas.Font.Style:=[fsBold];
 
-    th:= Buffer.Canvas.TextHeight('国');
+    Texth:= Buffer.Canvas.TextHeight('国');
     if (h=0) and (FRowHeight=0) then
-      h:=round(th*1.5); //表格行高
+      h:=round(Texth*1.5); //表格行高
     if FRowHeight>h then h:= FRowHeight; //FRowHeight--设定的行高
     if FRowHeight=0 then FRowHeight:=h;
 
     if (colWidth=0) and (FColWidth=0) then
-      colWidth:=(Buffer.Width) div col; //单元格宽
+      colWidth:=(Buffer.Width) div FColCount; //单元格宽
     if FColWidth=0 then
       FColWidth:=colWidth;
 
@@ -4353,7 +4392,7 @@ begin
     //画单元格
     hg:=0;
     x0:=0;
-    for i:=0 to FRowCount do
+    for i:=0 to FRowCount-1 do
     begin
       x0:=0;
       for j:=1 to FColCount do
@@ -4413,7 +4452,7 @@ begin
         end;
       end;
     end;
-    FTableWidth:=x1;
+    FTableWidth:=FColWidth*FColCount;//x1;
     FTableHeight:=y1;
 
     //开始画表格最外框边框
@@ -4426,14 +4465,14 @@ begin
       if FColWidth*FColCount>=Buffer.Canvas.Width then
       begin
         Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,1);  //顶
-        Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,h*(FRowCount+1));//右;
+        Buffer.Canvas.LineTo(Buffer.Canvas.Width-1,h*(FRowCount));//右;
       end
       else
       begin
         Buffer.Canvas.LineTo(FColWidth*FColCount-1,1);
-        Buffer.Canvas.LineTo(FColWidth*FColCount-1,h*(FRowCount+1));
+        Buffer.Canvas.LineTo(FColWidth*FColCount-1,h*(FRowCount));
       end;
-      Buffer.Canvas.LineTo(1,h*(FRowCount+1)); //底
+      Buffer.Canvas.LineTo(1,h*(FRowCount)); //底
       Buffer.Canvas.LineTo(1,1);//左
       Buffer.Canvas.Pen.Width:=1;
     end;
@@ -4443,7 +4482,7 @@ begin
     Buffer.Canvas.Brush.Style := bsClear;//透明文字
     TabStops:=0;
     x0:=0;
-    for i:=0 to FRowCount do
+    for i:=0 to FRowCount-1 do
     begin
       x0:=0;
       for j:=1 to FColCount do
@@ -4466,7 +4505,7 @@ begin
             if (FTable[i,j].DispType>1) and (FTable[i,j].DispType<5) then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
             else Buffer.Canvas.Font.Color:=FTable[i,j].Color;
             Buffer.Canvas.Font.Size:=FTable[i,j].FontSize;
-            th:= Buffer.Canvas.TextHeight('国');
+            Texth:= Buffer.Canvas.TextHeight('国');
             //设置字体属性
 
             x0:=FTable[i,j].x;
@@ -4487,16 +4526,16 @@ begin
 
             if i=0 then
             begin
-              y0:=y+i*FTable[i,j].Height+abs(FTable[i,j].Height- th) div 2;//垂直居中
+              y0:=y+i*FTable[i,j].Height+abs(FTable[i,j].Height- Texth) div 2;//垂直居中
               Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
               DisplayChar(Buffer,x1+2, y0,TruncationStr(Buffer,FTable[i,j].str,FTable[i,j].Width));//截断超过单元格宽度的字符串
             end
             else
             begin
                if FTable[i,j].Height>FRowHeight then
-                 y0:=y + i* FRowHeight + abs (FTable[i,j].Height-th) div 2//垂直居中
+                 y0:=y + i* FRowHeight + abs (FTable[i,j].Height-texth) div 2//垂直居中
                else
-                 y0:=y + i* FTable[i,j].Height + abs(FTable[i,j].Height- th) div 2;//垂直居中
+                 y0:=y + i* FTable[i,j].Height + abs(FTable[i,j].Height- Texth) div 2;//垂直居中
                DisplayChar(Buffer,x1+2, y0,TruncationStr(Buffer,FTable[i,j].str,FTable[i,j].Width));
             end;
             h:=h1;
@@ -4507,9 +4546,20 @@ begin
             if Control<>nil then
             begin
               Control.Width:=FTable[i,j].Width-FGap*2;
-              Control.Height:= FTable[i,j].Height-FGap*2;
-              y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
+              if (Control is TMemo) or
+                 (Control is TButton) or
+                 (Control is TDBMemo) or
+                 (Control is TStringGrid) or
+                 (Control is TDBGrid) or
+                 (Control is TComboBox) or
+                 (Control is TDBListBox) or
+                 (Control is TListBox) or
+                 (Control is TDBComboBox) then
+              begin
+                Control.Height:= FTable[i,j].Height-FGap*2;
+              end;
               Control.Left:=FTable[i,j].x+FGap+self.Left;
+              y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
               Control.Top:=FTable[i,j].y+FGap+self.Top+y1;//垂直居中显示控件
               if (Control is TEdit) or (Control is TDBEdit) or
                  (Control is TMemo) or
@@ -4573,10 +4623,13 @@ begin
     FisLeftButtonDown := True;
     FinitialXY.X := X;
     FinitialXY.Y := Y;
-    if FTable[FSelectRow,FSelectCol].DispType=5 then
-      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
-    else
-      DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+    if (FSelectRow>=0) and (FSelectCol>=0) then
+    begin
+      if FTable[FSelectRow,FSelectCol].DispType=5 then
+        DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+      else
+        DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+    end;
   end;
 end;
 
@@ -4620,7 +4673,7 @@ var
     i,j,x0,x1,y0,y1:integer;
   begin
     Result:=false;
-    for i:=0 to FRowCount do
+    for i:=0 to FRowCount-1 do
     begin
       for j:=1 to FColCount do
       begin
@@ -4673,7 +4726,7 @@ begin
   end;
   Canvas.Pen.Color:=colors;
   Canvas.MoveTo(rect.Left,rect.Top);
-  if rect.Left+rect.Width>=FBuffer.Width then
+  if rect.Left+rect.Width>=FTableWidth-1 then
   rect.Width:=rect.Width-1;
   //顶
   if (rect.Top=0) and (FBorder) then
@@ -4699,7 +4752,7 @@ begin
   end;
   Canvas.LineTo(rect.Left+rect.Width,rect.Top);  //顶
   //右;
-  if (rect.Left+rect.Width=FTableWidth)  and (FBorder) then
+  if (rect.Left+rect.Width>=FTableWidth-1)  and (FBorder) then
   begin
     Canvas.Pen.Style:=psSolid;
     if Canvas.Pen.Color=FCellLineColor then
@@ -4810,25 +4863,25 @@ begin
           x1:=FTable[FSelectRow,FSelectCol+1].x;
           j:=FSelectCol+1;
         end;
-        for i:=0 to FRowCount do
+        for i:=0 to FRowCount-1 do
         begin
           if FTable[i,j].x=x1 then
           begin
             if movedX>0 then
             begin
-              if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
+              if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FTableWidth then
                 FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
 
-              if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX=FBuffer.Width then
+              if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX=FTableWidth then
                 FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+movedX
               else
-              if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX<FBuffer.Width then
+              if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX<FTableWidth then
                 FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width-movedX;
               FTable[i,FMoveCol].x:=FTable[i,FMoveCol-1].x+movedX;
             end
             else
             begin
-              if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width=FBuffer.Width then
+              if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width=FTableWidth then
               begin
                 FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width-abs(movedX);
                 FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
@@ -4836,9 +4889,9 @@ begin
               end
               else
               begin
-                if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FBuffer.Width then
+                if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FTableWidth then
                   FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
-                if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width+abs(movedX)<FBuffer.Width then
+                if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width+abs(movedX)<FTableWidth then
                   FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
                 FTable[i,FMoveCol].x:=FTable[i,FMoveCol].x-abs(movedX);
               end;
@@ -4850,20 +4903,20 @@ begin
       begin
         if movedX>0 then
         begin
-          if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FBuffer.Width then
+          if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FTableWidth then
             FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width+movedX;
 
-          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX=FBuffer.Width then
+          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX=FTableWidth then
             FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+movedX
           else
-          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX<FBuffer.Width then
+          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX<FTableWidth then
             FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width-movedX;
 
           FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol-1].x+movedX;
         end
         else
         begin
-          if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width=FBuffer.Width then
+          if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width=FTableWidth then //FBuffer.Width then
           begin
             FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width-abs(movedX);
             FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+abs(movedX);
@@ -4871,10 +4924,10 @@ begin
           end
           else
           begin
-            if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FBuffer.Width then
+            if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FTableWidth then
               FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width+movedX;
 
-            if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width+abs(movedX)<FBuffer.Width then
+            if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width+abs(movedX)<FTableWidth then
               FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+abs(movedX);
             FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol].x-abs(movedX);
           end;
@@ -4916,7 +4969,7 @@ var
     Rect.Top:=0;
     Rect.Width:=0;
     Rect.Height:=0;
-    for i:=0 to FRowCount do
+    for i:=0 to FRowCount-1 do
     begin
       for j:=1 to FColCount do
       begin
@@ -4950,7 +5003,7 @@ var
   begin
     Cursor:=crDefault;
     Result:=Cursor;
-    for i:=0 to FRowCount do
+    for i:=0 to FRowCount-1 do
     begin
       for j:=1 to FColCount do
       begin
@@ -5083,7 +5136,7 @@ begin
           FTable[j-no,k].FontStyle:=TJSONObject(lItem.Items[0]).Get('FontStyle');
           FTable[j-no,k].FontColor:=TJSONObject(lItem.Items[0]).Get('FontColor');
           FTable[j-no,k].ComponentType:=TJSONObject(lItem.Items[0]).Get('ComponentType');
-          FTable[j-no,k].ComponentName:=TJSONObject(lItem.Items[0]).Get('FontSComponentNametyle');
+          FTable[j-no,k].ComponentName:=TJSONObject(lItem.Items[0]).Get('ComponentName');
           //FTable[j-no,k].Width:=TJSONObject(lItem.Items[l]).Get('ComponentDataSource', TJSONObject.Create(FTable[i,j].ComponentDataSource));
           //FTable[j-no,k].Width:=TJSONObject(lItem.Items[l]).Get('ComponentDataFieldName',TJSONObjectClass.Create(FTable[i,j].ComponentDataFieldName.ClassName));
           FTable[j-no,k].Visible:=TJSONObject(lItem.Items[0]).Get('Visible');
@@ -5138,7 +5191,7 @@ begin
   jsonGrid.Add('FEditFontFocusColor', FEditFontFocusColor);
   jsonGrid.Add('FEditFocusColor', FEditFocusColor);
 
-  for i := 0 to FRowCount do
+  for i := 0 to FRowCount-1 do
   begin
     jsonRow := TJSONObject.Create;
     jsonGrid.Add(Format('row%d', [i]), jsonRow);
@@ -5163,7 +5216,7 @@ begin
       jsonParamObj.Add('FontStyle', FTable[i,j].FontStyle);
       jsonParamObj.Add('FontColor', FTable[i,j].FontColor);
       jsonParamObj.Add('ComponentType', FTable[i,j].ComponentType);
-      jsonParamObj.Add('FontSComponentNametyle', FTable[i,j].ComponentName);
+      jsonParamObj.Add('ComponentName', FTable[i,j].ComponentName);
       //jsonParamObj.Add('ComponentDataSource', TJSONObject.Create(FTable[i,j].ComponentDataSource));
       //jsonParamObj.Add('ComponentDataFieldName',TJSONObjectClass.Create(FTable[i,j].ComponentDataFieldName.ClassName));
       jsonParamObj.Add('Visible', FTable[i,j].Visible);
