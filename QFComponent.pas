@@ -153,6 +153,7 @@ type
     FBackgroundImage:TImage;
     FBackImageFile:string;
     FShowBackImage:boolean;
+    FIsShowBackImage:boolean;
     FBookMark1:array of TQFBookMark;
     FBookMark2:array of TQFBookMark;
     FHyperLink:array of THyperLink;
@@ -1219,9 +1220,11 @@ begin
         FBackgroundImage.Picture.LoadFromFile(FBackImageFile);
       end;
       Buffer.Canvas.StretchDraw(FRect,FBackgroundImage.Picture.Bitmap);
+      FIsShowBackImage:=true;
     end
     else
     begin
+      FIsShowBackImage:=false;
       with Buffer.Canvas do
       begin
         Brush.Color := FColor;
@@ -2916,6 +2919,7 @@ begin
   FDefaultFontName:=FBuffer.Canvas.Font.Name;
   FColor:=clWhite;
   FShowBackImage:=true;
+  FIsShowBackImage:=false;
   OnPaint := @DrawScrollingText;
 end;
 
@@ -3706,6 +3710,7 @@ begin
   OnPaint := @DisplayTable;
   FOldFontName:=FBuffer.Canvas.Font.Name;
   FConfigFileName:='QFGridPanelConfig.cfg';
+  FIsShowBackImage:=false;
 end;
 
 destructor TQFGridPanelComponent.Destroy;
@@ -4707,7 +4712,8 @@ begin
       Canvas.Brush.Color:=FOldBrushColor
     else
       Canvas.Brush.Color:=FEditFocusColor;
-    Canvas.FillRect(rect);
+    if not FIsShowBackImage then //没用背景图片时，填充
+      Canvas.FillRect(rect);
     if CellControl<>nil then
     begin
       if (CellControl is TEdit) or
@@ -5112,6 +5118,8 @@ begin
           FBorder:=TJSONObject(jItem).get('FBorder');
           FEditFontFocusColor:=TJSONObject(jItem).get('FEditFontFocusColor');
           FEditFocusColor:=TJSONObject(jItem).get('FEditFocusColor');
+          FBackImageFile:=TJSONObject(jItem).get('FBackImageFile');
+          FShowBackImage:=TJSONObject(jItem).get('FShowBackImage');
           FTable:=nil;
           setlength(FTable,FRowcount+1,FColcount+1);
         end;
@@ -5190,6 +5198,8 @@ begin
   jsonGrid.Add('FBorder', FBorder);
   jsonGrid.Add('FEditFontFocusColor', FEditFontFocusColor);
   jsonGrid.Add('FEditFocusColor', FEditFocusColor);
+  jsonGrid.Add('FBackImageFile', FBackImageFile);
+  jsonGrid.Add('FShowBackImage', FShowBackImage);
 
   for i := 0 to FRowCount-1 do
   begin
