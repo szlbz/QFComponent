@@ -175,7 +175,7 @@ type
     FGapY:integer;
     FColor:TColor;
     FDefaultFontName:string;
-    procedure Init(Buffer:TBitmap);
+    function Init(Buffer:TBitmap):boolean;
     function ActiveLineIsURL: boolean;
     function TextPreprocessing(i:integer;str:string;out textstyle:string):string; //文字类预处理
     procedure TablePreprocessing; //表格类预处理
@@ -1601,7 +1601,7 @@ begin
   end;
 end;
 
-procedure TCustomText.Init(Buffer:TBitmap);
+function TCustomText.Init(Buffer:TBitmap):boolean;
 var
   i,w,j,k,rj,hls:integer;
   bmsl1,bmsl2:integer;
@@ -1612,106 +1612,110 @@ begin
   Linetemp:=TStringList.Create;
   setlength(FLineList,FLines.Count);
   k:= FLines.Count;
-
-  TablePreprocessing;//表格预处理
-
-  //根据控件宽度进行自动换行处理
-  hls:=0;
-  for i := 0 to FLines.Count-1 do
+  Result:=false;
+  if FLines.Text<>'' then
   begin
-    s := FLines[i];
-    textstyle:='';
-    rj:=0;
-    if Length(s) > 0 then
+    Result:=true;
+    TablePreprocessing;//表格预处理
+
+    //根据控件宽度进行自动换行处理
+    hls:=0;
+    for i := 0 to FLines.Count-1 do
     begin
-      s:=TextPreprocessing(i,s,textstyle);
-      Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      w:=Buffer.Canvas.TextWidth(ReplaceCharacters(s));
-      if FLineList[i].DispType='URL' then
+      s := FLines[i];
+      textstyle:='';
+      rj:=0;
+      if Length(s) > 0 then
       begin
-        FHyperLink[hls].URL:= FLineList[i].url;
-        FHyperLink[hls].URLStr:= FLineList[i].URLStr;
-        //FHyperLink[hls].hs:=i;//所在行数
-        inc(hls);
-      end;
-      if w>Width then //换行
-      begin
-         s1:='';
-         k:=0;
-         j:=1;
-         while j<= utf8length(s) do
-         begin
-           s1:=s1+utf8copy(s,j,1);
-           if Buffer.Canvas.TextWidth(ReplaceCharacters(s1)+SkipIdentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
+        s:=TextPreprocessing(i,s,textstyle);
+        Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
+        w:=Buffer.Canvas.TextWidth(ReplaceCharacters(s));
+        if FLineList[i].DispType='URL' then
+        begin
+          FHyperLink[hls].URL:= FLineList[i].url;
+          FHyperLink[hls].URLStr:= FLineList[i].URLStr;
+          //FHyperLink[hls].hs:=i;//所在行数
+          inc(hls);
+        end;
+        if w>Width then //换行
+        begin
+           s1:='';
+           k:=0;
+           j:=1;
+           while j<= utf8length(s) do
            begin
-             if SkipIdentification(j,s,rj)=''then
+             s1:=s1+utf8copy(s,j,1);
+             if Buffer.Canvas.TextWidth(ReplaceCharacters(s1)+SkipIdentification(j,s,rj))+FGapX*2>=Width then //跳过特定符号
+             begin
+               if SkipIdentification(j,s,rj)=''then
+                 s1:=s1+utf8copy(s,j+1,rj);
+               Linetemp.Add(textstyle+s1);
+               s1:='';
+             end;
+             if SkipIdentification(j,s,rj)='' then
+             begin
                s1:=s1+utf8copy(s,j+1,rj);
-             Linetemp.Add(textstyle+s1);
-             s1:='';
+               j:=j+rj+1;
+             end
+             else
+               inc(j);
            end;
-           if SkipIdentification(j,s,rj)='' then
-           begin
-             s1:=s1+utf8copy(s,j+1,rj);
-             j:=j+rj+1;
-           end
-           else
-             inc(j);
-         end;
-         if s1<>'' then
-           Linetemp.Add(textstyle+s1);
-      end
-      else
-        Linetemp.Add(textstyle+s);
-    end;
-  end;
-  //根据控件宽度进行自动换行处理
-
-  FLineList:=nil;
-  setlength(FLineList,Linetemp.Count);
-  Lineno:= Linetemp.Count;
-  hls:=0;
-  bmsl1:=0;//BM
-  bmsl2:=0;
-  for i := 0 to Linetemp.Count-1 do
-  begin
-    s := Linetemp[i];
-    if Length(s) > 0 then
-    begin
-      s:=TextPreprocessing(i,s,textstyle);
-      FLineList[i].str:=s;
-      Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
-      FLineList[i].LineHeight:=Buffer.Canvas.TextHeight(s)+FLineSpacing;
-
-      //if FLineList[i].DispType='URL' then
-      if utf8pos('<HLK>',FLineList[i].str.ToUpper)>0 then
-      begin
-        //FHyperLink[hls].URL:= FLineList[i].url;
-        FHyperLink[hls].hs:=i;//所在行数
-        FLineList[i].URL:=FHyperLink[hls].URL;
-        inc(hls);
-      end
-      else
-      if FLineList[i].DispType='BOOKMARK1' then
-      begin
-         FBookMark1[bmsl1].BookMark:=FLineList[i].BookMark1;
-         FBookMark1[bmsl1].hs:=i;//所在行数
-         inc(bmsl1);
-      end
-      else
-      if FLineList[i].DispType='BOOKMARK2' then
-      begin
-        FBookMark2[bmsl2].BookMark:=FLineList[i].BookMark2;
-        FBookMark2[bmsl2].hs:=i;//所在行数
-        inc(bmsl2);
+           if s1<>'' then
+             Linetemp.Add(textstyle+s1);
+        end
+        else
+          Linetemp.Add(textstyle+s);
       end;
     end;
+    //根据控件宽度进行自动换行处理
+
+    FLineList:=nil;
+    setlength(FLineList,Linetemp.Count);
+    Lineno:= Linetemp.Count;
+    hls:=0;
+    bmsl1:=0;//BM
+    bmsl2:=0;
+    for i := 0 to Linetemp.Count-1 do
+    begin
+      s := Linetemp[i];
+      if Length(s) > 0 then
+      begin
+        s:=TextPreprocessing(i,s,textstyle);
+        FLineList[i].str:=s;
+        Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
+        FLineList[i].LineHeight:=Buffer.Canvas.TextHeight(s)+FLineSpacing;
+
+        //if FLineList[i].DispType='URL' then
+        if utf8pos('<HLK>',FLineList[i].str.ToUpper)>0 then
+        begin
+          //FHyperLink[hls].URL:= FLineList[i].url;
+          FHyperLink[hls].hs:=i;//所在行数
+          FLineList[i].URL:=FHyperLink[hls].URL;
+          inc(hls);
+        end
+        else
+        if FLineList[i].DispType='BOOKMARK1' then
+        begin
+           FBookMark1[bmsl1].BookMark:=FLineList[i].BookMark1;
+           FBookMark1[bmsl1].hs:=i;//所在行数
+           inc(bmsl1);
+        end
+        else
+        if FLineList[i].DispType='BOOKMARK2' then
+        begin
+          FBookMark2[bmsl2].BookMark:=FLineList[i].BookMark2;
+          FBookMark2[bmsl2].hs:=i;//所在行数
+          inc(bmsl2);
+        end;
+      end;
+    end;
+    freeandnil(Linetemp);
   end;
   Buffer.Width := Width;
   Buffer.Height := Height;
   if FOffset = -1 then
     FOffset := Buffer.Height;
 
-  freeandnil(Linetemp);
   BackgroundRefresh(Buffer); //刷新背景
 end;
 
@@ -3699,14 +3703,14 @@ begin
   FRowHeight:=30;
   FSelectCol:=-1;
   FSelectRow:=-1;
-  Lines.Add(
-  '||||||'+#13#10+
-  '|:-:|:-:|:-:|:-:|:-:|'+#13#10+
-  '||||||'+#13#10+
-  '||||||'+#13#10+
-  '||||||'+#13#10+
-  '||||||'+#13#10+
-  '||||||'+#13#10);
+  //Lines.Add(
+  //'||||||'+#13#10+
+  //'|:-:|:-:|:-:|:-:|:-:|'+#13#10+
+  //'||||||'+#13#10+
+  //'||||||'+#13#10+
+  //'||||||'+#13#10+
+  //'||||||'+#13#10+
+  //'||||||'+#13#10);
   OnPaint := @DisplayTable;
   FOldFontName:=FBuffer.Canvas.Font.Name;
   FConfigFileName:='QFGridPanelConfig.cfg';
@@ -4165,9 +4169,11 @@ end;
 procedure TQFGridPanelComponent.Refresh;
 begin
   FRun:=0;
-  Init(FBuffer);
-  if FTablesl<>nil then
-    GetTableInfo(0);
+  if Init(FBuffer) then
+  begin
+    if FTablesl<>nil then
+      GetTableInfo(0);
+  end;
   Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
   DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
   //Canvas.Draw(0,0,FBuffer)
@@ -4179,9 +4185,11 @@ begin
   begin
     FRun:=0;
     FLines.Assign(AValue);
-    Init(FBuffer);
-    if FTablesl<>nil then
-      GetTableInfo(0);
+    if Init(FBuffer) then
+    begin
+      if FTablesl<>nil then
+        GetTableInfo(0);
+    end;
     Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
     DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
     //Canvas.Draw(0,0,FBuffer)
@@ -4228,9 +4236,11 @@ procedure TQFGridPanelComponent.DisplayTable(Sender: TObject);
 begin
   if FRun=0 then
   begin
-    Init(FBuffer);
-    if FTablesl<>nil then
-      GetTableInfo(0);
+    if Init(FBuffer) then
+    begin
+      if FTablesl<>nil then
+        GetTableInfo(0);
+    end;
     Tableiniti(FBuffer,FColWidth,FRowHeight,0,0);
   end;
   DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
@@ -4375,7 +4385,7 @@ var
 begin
   Index:=0;
   y:=0;
-  if FTablesl<>nil then
+  //if FTablesl<>nil then
   begin
     BackgroundRefresh(Buffer); //刷新背景
     Buffer.Canvas.Font.Style:=[fsBold];
@@ -5048,32 +5058,35 @@ var
 begin
   inherited MouseMove(Shift, X, Y);
 
-  if isCell(x,y,FCurrentR) then
+  if FTable<>nil then
   begin
-    DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,1);
-    FOldR:=FCurrentR;
-    if FTable[FSelectRow,FSelectCol].DispType=5 then
-      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+    if isCell(x,y,FCurrentR) then
+    begin
+      DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,1);
+      FOldR:=FCurrentR;
+      if FTable[FSelectRow,FSelectCol].DispType=5 then
+        DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+      else
+        DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+    end;
+    if FisLeftButtonDown then
+    begin
+      FCurrentR.Left:=0;
+      FCurrentR.Top:=0;
+      FCurrentR.Width:=0;
+      FCurrentR.Width:=0;
+      FResultCursor:=Cursor;
+    end
     else
-      DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
-  end;
-  if FisLeftButtonDown then
-  begin
-    FCurrentR.Left:=0;
-    FCurrentR.Top:=0;
-    FCurrentR.Width:=0;
-    FCurrentR.Width:=0;
-    FResultCursor:=Cursor;
-  end
-  else
-  begin
-    FResultCursor:=isLine(x,y,FMoveRow,FMoveCol);
-  end;
-  if FResultCursor=crHSplit then
-  begin
-     //FMVLineX:=x;
-     //Canvas.Pen.Color:=clNone;
-     //Canvas.Line(x,0,x,y+Canvas.Height);
+    begin
+      FResultCursor:=isLine(x,y,FMoveRow,FMoveCol);
+    end;
+    if FResultCursor=crHSplit then
+    begin
+       //FMVLineX:=x;
+       //Canvas.Pen.Color:=clNone;
+       //Canvas.Line(x,0,x,y+Canvas.Height);
+    end;
   end;
 end;
 
@@ -5175,7 +5188,7 @@ i,j: Integer;
 savejsonfile: TStringList ;
 str:string;
 begin
-  // 现在，我们创建一个新的JSON对象来写入数据
+  //创建一个新的JSON对象来写入数据
   jsonRoot := TJSONObject.Create;
   jsonRoot.Add('TQFGridPanelComponent', utf8toansi('TQFGridPanelComponent配置'));
   jsonRoot.Add('Version', Version);
