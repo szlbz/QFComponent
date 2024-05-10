@@ -343,6 +343,7 @@ object Form1: TForm1
         GapX = 0
         GapY = 0
         Color = clWhite
+        BackImageFile = '2.jpeg'
         ShowBackImage = True
         RowHeight = 80
         Gap = 5
@@ -353,6 +354,8 @@ object Form1: TForm1
         Font.Height = -24
         Font.Pitch = fpVariable
         Font.Quality = fqDraft
+        ColCount = 4
+        RowCount = 9
         ConfigFileName = 'QFGridPanelConfig.cfg'
       end
       object name1: TEdit
@@ -552,7 +555,7 @@ object Form1: TForm1
       object Grid1: TStringGrid
         Left = 259
         Height = 230
-        Top = 407
+        Top = 400
         Width = 656
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
         TabOrder = 9
