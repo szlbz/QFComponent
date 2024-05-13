@@ -20,11 +20,25 @@ type
     BevelCellType5: TBevel;
     BevelCellType6: TBevel;
     BtnSetCellLineColor1: TButton;
+    BtnSetFontColor: TButton;
     Button1: TButton;
+    Button2: TButton;
     CbxCellType: TComboBox;
     CbxLineStyle: TComboBox;
+    ChkBoxUnderLine: TCheckBox;
     ColEdit: TLabeledEdit;
     ColMerge: TLabeledEdit;
+    EditFontSize: TEdit;
+    GbxFontPreview: TGroupBox;
+    LabelFontColor: TLabel;
+    LabelFontName: TLabel;
+    LabelFontSize: TLabel;
+    LabelFontStyle: TLabel;
+    LbxFontName: TListBox;
+    LbxFontSize: TListBox;
+    LbxFontStyle: TListBox;
+    PanelFontColor: TPanel;
+    PanelFontPreview1: TPanel;
     RowMerge: TLabeledEdit;
     ColWidthEdit: TLabeledEdit;
     GroupBox1: TGroupBox;
@@ -47,33 +61,18 @@ type
     LabelControl1: TLabel;
     LabelControl2: TLabel;
     LabelControl3: TLabel;
-    PageCtlCellProp: TPageControl;
     LineColor: TPanel;
-    TabSheetCellType: TTabSheet;
-    TabSheetFont: TTabSheet;
     BtnOk: TButton;
     BtnCancel: TButton;
-    LabelFontName: TLabel;
     LabelCellType: TLabel;
     BevelCellType: TBevel;
-    LabelFontStyle: TLabel;
-    LabelFontSize: TLabel;
-    LbxFontName: TListBox;
-    LbxFontStyle: TListBox;
-    LbxFontSize: TListBox;
-    LabelFontColor: TLabel;
-    GbxFontPreview: TGroupBox;
-    PanelFontPreview1: TPanel;
-    ChkBoxUnderLine: TCheckBox;
-    PanelFontColor: TPanel;
-    BtnSetFontColor: TButton;
-    EditFontSize: TEdit;
     ColorDialogCellProp: TColorDialog;
     CbxHAlign: TComboBox;
     procedure BtnCancelClick(Sender: TObject);
     procedure BtnOkClick(Sender: TObject);
     procedure BtnSetCellLineColor1Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LbxFontStyleClick(Sender: TObject);
@@ -94,7 +93,7 @@ type
     procedure GetFirstCellProp;
     procedure SetControlState;
   public
-    FTable:Array of Array of TCell;
+    GTable:Array of Array of TCell;
     ParentGrid: Pointer;
   end;
 
@@ -141,6 +140,11 @@ begin
   StringGrid1.RowCount:=tmp;
   val(ColEdit.Text,tmp,err);
   StringGrid1.ColCount:=tmp;
+end;
+
+procedure TQFCellProper.Button2Click(Sender: TObject);
+begin
+  RightLineStyleChange(self);
 end;
 
 procedure TQFCellProper.SetNumControls(Value: boolean);
@@ -196,64 +200,66 @@ var
   tmp,err:integer;
 begin
   if CbxHAlign.ItemIndex>=0 then
-    FTable[Row,Col].Align:=CbxHAlign.ItemIndex+1;
+    GTable[Row,Col+1].Align:=CbxHAlign.ItemIndex+1;
 
-  val(ColMerge.Text,tmp,err);
-  FTable[Row,Col].RowMerge:=tmp;
   val(RowMerge.Text,tmp,err);
-  FTable[Row,Col].ColMerge:=tmp;
+  GTable[Row,Col+1].RowMerge:=tmp;
+  val(ColMerge.Text,tmp,err);
+  GTable[Row,Col+1].ColMerge:=tmp;
 
   if LbxFontName.ItemIndex>=0 then
-    FTable[Row,Col].FontName:=LbxFontName.Items.ValueFromIndex[LbxFontName.ItemIndex];
+    GTable[Row,Col+1].FontName:=LbxFontName.Items.ValueFromIndex[LbxFontName.ItemIndex];
   if LbxFontSize.itemindex>=0 then
   begin
     val(LbxFontSize.Items.ValueFromIndex[LbxFontSize.itemindex],tmp,err);
-    FTable[Row,Col].FontSize:=tmp;
+    GTable[Row,Col+1].FontSize:=tmp;
   end;
-  FTable[Row,Col].FontColor:=PanelFontColor.Color;
-
-  FTable[Row,Col].DrawBottom:=DrawBottomLine.Checked;
-  FTable[Row,Col].DrawLeft:=DrawLeftLine.Checked;
-  FTable[Row,Col].DrawRight:=DrawRightLine.Checked;
-  FTable[Row,Col].DrawTop:=DrawTopLine.Checked;
-  FTable[Row,Col].LeftLineStyle:=TFPPenStyle(LeftLineStyle.ItemIndex);
-  FTable[Row,Col].RightLineStyle:=TFPPenStyle(RightLineStyle.ItemIndex);
-  FTable[Row,Col].BottomLineStyle:=TFPPenStyle(BottomLineStyle.ItemIndex);
-  FTable[Row,Col].TopLineStyle:=TFPPenStyle(TopLineStyle.ItemIndex);
-  FTable[Row,Col].str:=StringGrid1.cells[Row,Col];
+  GTable[Row,Col+1].FontColor:=PanelFontColor.Color;
+  GTable[Row,Col+1].DrawBottom:=DrawBottomLine.Checked;
+  GTable[Row,Col+1].DrawLeft:=DrawLeftLine.Checked;
+  GTable[Row,Col+1].DrawRight:=DrawRightLine.Checked;
+  GTable[Row,Col+1].DrawTop:=DrawTopLine.Checked;
+  GTable[Row,Col+1].LeftLineStyle:=TFPPenStyle(LeftLineStyle.ItemIndex);
+  GTable[Row,Col+1].RightLineStyle:=TFPPenStyle(RightLineStyle.ItemIndex);
+  GTable[Row,Col+1].BottomLineStyle:=TFPPenStyle(BottomLineStyle.ItemIndex);
+  GTable[Row,Col+1].TopLineStyle:=TFPPenStyle(TopLineStyle.ItemIndex);
+  GTable[Row,Col+1].str:=StringGrid1.cells[Col,Row];
 end;
 
 procedure TQFCellProper.StringGrid1Click(Sender: TObject);
 begin
+  Button2.Enabled:=true;
+  ColMerge.Enabled:=true;
+  RowMerge.Enabled:=true;
   row:=StringGrid1.Row;
-  col:=StringGrid1.Col+1;
+  col:=StringGrid1.Col;
   ComboBox1.ItemIndex:=
-     ComboBox1.Items.IndexOf(FTable[Row,Col].ComponentName);
-  if FTable[Row,Col].Align=0 then FTable[Row,Col].Align:=2;
-  if FTable[Row,Col].Align>0 then
-    CbxHAlign.ItemIndex:=FTable[Row,Col].Align-1;
+     ComboBox1.Items.IndexOf(GTable[Row,Col+1].ComponentName);
+  if GTable[Row,Col+1].Align=0 then GTable[Row,Col+1].Align:=2;
+  if GTable[Row,Col+1].Align>0 then
+    CbxHAlign.ItemIndex:=GTable[Row,Col+1].Align-1;
 
-  if FTable[Row,Col].DispType<3 then
-    CbxCellType.ItemIndex:=FTable[Row,Col].DispType
+  if GTable[Row,Col+1].DispType<3 then
+    CbxCellType.ItemIndex:=GTable[Row,Col+1].DispType
   else
     CbxCellType.ItemIndex:=2;//控件
-  ColMerge.Text:=FTable[Row,Col].ColMerge.ToString;
-  RowMerge.Text:=FTable[Row,Col].RowMerge.ToString;
-  EditFontSize.Text:=FTable[Row,Col].FontSize.ToString;
-  LbxFontName.ItemIndex:=LbxFontName.Items.IndexOf(FTable[Row,Col].FontName);
-  LbxFontSize.ItemIndex:=LbxFontSize.Items.IndexOf(FTable[Row,Col].FontSize.ToString);
-  PanelFontColor.Color:=FTable[Row,Col].FontColor;
-  DrawBottomLine.Checked:=FTable[Row,Col].DrawBottom;
-  DrawLeftLine.Checked:=FTable[Row,Col].DrawLeft;
-  DrawRightLine.Checked:=FTable[Row,Col].DrawRight;
-  DrawTopLine.Checked:=FTable[Row,Col].DrawTop;
-  LeftLineStyle.ItemIndex:=ord(FTable[Row,Col].LeftLineStyle);
-  RightLineStyle.ItemIndex:=ord(FTable[Row,Col].RightLineStyle);
-  BottomLineStyle.ItemIndex:=ord(FTable[Row,Col].BottomLineStyle);
-  TopLineStyle.ItemIndex:=ord(FTable[Row,Col].TopLineStyle);
-  PanelFontPreview1.Font.Name:=FTable[Row,Col].FontName;
+  ColMerge.Text:=GTable[Row,Col+1].ColMerge.ToString;
+  RowMerge.Text:=GTable[Row,Col+1].RowMerge.ToString;
+  EditFontSize.Text:=GTable[Row,Col+1].FontSize.ToString;
+  LbxFontName.ItemIndex:=LbxFontName.Items.IndexOf(GTable[Row,Col+1].FontName);
+  LbxFontSize.ItemIndex:=LbxFontSize.Items.IndexOf(GTable[Row,Col+1].FontSize.ToString);
+  PanelFontColor.Color:=GTable[Row,Col+1].FontColor;
+  DrawBottomLine.Checked:=GTable[Row,Col+1].DrawBottom;
+  DrawLeftLine.Checked:=GTable[Row,Col+1].DrawLeft;
+  DrawRightLine.Checked:=GTable[Row,Col+1].DrawRight;
+  DrawTopLine.Checked:=GTable[Row,Col+1].DrawTop;
+  LeftLineStyle.ItemIndex:=ord(GTable[Row,Col+1].LeftLineStyle);
+  RightLineStyle.ItemIndex:=ord(GTable[Row,Col+1].RightLineStyle);
+  BottomLineStyle.ItemIndex:=ord(GTable[Row,Col+1].BottomLineStyle);
+  TopLineStyle.ItemIndex:=ord(GTable[Row,Col+1].TopLineStyle);
+  PanelFontPreview1.Font.Name:=GTable[Row,Col+1].FontName;
   StatusBar1.Panels[0].Text:='行:'+row.ToString+'  列:'+col.ToString;
-  StatusBar1.Panels[1].Text:=StringGrid1.Cells[col-1,row];// FTable[Row,Col].str;
+  StatusBar1.Panels[1].Text:=GTable[Row,Col+1].str;//StringGrid1.Cells[col,row];
 end;
 
 procedure TQFCellProper.UpDownClick(Sender: TObject; Button: TUDBtnType);
