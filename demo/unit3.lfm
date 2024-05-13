@@ -335,11 +335,24 @@ object Form1: TForm1
       ClientWidth = 973
       object QFGridPanelComponent1: TQFGridPanelComponent
         Left = 32
-        Height = 721
+        Height = 722
         Top = 2
-        Width = 888
+        Width = 904
         Anchors = [akTop, akLeft, akRight, akBottom]
         LineSpacing = 0
+        Lines.Strings = (
+          '|<colmerge=4><fontname=楷体><fontsize=16>界面动态调整Demo</fontname></fontsize>||||'
+          '|:-:|:-:|:-:|:-:|'
+          '|单位名称|<compname=name1>|按键测试|<rowmerge=3>[img]cl.png|'
+          '|单位地址|<compname=eeee>|<compname=name3>|2|'
+          '|联系电话|<compname=tel>||3|'
+          '|联系人|<compname=name2>|<colmerge=2><compname=dateEdit1>|4|'
+          '|<rowmerge=3>表格控件|<rowmerge=3><colmerge=3><compname=grid1>|1|5|'
+          '|||2|6|'
+          '|||3|7|'
+          '|[c2]说明|<colmerge=3><compname=Memo1>|4|8|'
+          ''
+        )
         GapX = 0
         GapY = 0
         Color = clWhite
@@ -353,13 +366,15 @@ object Form1: TForm1
         Font.Height = -24
         Font.Pitch = fpVariable
         Font.Quality = fqDraft
+        ColCount = 4
+        RowCount = 9
         ConfigFileName = 'QFGridPanelConfig.cfg'
       end
       object name1: TEdit
-        Left = 259
+        Left = 263
         Height = 31
         Top = 106
-        Width = 212
+        Width = 216
         BorderStyle = bsNone
         Font.CharSet = GB2312_CHARSET
         Font.Height = -24
@@ -370,19 +385,19 @@ object Form1: TForm1
         TextHint = '请输入单位名称'
       end
       object name3: TButton
-        Left = 481
+        Left = 489
         Height = 70
         Top = 167
-        Width = 212
+        Width = 216
         Caption = 'Button'
         TabOrder = 5
         OnClick = name3Click
       end
       object DateEdit1: TDateEdit
-        Left = 481
+        Left = 489
         Height = 32
         Top = 346
-        Width = 434
+        Width = 442
         CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
         DateOrder = doNone
         ButtonWidth = 34
@@ -392,10 +407,10 @@ object Form1: TForm1
         Text = 'DateEdit1'
       end
       object tel: TEdit
-        Left = 259
+        Left = 263
         Height = 31
         Top = 266
-        Width = 212
+        Width = 216
         BorderStyle = bsNone
         Font.CharSet = GB2312_CHARSET
         Font.Height = -24
@@ -406,10 +421,10 @@ object Form1: TForm1
         TextHint = '请输入联系电话'
       end
       object name2: TEdit
-        Left = 259
+        Left = 263
         Height = 31
         Top = 346
-        Width = 212
+        Width = 216
         BorderStyle = bsNone
         Font.CharSet = GB2312_CHARSET
         Font.Height = -24
@@ -420,10 +435,10 @@ object Form1: TForm1
         TextHint = '请输入联系人'
       end
       object eeee: TEdit
-        Left = 259
+        Left = 263
         Height = 31
         Top = 186
-        Width = 212
+        Width = 216
         BorderStyle = bsNone
         Font.CharSet = GB2312_CHARSET
         Font.Height = -24
@@ -434,10 +449,10 @@ object Form1: TForm1
         TextHint = '请输入单位地址'
       end
       object Memo1: TMemo
-        Left = 259
+        Left = 263
         Height = 70
         Top = 647
-        Width = 656
+        Width = 668
         BorderStyle = bsNone
         Lines.Strings = (
           'TQFGridPanelComponent控件支持在单元格绑定可视控件，运行时单元格绑定的控件会吸附到相应的单元格里。绑定后，控件的TabOrder从表格第1行第1列开始从左到右，从上到下重新编排。控件的宽和高自动适配单元格的尺寸。'
@@ -550,10 +565,10 @@ object Form1: TForm1
         end
       end
       object Grid1: TStringGrid
-        Left = 259
+        Left = 263
         Height = 230
         Top = 407
-        Width = 656
+        Width = 668
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goSmoothScroll]
         TabOrder = 9
       end
