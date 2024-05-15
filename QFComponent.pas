@@ -3700,8 +3700,8 @@ begin
   FEditFontFocusColor:=clBlack;
   FTableWidth:=0;
   FTableHeight:=0;
-  FColCount:= 5;
-  FRowCount:= 5;
+  FColCount:= 1;
+  FRowCount:= 1;
   FColSizing:= true;
   FRowSizing:=true;
   FCellLineColor := clSilver;
@@ -4224,30 +4224,42 @@ end;
 
 procedure TQFGridPanelComponent.SetColCount(Value :integer);
 begin
-  if FColCount <> Value then
-  begin
-    FColCount := Value;
-    if FColCount<>0 then
-      FColWidth:= FBuffer.Width div FColCount;
-    if FRowCount<>0 then
-      FRowHeight:= FBuffer.Height div FRowCount;
-    Tableiniti;
-    Invalidate;
-  end;
+  //if FColCount <> Value then
+  //begin
+    TableIniti;
+    if FColCount<>Value then
+    begin
+      FColCount := Value;
+      if FColCount<>0 then
+        FColWidth:= FBuffer.Width div FColCount;
+      if FRowCount<>0 then
+        FRowHeight:= FBuffer.Height div FRowCount;
+      FTable:=nil;
+      setlength(FTable,FRowcount+1,FColcount+1);
+      TableMerge;
+    end;
+    DrawTable;
+  //end;
 end;
 
 procedure TQFGridPanelComponent.SetRowCount(Value :integer);
 begin
-  if FRowCount <> Value then
-  begin
-    FRowCount := Value;
-    if FColCount<>0 then
-      FColWidth:= FBuffer.Width div FColCount;
-    if FRowCount<>0 then
-      FRowHeight:= FBuffer.Height div FRowCount;
-    Tableiniti;
-    Invalidate;
-  end;
+  //if FRowCount <> Value then
+  //begin
+    TableIniti;
+    if FRowCount <> Value then
+    begin
+      FRowCount := Value;
+      if FColCount<>0 then
+        FColWidth:= FBuffer.Width div FColCount;
+      if FRowCount<>0 then
+        FRowHeight:= FBuffer.Height div FRowCount;
+      FTable:=nil;
+      setlength(FTable,FRowcount+1,FColcount+1);
+      TableMerge;
+    end;
+    DrawTable;
+  //end;
 end;
 
 procedure TQFGridPanelComponent.SetCellLineColor(Value : TColor);
@@ -4319,7 +4331,9 @@ begin
       FTable[i,j].DrawRight:=true;
       FTable[i,j].LineStyle:=FCellLineStyle;
       if j=0 then
-        FTable[i,j].Visible:=false;
+        FTable[i,j].Visible:=false
+      else
+      FTable[i,j].Visible:=true;
 
       //竖向(row)合并单元格
       if (FTable[i,j].RowMerge>0) and (FTable[i,j].ColMerge>0) then
@@ -4645,6 +4659,7 @@ begin
           //   h:=FTable[i,j].Height;
 
           x1:=x0; //居左
+          if FTable[i,j].Align=0 then FTable[i,j].Align:=2;//默认居中
           if FTable[i,j].Align=1 then
             x1:=x0 ;//居左
           if FTable[i,j].Align=2 then
@@ -5209,10 +5224,13 @@ var
   V1,v2,v3,v4,err:integer;
   Versionnum:int64;
   //object_name: String;
+  OldRowcount,OldColcount:integer;
 begin
   jData := GetJSON(utf8toansi(jsonstr));
   jsonRoot:=TJSONObject(jData);
 
+  OldRowcount:=FRowcount;
+  OldColcount:=FColcount;
   if jsonRoot.get('TQFGridPanelComponent')='TQFGridPanelComponent配置' then
   begin
     Versions:= jsonRoot.get('Version');
@@ -5316,6 +5334,14 @@ begin
   end;
   jData.Free;
   jsonRoot:=nil;
+  //if (OldRowcount<>FRowcount) or (OldColcount<>FColcount) then
+  //begin
+  //  FTable:=nil;
+  //  setlength(FTable,OldRowcount+1,OldColcount+1);
+  //  FRowcount:=OldRowcount;
+  //  FColcount:=OldColcount;
+  //  TableMerge;
+  //end;
 end;
 
 procedure TQFGridPanelComponent.SaveJSON(files:string);
