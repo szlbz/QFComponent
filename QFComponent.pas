@@ -3924,7 +3924,7 @@ begin
         FTable[i,j].RightLineStyle:=CellProper.GTable[i,j].RightLineStyle;
         FTable[i,j].RowMerge:=CellProper.GTable[i,j].RowMerge;
         FTable[i,j].TopLineStyle:=CellProper.GTable[i,j].TopLineStyle;
-        FTable[i,j].Visible:=true;// CellProper.GTable[i,j].Visible;
+        FTable[i,j].Visible:=true;//CellProper.GTable[i,j].Visible;
         FTable[i,j].Width:=CellProper.GTable[i,j].Width;
         FTable[i,j].x:=CellProper.GTable[i,j].x;
         FTable[i,j].y:=CellProper.GTable[i,j].y;
@@ -3933,8 +3933,8 @@ begin
     end;
 
     TableMerge;
-    DrawTable;
     SaveQFConfig;
+    DrawTable;
     //Invalidate;
 
   end;
@@ -4331,56 +4331,61 @@ begin
       FTable[i,j].DrawRight:=true;
       FTable[i,j].LineStyle:=FCellLineStyle;
       if j=0 then
-        FTable[i,j].Visible:=false
-      else
-      FTable[i,j].Visible:=true;
+        FTable[i,j].Visible:=false ;
+      //else
+      //FTable[i,j].Visible:=true;
 
       //竖向(row)合并单元格
       if (FTable[i,j].RowMerge>0) and (FTable[i,j].ColMerge>0) then
       begin
         row1:=FTable[i,j].RowMerge+i-1;
         if row1>FRowCount then row1:=FRowCount;
+        FTable[i,j].Visible:=true;//将左上角单元格置为true
+        FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+        FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
 
         for oo:=i to row1 do
         begin
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
+          //FTable[i,j].Visible:=true;//将左上角单元格置为true
+          //FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+          //FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
           for oo1:=j to col1 do
           begin
-            //FTable[oo,oo1].x:=false;
             FTable[oo,oo1].Visible:=false;
           end;
-          FTable[i,j].Visible:=true;//将左上角单元格置为true
-          FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+        end;
+      end
+      else
+      begin
+        //竖向(row)合并单元格
+        if FTable[i,j].RowMerge>0 then
+        begin
           FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
-        end;
-      end
-      else
-      //竖向(row)合并单元格
-      if FTable[i,j].RowMerge>0 then
-      begin
-        FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
-        row1:=FTable[i,j].RowMerge+i-1;
-        if row1>FRowCount then row1:=FRowCount;
-        for oo:=i+1 to row1 do
+          row1:=FTable[i,j].RowMerge+i-1;
+          if row1>FRowCount then row1:=FRowCount;
+          for oo:=i+1 to row1 do
+          begin
+            FTable[oo,j].Visible:=false;
+          end;
+        end
+        else
+        //横向(col)合并单元格
+        if FTable[i,j].ColMerge>0 then
         begin
-          FTable[oo,j].Visible:=false;
-        end;
-      end
-      else
-      //横向(col)合并单元格
-      if FTable[i,j].ColMerge>0 then
-      begin
-        FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
-        col1:=FTable[i,j].ColMerge+j-1;
-        if col1>FColCount then col1:=FColCount;
-        for oo:=j+1 to col1 do
-        begin
-          FTable[i,oo].Visible:=false;
+          FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+          col1:=FTable[i,j].ColMerge+j-1;
+          if col1>FColCount then col1:=FColCount;
+          for oo:=j+1 to col1 do
+          begin
+            FTable[i,oo].Visible:=false;
+          end;
         end;
       end;
     end;
   end;
+    SaveQFConfig;
 end;
 
 function TQFGridPanelComponent.Tableiniti:boolean;
@@ -4443,10 +4448,6 @@ begin
           FTable[i,j].Visible:=true;
         if j=0 then
           FTable[i,j].Visible:=false;
-        //FTable[i,j].TopLineStyle:=FCellLineStyle;
-        //FTable[i,j].LeftLineStyle:=FCellLineStyle;
-        //FTable[i,j].BottomLineStyle:=FCellLineStyle;
-        //FTable[i,j].RightLineStyle:=FCellLineStyle;
 
         //竖向(row)合并单元格
         if (FTable[i,j].RowMerge>0) and (FTable[i,j].ColMerge>0) then
@@ -4647,6 +4648,7 @@ begin
           if (FTable[i,j].DispType>1) and (FTable[i,j].DispType<5) then  FBuffer.Canvas.Font.Color:=clBlue //URL,bookmark
           else FBuffer.Canvas.Font.Color:=FTable[i,j].Color;
           FBuffer.Canvas.Font.Size:=FTable[i,j].FontSize;
+          FBuffer.Canvas.Font.Color:=FTable[i,j].FontColor;
           Texth:= FBuffer.Canvas.TextHeight('国');
           //设置字体属性
 
@@ -4666,11 +4668,9 @@ begin
             x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width))) div 2; //居中
           if FTable[i,j].Align=3 then
              x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-5; //居右
-
           if i=0 then
           begin
             y0:=y+i*FTable[i,j].Height+abs(FTable[i,j].Height- Texth) div 2;//垂直居中
-            FBuffer.Canvas.Font.Color:=FTable[i,j+1].Color;
             DisplayChar(FBuffer,x1+2, y0,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));//截断超过单元格宽度的字符串
           end
           else
