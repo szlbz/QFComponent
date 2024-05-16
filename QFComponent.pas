@@ -3765,9 +3765,11 @@ begin
   if FTable[FSelectRow,FSelectCol].Align>0 then
     CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
 
-  if FTable[FSelectRow,FSelectCol].DispType<3 then
-    CellProper.CbxCellType.ItemIndex:=FTable[FSelectRow,FSelectCol].DispType
-  else
+  if FTable[FSelectRow,FSelectCol].DispType=0 then
+    CellProper.CbxCellType.ItemIndex:=0;//文字
+  if FTable[FSelectRow,FSelectCol].DispType=3 then
+    CellProper.CbxCellType.ItemIndex:=1;//图像
+  if FTable[FSelectRow,FSelectCol].DispType=5 then
     CellProper.CbxCellType.ItemIndex:=2;//控件
   CellProper.RowMerge.text:=FTable[FSelectRow,FSelectCol].RowMerge.ToString;
   CellProper.ColMerge.text:=FTable[FSelectRow,FSelectCol].ColMerge.ToString;
@@ -4340,17 +4342,14 @@ begin
       begin
         row1:=FTable[i,j].RowMerge+i-1;
         if row1>FRowCount then row1:=FRowCount;
-        FTable[i,j].Visible:=true;//将左上角单元格置为true
-        FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
-        FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
 
         for oo:=i to row1 do
         begin
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
-          //FTable[i,j].Visible:=true;//将左上角单元格置为true
-          //FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
-          //FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
+          FTable[i,j].Visible:=true;//将左上角单元格置为true
+          FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+          FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
           for oo1:=j to col1 do
           begin
             FTable[oo,oo1].Visible:=false;

@@ -19,6 +19,8 @@ type
     BevelCellType4: TBevel;
     BevelCellType5: TBevel;
     BevelCellType6: TBevel;
+    BtnCancel: TButton;
+    BtnOk: TButton;
     BtnSetCellLineColor1: TButton;
     BtnSetFontColor: TButton;
     Button1: TButton;
@@ -37,6 +39,8 @@ type
     LbxFontName: TListBox;
     LbxFontSize: TListBox;
     LbxFontStyle: TListBox;
+    Panel1: TPanel;
+    Panel2: TPanel;
     PanelFontColor: TPanel;
     PanelFontPreview1: TPanel;
     RowMerge: TLabeledEdit;
@@ -62,8 +66,6 @@ type
     LabelControl2: TLabel;
     LabelControl3: TLabel;
     LineColor: TPanel;
-    BtnOk: TButton;
-    BtnCancel: TButton;
     LabelCellType: TLabel;
     BevelCellType: TBevel;
     ColorDialogCellProp: TColorDialog;
@@ -116,6 +118,8 @@ end;
 
 procedure TQFCellProper.BtnOkClick(Sender: TObject);
 begin
+  if panel1.Enabled then
+    RightLineStyleChange(self);//保存最后的修改
   QFCellProperReturn:=true;
 end;
 
@@ -128,14 +132,14 @@ begin
   val(ColEdit.Text,ColCount,err);
   val(RowHeightEdit.Text,tmp,err);
   val(ColWidthEdit.Text,tmp1,err);
-  for i:=0 to RowCount-1 do
-  begin
-    StringGrid1.RowHeights[i]:=tmp;
-    for j:=1 to ColCount do
-    begin
-      StringGrid1.ColWidths[j-1]:=tmp1;
-    end;
-  end;
+  //for i:=0 to RowCount-1 do
+  //begin
+  //  StringGrid1.RowHeights[i]:=tmp;
+  //  for j:=1 to ColCount do
+  //  begin
+  //    StringGrid1.ColWidths[j-1]:=tmp1;
+  //  end;
+  //end;
   val(RowEdit.Text,tmp,err);
   StringGrid1.RowCount:=tmp;
   val(ColEdit.Text,tmp,err);
@@ -145,6 +149,7 @@ end;
 procedure TQFCellProper.Button2Click(Sender: TObject);
 begin
   RightLineStyleChange(self);
+  Panel1.Enabled:=false;
 end;
 
 procedure TQFCellProper.SetNumControls(Value: boolean);
@@ -202,6 +207,13 @@ begin
   if CbxHAlign.ItemIndex>=0 then
     GTable[Row,Col+1].Align:=CbxHAlign.ItemIndex+1;
 
+  if CbxCellType.ItemIndex=0 then
+    GTable[Row,Col+1].DispType:=0; //文字
+  if CbxCellType.ItemIndex=1 then
+    GTable[Row,Col+1].DispType:=1; //图像
+  if CbxCellType.ItemIndex=2 then
+    GTable[Row,Col+1].DispType:=5; //控件
+
   val(RowMerge.Text,tmp,err);
   GTable[Row,Col+1].RowMerge:=tmp;
   val(ColMerge.Text,tmp,err);
@@ -228,9 +240,7 @@ end;
 
 procedure TQFCellProper.StringGrid1Click(Sender: TObject);
 begin
-  Button2.Enabled:=true;
-  ColMerge.Enabled:=true;
-  RowMerge.Enabled:=true;
+  Panel1.Enabled:=true;
   row:=StringGrid1.Row;
   col:=StringGrid1.Col;
   ComboBox1.ItemIndex:=
@@ -239,9 +249,11 @@ begin
   if GTable[Row,Col+1].Align>0 then
     CbxHAlign.ItemIndex:=GTable[Row,Col+1].Align-1;
 
-  if GTable[Row,Col+1].DispType<3 then
-    CbxCellType.ItemIndex:=GTable[Row,Col+1].DispType
-  else
+  if GTable[Row,Col+1].DispType=0 then
+    CbxCellType.ItemIndex:=0;//文字
+  if GTable[Row,Col+1].DispType=1 then
+    CbxCellType.ItemIndex:=1;//图像
+  if GTable[Row,Col+1].DispType=5 then
     CbxCellType.ItemIndex:=2;//控件
   ColMerge.Text:=GTable[Row,Col+1].ColMerge.ToString;
   RowMerge.Text:=GTable[Row,Col+1].RowMerge.ToString;
@@ -258,6 +270,7 @@ begin
   BottomLineStyle.ItemIndex:=ord(GTable[Row,Col+1].BottomLineStyle);
   TopLineStyle.ItemIndex:=ord(GTable[Row,Col+1].TopLineStyle);
   PanelFontPreview1.Font.Name:=GTable[Row,Col+1].FontName;
+  //PanelFontColor.Color:=GTable[Row,Col+1].Color;
   StatusBar1.Panels[0].Text:='行:'+row.ToString+'  列:'+col.ToString;
   StatusBar1.Panels[1].Text:=GTable[Row,Col+1].str;//StringGrid1.Cells[col,row];
 end;
