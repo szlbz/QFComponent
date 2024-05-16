@@ -3761,6 +3761,12 @@ begin
   CellProper.ComboBox1.Items.Assign(FControlsList);
   CellProper.ComboBox1.ItemIndex:=
      CellProper.ComboBox1.Items.IndexOf(FTable[FSelectRow,FSelectCol].ComponentName);
+  CellProper.StringGrid1.Row:=FSelectRow;
+  CellProper.StringGrid1.Col:=FSelectCol-1;
+  CellProper.CellTextEdit.Text:=FTable[FSelectRow,FSelectCol].str;
+  CellProper.StatusBar1.Panels[0].Text:='行:'+FSelectRow.ToString+'  列:'+(FSelectCol-1).ToString;
+  CellProper.StatusBar1.Panels[1].Text:=FTable[FSelectRow,FSelectCol].str;//StringGrid1.Cells[col,row];
+
   if FTable[FSelectRow,FSelectCol].Align=0 then FTable[FSelectRow,FSelectCol].Align:=2;
   if FTable[FSelectRow,FSelectCol].Align>0 then
     CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
@@ -3782,6 +3788,8 @@ begin
   CellProper.PanelFontPreview1.Font.Name:=FTable[FSelectRow,FSelectCol].FontName;
   CellProper.LbxFontSize.ItemIndex:=CellProper.LbxFontSize.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontSize.ToString);
   CellProper.PanelFontColor.Color:=FTable[FSelectRow,FSelectCol].FontColor;
+  CellProper.PanelFontPreview1.Font.Color:=FTable[FSelectRow,FSelectCol].FontColor;
+
   CellProper.DrawBottomLine.Checked:=FTable[FSelectRow,FSelectCol].DrawBottom;
   CellProper.DrawLeftLine.Checked:=FTable[FSelectRow,FSelectCol].DrawLeft;
   CellProper.DrawRightLine.Checked:=FTable[FSelectRow,FSelectCol].DrawRight;

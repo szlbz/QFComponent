@@ -29,6 +29,7 @@ type
     CbxLineStyle: TComboBox;
     ChkBoxUnderLine: TCheckBox;
     ColEdit: TLabeledEdit;
+    CellTextEdit: TLabeledEdit;
     ColMerge: TLabeledEdit;
     EditFontSize: TEdit;
     GbxFontPreview: TGroupBox;
@@ -214,6 +215,8 @@ begin
   if CbxCellType.ItemIndex=2 then
     GTable[Row,Col+1].DispType:=5; //控件
 
+  GTable[Row,Col+1].str:=CellTextEdit.Text;
+  StringGrid1.cells[Col,Row]:=CellTextEdit.Text;
   val(RowMerge.Text,tmp,err);
   GTable[Row,Col+1].RowMerge:=tmp;
   val(ColMerge.Text,tmp,err);
@@ -261,6 +264,7 @@ begin
   LbxFontName.ItemIndex:=LbxFontName.Items.IndexOf(GTable[Row,Col+1].FontName);
   LbxFontSize.ItemIndex:=LbxFontSize.Items.IndexOf(GTable[Row,Col+1].FontSize.ToString);
   PanelFontColor.Color:=GTable[Row,Col+1].FontColor;
+  PanelFontPreview1.Font.Color:=GTable[Row,Col+1].FontColor;
   DrawBottomLine.Checked:=GTable[Row,Col+1].DrawBottom;
   DrawLeftLine.Checked:=GTable[Row,Col+1].DrawLeft;
   DrawRightLine.Checked:=GTable[Row,Col+1].DrawRight;
@@ -273,6 +277,7 @@ begin
   //PanelFontColor.Color:=GTable[Row,Col+1].Color;
   StatusBar1.Panels[0].Text:='行:'+row.ToString+'  列:'+col.ToString;
   StatusBar1.Panels[1].Text:=GTable[Row,Col+1].str;//StringGrid1.Cells[col,row];
+  CellTextEdit.Text:=GTable[Row,Col+1].str;
 end;
 
 procedure TQFCellProper.UpDownClick(Sender: TObject; Button: TUDBtnType);

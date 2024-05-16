@@ -18,11 +18,11 @@ object QFCellProper: TQFCellProper
   Position = poScreenCenter
   object Panel1: TPanel
     Left = 0
-    Height = 456
+    Height = 480
     Top = 0
     Width = 1073
     Align = alTop
-    ClientHeight = 456
+    ClientHeight = 480
     ClientWidth = 1073
     Enabled = False
     ParentBackground = False
@@ -396,7 +396,7 @@ object QFCellProper: TQFCellProper
     object GroupBox1: TGroupBox
       Left = 24
       Height = 88
-      Top = 286
+      Top = 328
       Width = 256
       Caption = '合并单元格'
       ClientHeight = 65
@@ -428,7 +428,7 @@ object QFCellProper: TQFCellProper
       Left = 24
       Height = 48
       Hint = '保存当前单元格参数'
-      Top = 390
+      Top = 420
       Width = 256
       Caption = '保存'
       ParentShowHint = False
@@ -594,6 +594,17 @@ object QFCellProper: TQFCellProper
         TabOrder = 0
       end
     end
+    object CellTextEdit: TLabeledEdit
+      Left = 24
+      Height = 26
+      Top = 280
+      Width = 256
+      EditLabel.Height = 18
+      EditLabel.Width = 256
+      EditLabel.Caption = '单元格文字'
+      TabOrder = 31
+      OnChange = RightLineStyleChange
+    end
   end
   object StatusBar1: TStatusBar
     Left = 0
@@ -611,8 +622,8 @@ object QFCellProper: TQFCellProper
   end
   object StringGrid1: TStringGrid
     Left = 0
-    Height = 359
-    Top = 456
+    Height = 335
+    Top = 480
     Width = 1073
     Align = alClient
     FixedCols = 0
