@@ -3805,6 +3805,7 @@ begin
   CellProper.EditFocusColor.Color:=FEditFocusColor;
   CellProper.BackImageFile.Text:=FBackImageFile;
   CellProper.ShowBackImage.Checked:=FShowBackImage;
+  CellProper.TableBorder.Checked:=FBorder;
 
   for i:=0 to FRowCount-1 do
   begin
@@ -3854,6 +3855,7 @@ begin
     FEditFocusColor:=CellProper.EditFocusColor.Color;
     FBackImageFile:=CellProper.BackImageFile.Text;
     FShowBackImage:=CellProper.ShowBackImage.Checked;
+    FBorder:=CellProper.TableBorder.Checked;
 
     val(CellProper.ColEdit.Text,tmp,err);
     if tmp<>FColCount then

@@ -62,6 +62,7 @@ type
     RightLineStyle: TComboBox;
     RowEdit: TLabeledEdit;
     RowHeightEdit: TLabeledEdit;
+    TableBorder: TCheckBox;
     StatusBar1: TStatusBar;
     StringGrid1: TStringGrid;
     TopLineStyle: TComboBox;

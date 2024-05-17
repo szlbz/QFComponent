@@ -201,7 +201,7 @@ object QFCellProper: TQFCellProper
     object ChkRowSizing: TCheckBox
       Left = 24
       Height = 24
-      Top = 521
+      Top = 513
       Width = 187
       Caption = '允许调整单元格高度'
       TabOrder = 7
@@ -706,10 +706,18 @@ object QFCellProper: TQFCellProper
     object ShowBackImage: TCheckBox
       Left = 24
       Height = 24
-      Top = 569
+      Top = 548
       Width = 133
       Caption = '显示背景图像'
       TabOrder = 38
+    end
+    object TableBorder: TCheckBox
+      Left = 24
+      Height = 24
+      Top = 584
+      Width = 133
+      Caption = '表格边框加粗'
+      TabOrder = 39
     end
   end
   object StatusBar1: TStatusBar
