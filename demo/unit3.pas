@@ -7,6 +7,8 @@ interface
 uses
   Classes, SysUtils, DB, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   ColorBox, ComCtrls, ComboEx, DBCtrls, EditBtn, Grids, QFComponent, Types,
+  LCLIntf,
+
   fpjson, jsonparser,TypInfo;
 
 type
@@ -23,7 +25,6 @@ type
     Button4: TButton;
     Button5: TButton;
     Button6: TButton;
-    Button8: TButton;
     Button9: TButton;
     DateEdit1: TDateEdit;
     edit2: TEdit;
@@ -60,7 +61,6 @@ type
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
-    procedure Button8Click(Sender: TObject);
     procedure Button9Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
@@ -169,178 +169,9 @@ begin
   QFRichView1.PageFooter;
 end;
 
-procedure TForm1.Button8Click(Sender: TObject);
-(*
-{
-  "rowcount": "2",
-  "colcount": "2",
-  "grid": {
-    "row1": {
-        "col1": [{
-	        "参数1": "123"
-        }, {
-	        "参数2": "123"
-        }],
-        "col2": [{
-	        "参数1": "123"
-        }, {
-	        "参数2": "123"
-        }]
-    },
-    "row2": {
-	"col1": [{
-		"参数1": "123"
-	}, {
-		"参数2": "123"
-	}],
-	"col2": [{
-		"参数1": "123"
-	}, {
-		"参数2": "123"
-	}]
-    }
-  }
-}
-*)
-
-  procedure ReadJSON(const JSONs: string);
-  var
-    jsonRoot, jsonGrid, jsonRow, jsonCol, jsonParams, jsonParamObj: TJSONObject;
-    jsonParamsArray: TJSONArray;
-    jsonParser :TJSONParser;
-    jData:TJSONData;
-    //jsonParam: TJSONPair;
-    jsonString,rowCount,colCount:string ;
-    i, j,k: Integer;
-  begin
-    // 假设jsonString包含上面提供的JSON数据
-    jsonString := '{ "rowcount" : "2", "colcount" : "2", "grid" : { "row1" : { "col1" : [{ "参数1" : "123" }, { "参数2" : "123" }], "col2" : [{ "参数1" : "123" }, { "参数2" : "123" }] }, "row2" : { "col1" : [{ "参数1" : "123" }, { "参数2" : "123" }], "col2" : [{ "参数1" : "123" }, { "参数2" : "123" }] } } }'; // 替换为实际的JSON字符串
-    jData:=GetJSON(jsonString);    //获取json数据
-    jsonRoot:=TJSONObject(jData);    //json数据结构化一
-
-    jsonParser := TJSONParser.Create;
-    //jsonRoot := jsonParser.Parse(jsonString).AsJSON` as TJSONObject;
-    jsonParser.Free;
-
-    // 读取JSON数据
-    rowCount := jsonRoot.Get('rowcount') ;
-    colCount := jsonRoot.Get('colcount');
-
-    jsonGrid :=jsonRoot.get('grid',jsonGrid);
-    for i := 1 to 2 do // 假设有两行数据
-    begin
-      jsonRow := jsonGrid.Get(Format('row%d', [i]),jsonRow);
-      for j := 1 to 2 do // 假设每行有两列数据
-      begin
-        jsonCol := jsonRow.Get(Format('col%d', [j]),jsonCol);
-        //jsonParamsArray := jsonCol.Get('parameters');
-        //for k := 0 to jsonParamsArray .Size - 1 do
-        //begin
-        //  jsonParamObj := jsonParamsArray.Get(k);
-        //  for jsonCol in jsonParamObj do
-        //  begin
-        //    WriteLn(Format('键: %s, 值: %s', [jsonCol.JsonString, jsonParam.JsonValue.AsString]));
-        //  end;
-        //end;
-      end;
-    end;
-
-    // 释放已解析的JSON对象
-    jsonRoot.Free;
-  end;
-
-  procedure WriteJSON;
-  VAR
-  jsonRoot, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
-  jsonCol: TJSONArray;
-  i, j,paramIndex: Integer;
-  begin
-    // 现在，我们创建一个新的JSON对象来写入数据
-    jsonRoot := TJSONObject.Create;
-    jsonRoot.Add('rowcount', '2');
-    jsonRoot.Add('colcount', '2');
-    jsonGrid := TJSONObject.Create;
-    jsonRoot.Add('grid', jsonGrid);
-
-    for i := 1 to 4 do // 创建两行数据
-    begin
-      jsonRow := TJSONObject.Create;
-      jsonGrid.Add(Format('row%d', [i]), jsonRow);
-      for j := 1 to 3 do // 创建每行的两列数据
-      begin
-        jsonCol := TJSONArray.Create;
-        jsonRow.Add(Format('col%d', [j]), jsonCol);
-
-        // 添加参数对象到数组
-        for paramIndex := 1 to 5 do // 假设每列有两个参数
-        begin
-          jsonParamObj := TJSONObject.Create;
-          jsonParamObj.Add(Format('参数%d', [paramIndex]), TJSONString.Create('123'));
-          jsonCol.Add(jsonParamObj);
-        end;
-      end;
-    end;
-  end;
-  begin
-   //ReadJSON('{"grid": {"row1": {"col1": ["参数1", ..., "参数n"], "coln": ["参数1", ..., "参数n"]}, "rown": {"col1": ["参数1", ..., "参数n"], "coln": ["参数1", ..., "参数n"]}}}');
-
-   ReadJSON('');
-    // 写入JSON数据
-
-   WriteJSON;
-
-end;
-
 procedure TForm1.Button9Click(Sender: TObject);
-  procedure JSONItems(Info: TStrings);
-  var
-    jData : TJSONData;
-    jItem,kItem,litem,mitem,nitem,tmp : TJSONData;
-    jsonitem:TJSONArray;
-    i, j,k,l,m,n: Integer;
-    object_name, field_name, field_value, object_type, object_items: String;
-  begin
-    jData := GetJSON(utf8toansi(
-    '{ "rowcount" : "2", "colcount" : "2", "grid" : { "row1" : { "col1" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col2" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col3" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }] }, "row2" : { "col1" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col2" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col3" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }] }, "row3" : { "col1" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col2" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col3" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }] }, "row4" : { "col1" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col2" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }], "col3" : [{ "参数1" : "123" }, { "参数2" : "123" }, { "参数3" : "123" }, { "参数4" : "123" }, { "参数5" : "123" }] } } }'
-    {
-    '{ "rowcount" : "2", "colcount" : "2",'+
-    ' "grid" : {'+
-    ' "row1" : { "row1col1" : [{ "参数1" : "123" }, { "参数2" : "1234" },'+
-                              '{ "参数1" : "123" }, { "参数2" : "1234" }],'+
-               ' "row1col2" : [{ "参数3" : "4123" }, { "参数4" : "41234" },'+
-                              '{ "参数1" : "123" }, { "参数2" : "1234" }] },'+
-    ' "row2" : { "row2col1" : [{ "参数5" : "1234" }, { "参数6" : "1235" },'+
-                              '{ "参数1" : "123" }, { "参数2" : "1234" }],'+
-               ' "row2col2" : [{ "参数7" : "1236" }, { "参数8" : "1237" },'+
-                              '{ "参数1" : "123" }, { "参数2" : "1234" }] }}  }'
-}
-    ));
-
-    for i := 0 to jData.Count - 1 do
-    begin
-      jItem := jData.Items[i];
-      object_name := TJSONObject(jData).Names[i];
-      Info.Append(i.ToString+'、object name: ' + object_name);
-      for j := 0 to jItem.Count - 1 do  //grid
-      begin
-        kItem:=jItem.Items[j];
-        for k := 0 to kItem.Count - 1 do //row
-        begin
-          lItem:=kItem.Items[k];
-          Info.Append(j.ToString+'、row：' + TJSONObject(kItem).Names[k]);
-          for l := 0 to lItem.Count - 1 do   //col
-          begin
-            field_name :=TJSONObject(lItem.Items[l]).Names[0];
-            field_value := lItem.Items[l].FindPath(TJSONObject(lItem.Items[l]).Names[0]).AsString;
-            Info.Append(field_name + '|' + field_value);
-          end;
-        end;
-      end;
-    end;
-
-    jData.Free;
-  end;
  begin
+   OpenURL('http://bbs.2ccc.com');
  end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);
@@ -365,12 +196,6 @@ procedure TForm1.ColorBox1Change(Sender: TObject);
 begin
   QFRichView1.Color:=ColorBox1.Colors[ColorBox1.ItemIndex];
 end;
-
-//procedure TForm1.UniQuery1nameGetText(Sender: TField; var aText: string;
-//  DisplayText: Boolean);
-//begin
-//  aText:= CP936ToUTF8(Sender.Value);
-//end;
 
 end.
 

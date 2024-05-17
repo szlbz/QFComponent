@@ -343,23 +343,13 @@ object Form1: TForm1
         ClientHeight = 207
         ClientWidth = 1063
         TabOrder = 2
-        object Button8: TButton
-          Left = 648
-          Height = 46
-          Top = 144
-          Width = 112
-          Caption = 'Button8'
-          TabOrder = 0
-          Visible = False
-          OnClick = Button8Click
-        end
         object Button9: TButton
-          Left = 770
+          Left = 408
           Height = 46
           Top = 144
           Width = 144
           Caption = 'Button9'
-          TabOrder = 1
+          TabOrder = 0
           Visible = False
           OnClick = Button9Click
         end
@@ -369,7 +359,7 @@ object Form1: TForm1
           Top = 144
           Width = 115
           Caption = '保存配置'
-          TabOrder = 2
+          TabOrder = 1
           OnClick = Button10Click
         end
         object Button11: TButton
@@ -378,7 +368,7 @@ object Form1: TForm1
           Top = 144
           Width = 115
           Caption = '调用配置'
-          TabOrder = 3
+          TabOrder = 2
           OnClick = Button11Click
         end
         object Button12: TButton
@@ -387,7 +377,7 @@ object Form1: TForm1
           Top = 144
           Width = 113
           Caption = '设置单元格'
-          TabOrder = 4
+          TabOrder = 3
           OnClick = Button12Click
         end
       end
