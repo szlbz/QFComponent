@@ -4,7 +4,7 @@ interface
 
 uses
   LCLType, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, ExtCtrls, Grids,PublicDefinition,FPCanvas;
+  StdCtrls, ComCtrls, ExtCtrls, Grids, ExtDlgs,PublicDefinition,FPCanvas;
 
 type
 
@@ -13,36 +13,47 @@ type
   { TQFCellProper }
 
   TQFCellProper = class(TForm)
+    BackImageFile: TLabeledEdit;
     BevelCellType1: TBevel;
     BevelCellType2: TBevel;
     BevelCellType3: TBevel;
     BevelCellType4: TBevel;
     BevelCellType5: TBevel;
-    BevelCellType6: TBevel;
+    BevelCellType7: TBevel;
     BtnCancel: TButton;
     BtnOk: TButton;
     BtnSetCellLineColor1: TButton;
     BtnSetFontColor: TButton;
+    BtnSetFontColor1: TButton;
+    BtnSetFontColor2: TButton;
+    BtnSetFontColor3: TButton;
     Button1: TButton;
     Button2: TButton;
     CbxCellType: TComboBox;
     CbxLineStyle: TComboBox;
     ChkBoxUnderLine: TCheckBox;
+    ShowBackImage: TCheckBox;
     ColEdit: TLabeledEdit;
     CellTextEdit: TLabeledEdit;
+    ColEdit1: TLabeledEdit;
     ColMerge: TLabeledEdit;
     EditFontSize: TEdit;
     GbxFontPreview: TGroupBox;
     LabelFontColor: TLabel;
+    LabelFontColor1: TLabel;
+    LabelFontColor2: TLabel;
     LabelFontName: TLabel;
     LabelFontSize: TLabel;
     LabelFontStyle: TLabel;
     LbxFontName: TListBox;
     LbxFontSize: TListBox;
     LbxFontStyle: TListBox;
+    OpenPictureDialog1: TOpenPictureDialog;
     Panel1: TPanel;
     Panel2: TPanel;
     PanelFontColor: TPanel;
+    EditFocusColor: TPanel;
+    EditFontFocusColor: TPanel;
     PanelFontPreview1: TPanel;
     RowMerge: TLabeledEdit;
     ColWidthEdit: TLabeledEdit;
@@ -74,6 +85,9 @@ type
     procedure BtnCancelClick(Sender: TObject);
     procedure BtnOkClick(Sender: TObject);
     procedure BtnSetCellLineColor1Click(Sender: TObject);
+    procedure BtnSetFontColor1Click(Sender: TObject);
+    procedure BtnSetFontColor2Click(Sender: TObject);
+    procedure BtnSetFontColor3Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -109,6 +123,30 @@ begin
   begin
     LineColor.Color := ColorDialogCellProp.Color;
     LineColor.Visible := True;
+  end;
+end;
+
+procedure TQFCellProper.BtnSetFontColor1Click(Sender: TObject);
+begin
+  if ColorDialogCellProp.Execute then
+  begin
+    EditFocusColor.Color := ColorDialogCellProp.Color;
+  end;
+end;
+
+procedure TQFCellProper.BtnSetFontColor2Click(Sender: TObject);
+begin
+  if ColorDialogCellProp.Execute then
+  begin
+    EditFontFocusColor.Color := ColorDialogCellProp.Color;
+  end;
+end;
+
+procedure TQFCellProper.BtnSetFontColor3Click(Sender: TObject);
+begin
+  if OpenPictureDialog1.Execute then
+  begin
+    BackImageFile.Text:=ExtractFileName(OpenPictureDialog1.FileName);
   end;
 end;
 

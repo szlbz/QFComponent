@@ -328,7 +328,7 @@ type
     procedure SetCellLineStyle(Value : TFPPenStyle);
     procedure SetColCount(Value :integer);
     procedure SetRowCount(Value :integer);
-    function FindChildControls(str:string;out parents:string):TControl;
+    function FindChildControls(str:string):TControl;
     procedure DrawTable;
     procedure MenuItemClick(Sender: TObject);
     procedure EditEnter(Sender: TObject);
@@ -3802,6 +3802,11 @@ begin
   CellProper.StringGrid1.RowCount:=FRowCount;
   CellProper.StringGrid1.ColCount:=FColCount;
 
+  CellProper.EditFontFocusColor.Color:=FEditFontFocusColor;
+  CellProper.EditFocusColor.Color:=FEditFocusColor;
+  CellProper.BackImageFile.Text:=FBackImageFile;
+  CellProper.ShowBackImage.Checked:=FShowBackImage;
+
   for i:=0 to FRowCount-1 do
   begin
     //CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
@@ -3846,6 +3851,10 @@ begin
   //单元格设置后
   if QFCellProperReturn then
   begin
+    FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
+    FEditFocusColor:=CellProper.EditFocusColor.Color;
+    FBackImageFile:=CellProper.BackImageFile.Text;
+    FShowBackImage:=CellProper.ShowBackImage.Checked;
 
     val(CellProper.ColEdit.Text,tmp,err);
     if tmp<>FColCount then
@@ -4502,7 +4511,7 @@ begin
   end;
 end;
 
-function TQFGridPanelComponent.FindChildControls(str:string;out parents:string):TControl;
+function TQFGridPanelComponent.FindChildControls(str:string):TControl;
 var i,j:integer;
 begin
   Result:=nil;
@@ -4514,7 +4523,6 @@ begin
       if UpperCase(self.Parent.Controls[i].Name) =str.ToUpper then
       begin
         Result:=self.Parent.Controls[i];
-        parents:='Y';
         break;
       end;
     end;
@@ -4525,7 +4533,6 @@ begin
         if UpperCase(self.Controls[j].Name) =str.ToUpper then
         begin
           Result:=self.Controls[j];
-          parents:='N';
           break;
         end;
       end;
@@ -4536,7 +4543,6 @@ end;
 
 procedure TQFGridPanelComponent.DrawTable;
 var
-  parents:string;
   i,j,w1,h1:integer;
   hg:integer;
   k:integer;
@@ -4710,7 +4716,7 @@ begin
         end;
         if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
         begin
-          Control:=FindChildControls(FTable[i,j].ComponentName,parents);//查找控件
+          Control:=FindChildControls(FTable[i,j].ComponentName);//查找控件
           if Control<>nil then
           begin
             Control.BringToFront;//将控件置前
@@ -4856,7 +4862,7 @@ var
           begin
             if FTable[i,j].DispType=5 then
             begin
-              Control:= FindChildControls(FTable[i,j].ComponentName,parents);
+              Control:= FindChildControls(FTable[i,j].ComponentName);
               Result:=true;
             end;
             Break;
