@@ -146,7 +146,6 @@ type
     FMV:integer;
     FLineSpacing:integer;//行距
     FTextHeigth:integer;
-    //FQFRE:TQFRichEditor;
     FisLeftButtonDown: Boolean; //鼠标左键按下标识
     TTHNO:integer;
     FTS:integer;//表格数量
@@ -334,7 +333,6 @@ type
     procedure EditEnter(Sender: TObject);
     procedure EditExit(Sender: TObject);
     procedure InitPopupMenu;
-    procedure SetCellProp;
     procedure DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:byte=0);
     procedure LoadJSON(jsonstr:string);
     procedure SaveJSON(files:string);
@@ -347,6 +345,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure SetCellProper;//设置单元格参数
     procedure Refresh;
     procedure GetControlsList;
     procedure SaveQFConfig(filename:string);
@@ -3737,7 +3736,7 @@ begin
   //FPopupMenu.Free;
 end;
 
-procedure TQFGridPanelComponent.SetCellProp;
+procedure TQFGridPanelComponent.SetCellProper;
 var
   i,j:integer;
   Index,tmp,err: Integer;
@@ -3985,7 +3984,7 @@ begin
     //mtClearCells :
     //  ClearCells(TRect(Selection));
     mtSetCellProp :
-      SetCellProp;
+      SetCellProper;
   end;
   //FOnSelectCell:=selectcell;
 end;
