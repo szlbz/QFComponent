@@ -17,6 +17,7 @@ type
     Button1: TButton;
     Button10: TButton;
     Button11: TButton;
+    Button12: TButton;
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
@@ -27,20 +28,20 @@ type
     Button9: TButton;
     CheckBox4: TCheckBox;
     DateEdit1: TDateEdit;
-    eeee: TEdit;
+    edit2: TEdit;
     LabeledEdit1: TLabeledEdit;
     LabeledEdit2: TLabeledEdit;
     Memo1: TMemo;
     Memo2: TMemo;
     Panel3: TPanel;
     Grid1: TStringGrid;
-    tel: TEdit;
-    name3: TButton;
+    edit3: TEdit;
+    Button: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
     CheckBox3: TCheckBox;
     ColorBox1: TColorBox;
-    name1: TEdit;
+    edit1: TEdit;
     Label1: TLabel;
     PageControl1: TPageControl;
     Panel1: TPanel;
@@ -54,9 +55,10 @@ type
     TabSheet2: TTabSheet;
     TabSheet3: TTabSheet;
     TabSheet4: TTabSheet;
-    name2: TEdit;
+    edit4: TEdit;
     procedure Button10Click(Sender: TObject);
     procedure Button11Click(Sender: TObject);
+    procedure Button12Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -74,7 +76,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure LabeledEdit1KeyPress(Sender: TObject; var Key: char);
     procedure LabeledEdit2KeyPress(Sender: TObject; var Key: char);
-    procedure name3Click(Sender: TObject);
+    procedure ButtonClick(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     //procedure UniQuery1nameGetText(Sender: TField; var aText: string;
     //  DisplayText: Boolean);
@@ -117,7 +119,7 @@ begin
   if key=#13 then Button7Click(self);
 end;
 
-procedure TForm1.name3Click(Sender: TObject);
+procedure TForm1.ButtonClick(Sender: TObject);
 begin
   showmessage('QFGridPanelComponent演示！');
 end;
@@ -155,6 +157,11 @@ end;
 procedure TForm1.Button11Click(Sender: TObject);
 begin
   QFGridPanelComponent1.LoadQFConfig;//('g.json');
+end;
+
+procedure TForm1.Button12Click(Sender: TObject);
+begin
+  QFGridPanelComponent1.SetCellProper;
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
