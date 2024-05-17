@@ -23,16 +23,11 @@ type
     Button4: TButton;
     Button5: TButton;
     Button6: TButton;
-    Button7: TButton;
     Button8: TButton;
     Button9: TButton;
-    CheckBox4: TCheckBox;
     DateEdit1: TDateEdit;
     edit2: TEdit;
-    LabeledEdit1: TLabeledEdit;
-    LabeledEdit2: TLabeledEdit;
     Memo1: TMemo;
-    Memo2: TMemo;
     Panel3: TPanel;
     Grid1: TStringGrid;
     edit3: TEdit;
@@ -65,17 +60,13 @@ type
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
-    procedure Button7Click(Sender: TObject);
     procedure Button8Click(Sender: TObject);
     procedure Button9Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
     procedure CheckBox3Change(Sender: TObject);
-    procedure CheckBox4Click(Sender: TObject);
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure LabeledEdit1KeyPress(Sender: TObject; var Key: char);
-    procedure LabeledEdit2KeyPress(Sender: TObject; var Key: char);
     procedure ButtonClick(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     //procedure UniQuery1nameGetText(Sender: TField; var aText: string;
@@ -98,7 +89,6 @@ implementation
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   TabControl1.TabIndex:=3;
-  memo2.Lines.Assign(QFGridPanelComponent1.Lines);
   PageControl1.TabIndex:=3;
   //QFRichView1.BackImagefile:='bg.jpg';
   ScrollingText1.BackImagefile:='bg.jpg';
@@ -107,16 +97,6 @@ begin
   //UniConnection1.SpecificOptions.Values['SQL Server.Provider']:='prDirect';// .Add('SQL Server.Provider=prDirect');
   //UniConnection1.Connected:=true;
   //UniQuery1.Active:=true;
-end;
-
-procedure TForm1.LabeledEdit1KeyPress(Sender: TObject; var Key: char);
-begin
-  if key=#13 then Button7Click(self);
-end;
-
-procedure TForm1.LabeledEdit2KeyPress(Sender: TObject; var Key: char);
-begin
-  if key=#13 then Button7Click(self);
 end;
 
 procedure TForm1.ButtonClick(Sender: TObject);
@@ -187,19 +167,6 @@ end;
 procedure TForm1.Button6Click(Sender: TObject);
 begin
   QFRichView1.PageFooter;
-end;
-
-procedure TForm1.Button7Click(Sender: TObject);
-var e,h:integer;
-  gh:integer;
-begin
-  val(LabeledEdit1.text,h,e);
-  val(LabeledEdit2.text,gh,e);
-  QFGridPanelComponent1.Lines.Clear;
-  QFGridPanelComponent1.RowHeight:=h;
-  QFGridPanelComponent1.Height:=gh;
-  QFGridPanelComponent1.Lines.Assign(memo2.Lines);
-  QFGridPanelComponent1.Refresh;
 end;
 
 procedure TForm1.Button8Click(Sender: TObject);
@@ -313,7 +280,6 @@ procedure TForm1.Button8Click(Sender: TObject);
         end;
       end;
     end;
-    memo2.Text:=  jsonRoot.AsJSON;
   end;
   begin
    //ReadJSON('{"grid": {"row1": {"col1": ["参数1", ..., "参数n"], "coln": ["参数1", ..., "参数n"]}, "rown": {"col1": ["参数1", ..., "参数n"], "coln": ["参数1", ..., "参数n"]}}}');
@@ -375,7 +341,6 @@ procedure TForm1.Button9Click(Sender: TObject);
     jData.Free;
   end;
  begin
-    JSONItems(memo2.Lines)
  end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);
@@ -394,15 +359,6 @@ procedure TForm1.CheckBox3Change(Sender: TObject);
 begin
   if checkbox3.Checked then QFHorizontalScrollingText1.ShowBackImage:=true
   else QFHorizontalScrollingText1.ShowBackImage:=false;
-end;
-
-procedure TForm1.CheckBox4Click(Sender: TObject);
-begin
-  if CheckBox4.Checked then
-    QFGridPanelComponent1.Border:=true
-  else
-    QFGridPanelComponent1.Border:=false;
-  QFGridPanelComponent1.Refresh;
 end;
 
 procedure TForm1.ColorBox1Change(Sender: TObject);
