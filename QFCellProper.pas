@@ -125,26 +125,36 @@ begin
 end;
 
 procedure TQFCellProper.Button1Click(Sender: TObject);
-var tmp,tmp1,err:integer;
+var err,cw,hh:integer;
   i,j:integer;
   RowCount,ColCount:integer;
 begin
   val(RowEdit.Text,RowCount,err);
   val(ColEdit.Text,ColCount,err);
-  val(RowHeightEdit.Text,tmp,err);
-  val(ColWidthEdit.Text,tmp1,err);
-  //for i:=0 to RowCount-1 do
+  val(RowHeightEdit.Text,hh,err);
+  val(ColWidthEdit.Text,cw,err);
+  //if (RowCount<>StringGrid1.RowCount) or (StringGrid1.ColCount<>ColCount) then
   //begin
-  //  StringGrid1.RowHeights[i]:=tmp;
-  //  for j:=1 to ColCount do
-  //  begin
-  //    StringGrid1.ColWidths[j-1]:=tmp1;
-  //  end;
+    StringGrid1.RowCount:=RowCount;
+    StringGrid1.ColCount:=ColCount;
+    GTable:=nil;
+    setlength(GTable,RowCount+1,ColCount+2);
+    for i:=0 to RowCount-1 do
+    begin
+      for j:=0 to ColCount-1 do
+      begin
+        StringGrid1.Cells[j,i]:='';
+        GTable[i,j].x:=j*cw;
+        GTable[i,j].y:=i*hh;
+        GTable[i,j].Width:=cw;
+        GTable[i,j].Height:=hh;
+        GTable[i,j].Visible:=true;
+        GTable[i,j].ComponentName:='';
+        GTable[i,j].ComponentDataFieldName:=nil;
+        GTable[i,j].ComponentDataSource:=nil;
+      end;
+    end;
   //end;
-  val(RowEdit.Text,tmp,err);
-  StringGrid1.RowCount:=tmp;
-  val(ColEdit.Text,tmp,err);
-  StringGrid1.ColCount:=tmp;
 end;
 
 procedure TQFCellProper.Button2Click(Sender: TObject);
@@ -214,6 +224,9 @@ begin
     GTable[Row,Col+1].DispType:=1; //图像
   if CbxCellType.ItemIndex=2 then
     GTable[Row,Col+1].DispType:=5; //控件
+
+  if ComboBox1.ItemIndex>-1 then
+    GTable[Row,Col+1].ComponentName:=ComboBox1.Items[ComboBox1.ItemIndex];
 
   GTable[Row,Col+1].str:=CellTextEdit.Text;
   StringGrid1.cells[Col,Row]:=CellTextEdit.Text;

@@ -328,7 +328,7 @@ type
     procedure SetCellLineStyle(Value : TFPPenStyle);
     procedure SetColCount(Value :integer);
     procedure SetRowCount(Value :integer);
-    function FindChildControls(str:string):TControl;
+    function FindChildControls(str:string;out parents:string):TControl;
     procedure DrawTable;
     procedure MenuItemClick(Sender: TObject);
     procedure EditEnter(Sender: TObject);
@@ -362,8 +362,8 @@ type
     property CellLineColor:TColor read FCellLineColor write SetCellLineColor default clSilver;
     property CellLineStyle:TFPPenStyle read FCellLineStyle write SetCellLineStyle default psSolid;
     property Font;
-    property ColCount:integer read FColCount write SetColCount default 5;
-    property RowCount:integer read FRowCount write SetRowCount default 5;
+    property ColCount:integer read FColCount write FColCount;// SetColCount default 5;
+    property RowCount:integer read FRowCount write FRowCount;//SetRowCount default 5;
     property ColSizing:Boolean read FColSizing write FColSizing default true;
     property RowSizing:Boolean read FRowSizing write FRowSizing default true;
     property ConfigFileName:string read FConfigFileName write FConfigFileName;
@@ -3700,8 +3700,8 @@ begin
   FEditFontFocusColor:=clBlack;
   FTableWidth:=0;
   FTableHeight:=0;
-  FColCount:= 1;
-  FRowCount:= 1;
+  FColCount:= 5;
+  FRowCount:= 5;
   FColSizing:= true;
   FRowSizing:=true;
   FCellLineColor := clSilver;
@@ -3860,7 +3860,6 @@ begin
       setlength(FTable,FRowcount+1,FColcount+1);
       if FRowcount<>oldRowcount then
       FRowHeight:=FBuffer.Height div FRowcount;
-
     end;
     if FCellLineColor<>CellProper.LineColor.Color then
     begin
@@ -3892,10 +3891,10 @@ begin
     end;
     FTable[FSelectRow,FSelectCol].FontColor:=CellProper.PanelFontColor.Color;
 }
-    val(CellProper.ColWidthEdit.Text,tmp,err);
-    FColWidth:=tmp;
-    val(CellProper.RowHeightEdit.Text,tmp,err);
-    FRowHeight:=tmp;
+    //val(CellProper.ColWidthEdit.Text,tmp,err);
+    //FColWidth:=tmp;
+    //val(CellProper.RowHeightEdit.Text,tmp,err);
+    //FRowHeight:=tmp;
 {
     FTable[FSelectRow,FSelectCol].DrawBottom:=CellProper.DrawBottomLine.Checked;
     FTable[FSelectRow,FSelectCol].DrawLeft:=CellProper.DrawLeftLine.Checked;
@@ -3941,6 +3940,10 @@ begin
         FTable[i,j].str:=CellProper.GTable[i,j].str
      end;
     end;
+    FOldR.Left:=0;
+    FOldR.Top:=0;
+    FOldR.Width:=0;
+    FOldR.Height:=0;
 
     TableMerge;
     SaveQFConfig;
@@ -4130,7 +4133,7 @@ end;
 
 procedure TQFGridPanelComponent.GetControlsList;
 var
-  i:integer;
+  i,j:integer;
 begin
   FControlsList:=TStringlist.Create;
   for i:=0 to self.Parent.ControlCount-1 do
@@ -4138,6 +4141,11 @@ begin
     if  UpperCase('QFGridPanelComponent')<>UpperCase(copy(self.Parent.Controls[i].Name,1,20)) then
     begin
       FControlsList.Add(self.Parent.Controls[i].Name);
+    end;
+    if  UpperCase('QFGridPanelComponent')=UpperCase(copy(self.Parent.Controls[i].Name,1,20)) then
+    begin
+      for j:=0 to self.ControlCount-1 do
+        FControlsList.Add(self.Controls[j].Name);
     end;
   end;
 end;
@@ -4234,42 +4242,35 @@ end;
 
 procedure TQFGridPanelComponent.SetColCount(Value :integer);
 begin
-  //if FColCount <> Value then
-  //begin
-    TableIniti;
-    if FColCount<>Value then
-    begin
-      FColCount := Value;
-      if FColCount<>0 then
-        FColWidth:= FBuffer.Width div FColCount;
-      if FRowCount<>0 then
-        FRowHeight:= FBuffer.Height div FRowCount;
-      FTable:=nil;
-      setlength(FTable,FRowcount+1,FColcount+1);
-      TableMerge;
-    end;
-    DrawTable;
-  //end;
+  if (FColCount<>Value) and (FColCount>-1)then
+  begin
+    FColCount := Value;
+    if FColCount<>0 then
+      FColWidth:= FBuffer.Width div FColCount;
+    if FRowCount<>0 then
+      FRowHeight:= FBuffer.Height div FRowCount;
+    FTable:=nil;
+    setlength(FTable,FRowcount+1,FColcount+1);
+    TableMerge;
+  end;
+  DrawTable;
 end;
 
 procedure TQFGridPanelComponent.SetRowCount(Value :integer);
 begin
-  //if FRowCount <> Value then
-  //begin
-    TableIniti;
-    if FRowCount <> Value then
-    begin
-      FRowCount := Value;
-      if FColCount<>0 then
-        FColWidth:= FBuffer.Width div FColCount;
-      if FRowCount<>0 then
-        FRowHeight:= FBuffer.Height div FRowCount;
-      FTable:=nil;
-      setlength(FTable,FRowcount+1,FColcount+1);
-      TableMerge;
-    end;
-    DrawTable;
-  //end;
+  if (FRowCount <> Value) and (FRowCount>-1) then
+  begin
+    FRowCount := Value;
+    if FColCount<>0 then
+      FColWidth:= FBuffer.Width div FColCount;
+    if FRowCount<>0 then
+      FRowHeight:= FBuffer.Height div FRowCount;
+    FTable:=nil;
+    setlength(FTable,FRowcount+1,FColcount+1);
+    TableMerge;
+  end;
+  //if FRowCount=-1 then Tableiniti;
+  DrawTable;
 end;
 
 procedure TQFGridPanelComponent.SetCellLineColor(Value : TColor);
@@ -4342,8 +4343,6 @@ begin
       FTable[i,j].LineStyle:=FCellLineStyle;
       if j=0 then
         FTable[i,j].Visible:=false ;
-      //else
-      //FTable[i,j].Visible:=true;
 
       //竖向(row)合并单元格
       if (FTable[i,j].RowMerge>0) and (FTable[i,j].ColMerge>0) then
@@ -4392,7 +4391,6 @@ begin
       end;
     end;
   end;
-    SaveQFConfig;
 end;
 
 function TQFGridPanelComponent.Tableiniti:boolean;
@@ -4504,17 +4502,33 @@ begin
   end;
 end;
 
-function TQFGridPanelComponent.FindChildControls(str:string):TControl;
-var kk,i:integer;
+function TQFGridPanelComponent.FindChildControls(str:string;out parents:string):TControl;
+var i,j:integer;
 begin
   Result:=nil;
-  kk:=self.Parent.ControlCount;
-  for i:=0 to kk-1 do
+
+  for i:=0 to self.Parent.ControlCount-1 do
   begin
-    if UpperCase(self.Parent.Controls[i].Name) =str.ToUpper then
+    if  UpperCase('QFGridPanelComponent')<>UpperCase(copy(self.Parent.Controls[i].Name,1,20)) then
     begin
-      Result:=self.Parent.Controls[i];
-      break;
+      if UpperCase(self.Parent.Controls[i].Name) =str.ToUpper then
+      begin
+        Result:=self.Parent.Controls[i];
+        parents:='Y';
+        break;
+      end;
+    end;
+    if  UpperCase('QFGridPanelComponent')=UpperCase(copy(self.Parent.Controls[i].Name,1,20)) then
+    begin
+      for j:=0 to self.ControlCount-1 do
+      begin
+        if UpperCase(self.Controls[j].Name) =str.ToUpper then
+        begin
+          Result:=self.Controls[j];
+          parents:='N';
+          break;
+        end;
+      end;
     end;
   end;
 end;
@@ -4522,6 +4536,7 @@ end;
 
 procedure TQFGridPanelComponent.DrawTable;
 var
+  parents:string;
   i,j,w1,h1:integer;
   hg:integer;
   k:integer;
@@ -4531,6 +4546,9 @@ var
   Control: TControl;
   Index,y:integer;
 begin
+  //if (FColCount=-1) and (FRowCount=-1) then
+  //   Tableiniti;
+
   Index:=0;
   y:=0;
   BackgroundRefresh(FBuffer); //刷新背景
@@ -4692,9 +4710,11 @@ begin
         end;
         if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
         begin
-          Control:=FindChildControls(FTable[i,j].ComponentName);//查找控件
+          Control:=FindChildControls(FTable[i,j].ComponentName,parents);//查找控件
           if Control<>nil then
           begin
+            Control.BringToFront;//将控件置前
+            Control.Parent:=self.Parent;
             Control.Width:=FTable[i,j].Width-FGap*2;
             if (Control is TMemo) or
                (Control is TButton) or
@@ -4817,6 +4837,7 @@ var
   function isCellComponent(Rect:TRect;out Control: TControl):Boolean;
   var
     i,j,x0,x1,y0,y1:integer;
+    parents:string;
   begin
     Result:=false;
     for i:=0 to FRowCount-1 do
@@ -4835,7 +4856,7 @@ var
           begin
             if FTable[i,j].DispType=5 then
             begin
-              Control:= FindChildControls(FTable[i,j].ComponentName);
+              Control:= FindChildControls(FTable[i,j].ComponentName,parents);
               Result:=true;
             end;
             Break;
@@ -5001,7 +5022,7 @@ begin
       FOldR.Width:=0;
       FOldR.Height:=0;
       movedX := X - FinitialXY.X; // 计算Y轴的移动距离
-      if ssShift in Shift then
+      if ssShift in Shift then//整列调整宽度
       begin
         x1:=FTable[FSelectRow,FSelectCol].x;
         j:=FSelectCol;
@@ -5017,10 +5038,16 @@ begin
             if movedX>0 then
             begin
               if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FTableWidth then
-                FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+              begin
+                if FTable[i,FMoveCol-1].Width<>FTableWidth then
+                  FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+              end;
 
               if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX=FTableWidth then
-                FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+movedX
+              begin
+                if FTable[i,FMoveCol].Width<>FTableWidth then
+                  FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+movedX
+              end
               else
               if FTable[i,FMoveCol].x+FTable[i,FMoveCol].Width-movedX<FTableWidth then
                 FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width-movedX;
@@ -5037,9 +5064,15 @@ begin
               else
               begin
                 if FTable[i,FMoveCol-1].x+FTable[i,FMoveCol-1].Width+movedX<FTableWidth then
+                begin
+                  if FTable[i,FMoveCol-1].Width<> FTableWidth then
                   FTable[i,FMoveCol-1].Width:=FTable[i,FMoveCol-1].Width+movedX;
+                end;
                 if FTable[i,FMoveCol].x+ FTable[i,FMoveCol].Width+abs(movedX)<FTableWidth then
-                  FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
+                begin
+                  if FTable[i,FMoveCol].Width<> FTableWidth then
+                    FTable[i,FMoveCol].Width:=FTable[i,FMoveCol].Width+abs(movedX);
+                end;
                 FTable[i,FMoveCol].x:=FTable[i,FMoveCol].x-abs(movedX);
               end;
             end;
@@ -5094,11 +5127,19 @@ begin
   end;
   if Button=mbRight then
   begin
-    if FTable[FSelectRow,FSelectCol].DispType=5 then
-      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+    if (FSelectRow>-1) and (FSelectCol>-1) then
+    begin
+      if FTable[FSelectRow,FSelectCol].DispType=5 then
+        DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+      else
+        DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+    end
     else
-      DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
-     FPopupMenu.PopUp(ControlToScreenX(self)+x,ControlToScreenY(self)+y);
+    begin
+      FSelectRow:=0;
+      FSelectCol:=0;
+    end;
+    FPopupMenu.PopUp(ControlToScreenX(self)+x,ControlToScreenY(self)+y);
   end;
   inherited MouseUP(Button,Shift, X, Y);
 end;
@@ -5341,14 +5382,6 @@ begin
   end;
   jData.Free;
   jsonRoot:=nil;
-  //if (OldRowcount<>FRowcount) or (OldColcount<>FColcount) then
-  //begin
-  //  FTable:=nil;
-  //  setlength(FTable,OldRowcount+1,OldColcount+1);
-  //  FRowcount:=OldRowcount;
-  //  FColcount:=OldColcount;
-  //  TableMerge;
-  //end;
 end;
 
 procedure TQFGridPanelComponent.SaveJSON(files:string);

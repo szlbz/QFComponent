@@ -375,7 +375,7 @@ object QFCellProper: TQFCellProper
       Height = 46
       Top = 176
       Width = 128
-      Caption = '调整表格'
+      Caption = '新表格'
       TabOrder = 20
       OnClick = Button1Click
     end
@@ -628,7 +628,7 @@ object QFCellProper: TQFCellProper
     Align = alClient
     FixedCols = 0
     FixedRows = 0
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goEditing, goColSpanning, goSmoothScroll]
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goColSpanning, goSmoothScroll]
     TabOrder = 2
     OnClick = StringGrid1Click
   end
