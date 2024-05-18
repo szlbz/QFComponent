@@ -5286,7 +5286,7 @@ begin
 
   OldRowcount:=FRowcount;
   OldColcount:=FColcount;
-  if jsonRoot.get('TQFGridPanelComponent')='TQFGridPanelComponent配置' then
+  if jsonRoot.get('ConfigName')='QFGridPanelComponentConfig' then
   begin
     Versions:= jsonRoot.get('Version');
     tmpstr:='';
@@ -5312,16 +5312,15 @@ begin
        else tmpstr:=tmpstr+Versions[i];
     end;
     VersionNum:=v1*1000000+v2*10000+v3*100+v4;
-    for i := 0 to jData.Count - 1 do
-    begin
-      jItem := jData.Items[i];
 
+    // find:
+    //"QFGridPanelComponent1" : {
+    jItem:= jsonRoot.find(self.Name);
+    if jItem<>nil then
+    begin
       no:=0;
       for j := 0 to jItem.Count - 1 do  //row
       begin
-        kItem:=jItem.Items[j];
-
-        str := TJSONObject(jItem).Names[j];
         if j=0 then
         begin
           FRowcount:= TJSONObject(jItem).get('FRowcount');
@@ -5346,8 +5345,10 @@ begin
           FTable:=nil;
           setlength(FTable,FRowcount+1,FColcount+1);
         end;
+        str := TJSONObject(jItem).Names[j];
         if str.ToUpper='ROW0' then no:=j;
 
+        kItem:=jItem.Items[j];
         for k := 0 to kItem.Count - 1 do //col
         begin
           lItem:=kItem.Items[k];
@@ -5401,7 +5402,7 @@ str:string;
 begin
   //创建一个新的JSON对象来写入数据
   jsonRoot := TJSONObject.Create;
-  jsonRoot.Add('TQFGridPanelComponent', utf8toansi('TQFGridPanelComponent配置'));
+  jsonRoot.Add('ConfigName', utf8toansi('QFGridPanelComponentConfig'));
   jsonRoot.Add('Version', Version);
 
   jsonGrid := TJSONObject.Create;
