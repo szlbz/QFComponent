@@ -111,6 +111,7 @@ type
     procedure GetFirstCellProp;
     procedure SetControlState;
   public
+    oldColMerge,oldRowMerge:integer;
     GTable:Array of Array of TCell;
     ParentGrid: Pointer;
   end;
@@ -269,10 +270,16 @@ begin
 
   GTable[Row,Col+1].str:=CellTextEdit.Text;
   StringGrid1.cells[Col,Row]:=CellTextEdit.Text;
+
   val(RowMerge.Text,tmp,err);
   GTable[Row,Col+1].RowMerge:=tmp;
+  if tmp<>oldRowMerge then
+    GTable[Row,Col+1].Height:=0;
+
   val(ColMerge.Text,tmp,err);
   GTable[Row,Col+1].ColMerge:=tmp;
+  if tmp<>oldColMerge then
+    GTable[Row,Col+1].Width:=0;
 
   if LbxFontName.ItemIndex>=0 then
     GTable[Row,Col+1].FontName:=LbxFontName.Items.ValueFromIndex[LbxFontName.ItemIndex];
@@ -310,6 +317,8 @@ begin
     CbxCellType.ItemIndex:=1;//图像
   if GTable[Row,Col+1].DispType=5 then
     CbxCellType.ItemIndex:=2;//控件
+  oldColMerge:=GTable[Row,Col+1].ColMerge;
+  oldRowMerge:=GTable[Row,Col+1].RowMerge;
   ColMerge.Text:=GTable[Row,Col+1].ColMerge.ToString;
   RowMerge.Text:=GTable[Row,Col+1].RowMerge.ToString;
   EditFontSize.Text:=GTable[Row,Col+1].FontSize.ToString;

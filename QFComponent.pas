@@ -3766,6 +3766,9 @@ begin
   CellProper.StatusBar1.Panels[0].Text:='行:'+FSelectRow.ToString+'  列:'+(FSelectCol-1).ToString;
   CellProper.StatusBar1.Panels[1].Text:=FTable[FSelectRow,FSelectCol].str;//StringGrid1.Cells[col,row];
 
+  CellProper.oldColMerge:=FTable[FSelectRow,FSelectCol].ColMerge;
+  CellProper.oldRowMerge:=FTable[FSelectRow,FSelectCol].RowMerge;
+
   if FTable[FSelectRow,FSelectCol].Align=0 then FTable[FSelectRow,FSelectCol].Align:=2;
   if FTable[FSelectRow,FSelectCol].Align>0 then
     CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
@@ -4344,8 +4347,10 @@ begin
   begin
     for j:=0 to FColCount do
     begin
-      FTable[i,j].Height:=FRowHeight;
-      FTable[i,j].Width:=FColWidth;
+      if FTable[i,j].Height=0 then
+        FTable[i,j].Height:=FRowHeight;
+      if FTable[i,j].Width=0 then
+        FTable[i,j].Width:=FColWidth;
       FTable[i,j].DrawTop:=true;
       FTable[i,j].DrawLeft:=true;
       FTable[i,j].DrawBottom:=true;
@@ -5311,12 +5316,16 @@ begin
        end
        else tmpstr:=tmpstr+Versions[i];
     end;
-    VersionNum:=v1*1000000+v2*10000+v3*100+v4;
-
+    VersionNum:=v1*1000000+v2*10000+v3*100+v4; //0.9.9.9==>90909
+{
+    for i := 0 to jData.Count - 1 do
+    begin
+      jItem := jData.Items[i];
+}
     // find:
     //"QFGridPanelComponent1" : {
     jItem:= jsonRoot.find(self.Name);
-    if jItem<>nil then
+    if jItem<>nil then  //找到QFGridPanelComponent1
     begin
       no:=0;
       for j := 0 to jItem.Count - 1 do  //row
@@ -5406,7 +5415,7 @@ begin
   jsonRoot.Add('Version', Version);
 
   jsonGrid := TJSONObject.Create;
-  jsonRoot.Add(self.Name, jsonGrid);//grid
+  jsonRoot.Add(self.Name, jsonGrid);//添加QFGridPanelComponent1
 
   jsonGrid.Add('ComponentName', self.Name);
   jsonGrid.Add('FRowcount', FRowcount);
