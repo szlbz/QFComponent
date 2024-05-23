@@ -79,7 +79,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
   OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,Grids,DBGrids,  FPCanvas,
-  fpjson,lazutf8,PublicDefinition,LazIDEIntf,
+  fpjson,lazutf8,PublicDefinition,LazIDEIntf,EditBtn,DBExtCtrls,
   lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit;
 
 const
@@ -4743,10 +4743,16 @@ begin
             Control.Left:=FTable[i,j].x+FGap+self.Left;
             y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
             Control.Top:=FTable[i,j].y+FGap+self.Top+y1;//垂直居中显示控件
-            if (Control is TEdit) or (Control is TDBEdit) or
+            if (Control is TEdit) or
+               (Control is TDBEdit) or
                (Control is TMemo) or
                (Control is TDBMemo) or
-               (Control is TComboBox) or (Control is TDBComboBox) then
+               (Control is TComboBox) or
+               (Control is TDBComboBox) or
+               (Control is TDateEdit) or
+               (Control is TDBDateEdit) or
+               (Control is TButton)
+               then
             begin
               FOldEditFocusColor:=TEdit(Control).Color;
               FOldEditFontFocusColor:=TEdit(Control).Font.Color;
@@ -4754,8 +4760,8 @@ begin
               TEdit(Control).TabOrder:= TabStops;
               TEdit(Control).OnEnter:=@EditEnter;
               TEdit(Control).OnExit:=@EditExit;
+              inc(TabStops);
             end;
-            inc(TabStops);
           end;
         end;
         if FTable[i,j].DispType=1 then  //显示图形
@@ -5015,22 +5021,25 @@ var movedX:integer;
 begin
   if FisLeftButtonDown then  //按下鼠标左键
   begin
-    if FResultCursor=crVSplit then //调整单元格高度
+    //=================调整单元格高度======================
+    if FResultCursor=crVSplit then
     begin
       FOldR.Left:=0;
       FOldR.Top:=0;
       FOldR.Width:=0;
       FOldR.Height:=0;
-      movedY := Y - FMouseDownXY.Y; // 计算Y轴上的移动距离
-      FRowHeight:=FRowHeight+movedY;
+      movedY := Y - FMouseDownXY.Y; // 计算X轴上下移动距离
+      //FRowHeight:=FRowHeight+movedY;
+
       FRun:=0;
-      //Init(FBuffer);
-      //if FTablesl<>nil then
-      //  GetTableInfo(0);
-      DrawTable;
+      //DrawTable;
       //Canvas.Draw(0,0,FBuffer)
     end;
-    if FResultCursor=crHSplit then //调整单元格宽度
+    //=================调整单元格高度======================
+
+
+    //=================调整单元格宽度======================
+    if FResultCursor=crHSplit then
     begin
       FOldR.Left:=0;
       FOldR.Top:=0;
@@ -5140,6 +5149,7 @@ begin
       DrawTable;
       Canvas.Draw(0,0,FBuffer)
     end;
+    //=================调整单元格宽度======================
   end;
   if Button = mbLeft then
   begin
