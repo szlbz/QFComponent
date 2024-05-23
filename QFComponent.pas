@@ -5106,33 +5106,33 @@ begin
       begin
         if movedX>0 then
         begin
-          if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FTableWidth then
-            FTable[FMoveRow,FMoveCol-1].Width:=FTable[FSelectCol,FMoveCol-1].Width+movedX;
+          if FTable[FSelectRow,FSelectCol-1].x+FTable[FSelectRow,FSelectCol-1].Width+movedX<FTableWidth then
+            FTable[FSelectRow,FSelectCol-1].Width:=FTable[FSelectRow,FSelectCol-1].Width+movedX;
 
-          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX=FTableWidth then
-            FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+movedX
+          if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-movedX=FTableWidth then
+            FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width+movedX
           else
-          if FTable[FMoveRow,FMoveCol].x+FTable[FMoveRow,FMoveCol].Width-movedX<FTableWidth then
-            FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width-movedX;
+          if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-movedX<FTableWidth then
+            FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-movedX;
 
-          FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol-1].x+movedX;
+          FTable[FSelectRow,FSelectCol].x:=FTable[FSelectRow,FSelectCol-1].x+movedX;
         end
         else
         begin
-          if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width=FTableWidth then //FBuffer.Width then
+          if FTable[FSelectRow,FSelectCol].x+ FTable[FSelectRow,FSelectCol].Width=FTableWidth then
           begin
-            FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width-abs(movedX);
-            FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+abs(movedX);
-            FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol].x-abs(movedX);
+            FTable[FSelectRow,FSelectCol-1].Width:=FTable[FSelectRow,FSelectCol-1].Width-abs(movedX);
+            FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width+abs(movedX);
+            FTable[FSelectRow,FSelectCol].x:=FTable[FSelectRow,FSelectCol].x-abs(movedX);
           end
           else
           begin
-            if FTable[FMoveRow,FMoveCol-1].x+FTable[FMoveRow,FMoveCol-1].Width+movedX<FTableWidth then
-              FTable[FMoveRow,FMoveCol-1].Width:=FTable[FMoveRow,FMoveCol-1].Width+movedX;
+            if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-abs(movedX)<FTableWidth then
+              FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-abs(movedX);
 
-            if FTable[FMoveRow,FMoveCol].x+ FTable[FMoveRow,FMoveCol].Width+abs(movedX)<FTableWidth then
-              FTable[FMoveRow,FMoveCol].Width:=FTable[FMoveRow,FMoveCol].Width+abs(movedX);
-            FTable[FMoveRow,FMoveCol].x:=FTable[FMoveRow,FMoveCol].x-abs(movedX);
+            if FTable[FSelectRow,FSelectCol+1].x+ FTable[FSelectRow,FSelectCol+1].Width+abs(movedX)<FTableWidth then
+              FTable[FSelectRow,FSelectCol+1].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
+            FTable[FSelectRow,FSelectCol+1].x:=FTable[FSelectRow,FSelectCol+1].x-abs(movedX);
           end;
         end;
       end;
