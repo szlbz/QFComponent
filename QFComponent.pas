@@ -44,7 +44,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='0.9.9.10';
+  Version ='0.9.9.11';
 
 type
 
@@ -3729,6 +3729,7 @@ begin
   CellProper.oldColMerge:=FTable[FSelectRow,FSelectCol].ColMerge;
   CellProper.oldRowMerge:=FTable[FSelectRow,FSelectCol].RowMerge;
 
+  CellProper.CellGapEdit.Text:=FTable[FSelectRow,FSelectCol].Gap.ToString;
   if FTable[FSelectRow,FSelectCol].Align=0 then FTable[FSelectRow,FSelectCol].Align:=2;
   if FTable[FSelectRow,FSelectCol].Align>0 then
     CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
@@ -3775,6 +3776,7 @@ begin
     //CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
     for j:=0 to FColCount do
     begin
+      CellProper.GTable[i,j].Gap:=FTable[i,j].Gap;
       CellProper.GTable[i,j].Align:=FTable[i,j].Align;
       CellProper.GTable[i,j].BottomLineStyle:=FTable[i,j].BottomLineStyle;
       CellProper.GTable[i,j].Color:=FTable[i,j].Color;
@@ -3883,6 +3885,7 @@ begin
     begin
       for j:=0 to FColCount do
       begin
+        FTable[i,j].Gap:=CellProper.GTable[i,j].Gap;
         FTable[i,j].Align:=CellProper.GTable[i,j].Align;
         FTable[i,j].BottomLineStyle:=CellProper.GTable[i,j].BottomLineStyle;
         FTable[i,j].Color:=CellProper.GTable[i,j].Color;
@@ -4520,7 +4523,6 @@ begin
   end;
 end;
 
-
 procedure TQFGridPanelComponent.DrawTable;
 var
   i,j,w1,h1:integer;
@@ -4530,7 +4532,7 @@ var
   Texth:integer;//文字高度
   TabStops:integer;
   Control: TControl;
-  Index,y:integer;
+  CellGap,Index,y:integer;
 begin
   Index:=0;
   y:=0;
@@ -4650,6 +4652,10 @@ begin
          y0:=y0 + FTable[i,j-1].Height;
       if FTable[i,j].Visible then
       begin
+        if FTable[i,j].Gap=0 then
+          CellGap:=FGap
+        else
+          CellGap:=FTable[i,j].Gap;
         if (FTable[i,j].DispType=0) or (FTable[i,j+1].DispType=2)
            or (FTable[i,j].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
         begin
@@ -4675,24 +4681,20 @@ begin
           h1:=FRowHeight;
           w1:=FTable[i,j].Width;
 
-          x1:=x0; //居左
-          if FTable[i,j].Align=0 then FTable[i,j].Align:=2;//默认居中
+          x1:=x0+CellGap; //居左
+          if FTable[i,j].Align=0 then
+            FTable[i,j].Align:=2;//默认居中
           if FTable[i,j].Align=1 then
-            x1:=x0 ;//居左
+            x1:=x0+CellGap ;//居左
           if FTable[i,j].Align=2 then
-            x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width))) div 2; //居中
+            x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,
+                TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width))) div 2; //居中
           if FTable[i,j].Align=3 then
-             x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-5; //居右
-          //if i=0 then
-          //begin
-          //  y2:=abs(FTable[i,j].Height- Texth) div 2;//垂直居中
-          //  DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));//截断超过单元格宽度的字符串
-          //end
-          //else
-          //begin
-            y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
-            DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
-          //end;
+             x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,
+                 TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-CellGap; //居右
+          y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
+          //在指定位置显示文字
+          DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
         end;
         if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
         begin
@@ -4701,7 +4703,7 @@ begin
           begin
             Control.BringToFront;//将控件置前
             Control.Parent:=self.Parent;
-            Control.Width:=FTable[i,j].Width-FGap*2;
+            Control.Width:=FTable[i,j].Width-CellGap*2;
             //if isComponent(Control) then
             if (Control is TMemo) or
                (Control is TButton) or
@@ -4713,11 +4715,11 @@ begin
                (Control is TListBox) or
                (Control is TDBComboBox) then
             begin
-              Control.Height:= FTable[i,j].Height-FGap*2;
+              Control.Height:= FTable[i,j].Height-CellGap*2;
             end;
-            Control.Left:=FTable[i,j].x+FGap+self.Left;
-            y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
-            Control.Top:=FTable[i,j].y+FGap+self.Top+y1;//垂直居中显示控件
+            Control.Left:=FTable[i,j].x+CellGap+self.Left;
+            y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-CellGap;
+            Control.Top:=FTable[i,j].y+CellGap+self.Top+y1;//垂直居中显示控件
             if isComponent(Control) then
             //if (Control is TEdit) or
             //   (Control is TDBEdit) or
@@ -4749,16 +4751,16 @@ begin
           begin
             IMG.Picture.LoadFromFile(FPathConfig+FTable[i,j].str);
             //设置图像显示位置及尺寸（单元格大小）
-            FRect.Top:=y0+FGap;
-            FRect.Left:=x0+FGap;
+            FRect.Top:=y0+CellGap;
+            FRect.Left:=x0+CellGap;
             if FTable[i,j].Width<>0 then
-              FRect.Width:=FTable[i,j].Width-FGap*2
+              FRect.Width:=FTable[i,j].Width-CellGap*2
             else
-              FRect.Width:=FColWidth-FGap*2;
+              FRect.Width:=FColWidth-CellGap*2;
             if FTable[i,j].Height<>0 then
-              FRect.Height:=FTable[i,j].Height-FGap*2
+              FRect.Height:=FTable[i,j].Height-CellGap*2
             else
-              FRect.Height:=FRowHeight-FGap*2;
+              FRect.Height:=FRowHeight-CellGap*2;
             FBuffer.Canvas.StretchDraw(FRect,img.Picture.Bitmap);
           end
           else
@@ -5378,6 +5380,8 @@ begin
 
           FTable[j-no,k].x:=TJSONObject(lItem.Items[0]).Get('x');
           FTable[j-no,k].y:=TJSONObject(lItem.Items[0]).Get('y');
+          if VersionNum>00090910 then
+            FTable[j-no,k].gap:=TJSONObject(lItem.Items[0]).Get('Gap');
           FTable[j-no,k].Width:=TJSONObject(lItem.Items[0]).Get('Width');
           FTable[j-no,k].Height:=TJSONObject(lItem.Items[0]).Get('Height');
           FTable[j-no,k].ColMerge:=TJSONObject(lItem.Items[0]).Get('ColMerge');
@@ -5461,6 +5465,7 @@ begin
       jsonParamObj := TJSONObject.Create;
       jsonParamObj.Add('x', FTable[i,j].x);
       jsonParamObj.Add('y', FTable[i,j].y);
+      jsonParamObj.Add('Gap', FTable[i,j].Gap);
       jsonParamObj.Add('Width', FTable[i,j].Width);
       jsonParamObj.Add('Height', FTable[i,j].Height);
       jsonParamObj.Add('ColMerge', FTable[i,j].ColMerge);

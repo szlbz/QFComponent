@@ -9,6 +9,7 @@ type
   TCell = record
      x:integer;
      y:integer;
+     Gap:integer;
      Width:integer;
      Height:integer;
      ColMerge:integer; //从当前单元格向右合并n个单元格

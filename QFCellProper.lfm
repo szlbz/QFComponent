@@ -58,14 +58,14 @@ object QFCellProper: TQFCellProper
       OnClick = CbxHAlignClick
     end
     object LabelControl1: TLabel
-      Left = 475
+      Left = 603
       Height = 18
       Top = 184
       Width = 126
       Caption = '单元格边框颜色'
     end
     object LineColor: TPanel
-      Left = 475
+      Left = 603
       Height = 35
       Top = 216
       Width = 103
@@ -81,14 +81,14 @@ object QFCellProper: TQFCellProper
       TabOrder = 1
     end
     object BevelCellType1: TBevel
-      Left = 472
+      Left = 600
       Height = 3
       Top = 206
       Width = 146
       Shape = bsBottomLine
     end
     object BtnSetCellLineColor1: TButton
-      Left = 583
+      Left = 711
       Height = 38
       Top = 216
       Width = 38
@@ -591,9 +591,9 @@ object QFCellProper: TQFCellProper
       Left = 24
       Height = 26
       Top = 224
-      Width = 424
+      Width = 363
       EditLabel.Height = 18
-      EditLabel.Width = 424
+      EditLabel.Width = 363
       EditLabel.Caption = '单元格文字'
       TabOrder = 31
       OnChange = RightLineStyleChange
@@ -718,6 +718,17 @@ object QFCellProper: TQFCellProper
       Width = 133
       Caption = '表格边框加粗'
       TabOrder = 39
+    end
+    object CellGapEdit: TLabeledEdit
+      Left = 432
+      Height = 26
+      Top = 224
+      Width = 144
+      EditLabel.Height = 18
+      EditLabel.Width = 144
+      EditLabel.Caption = '单元格内边距'
+      TabOrder = 40
+      OnChange = RightLineStyleChange
     end
   end
   object StatusBar1: TStatusBar

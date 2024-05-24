@@ -31,6 +31,7 @@ type
     Button2: TButton;
     CbxCellType: TComboBox;
     CbxLineStyle: TComboBox;
+    CellGapEdit: TLabeledEdit;
     ChkBoxUnderLine: TCheckBox;
     ShowBackImage: TCheckBox;
     ColEdit: TLabeledEdit;
@@ -271,6 +272,9 @@ begin
   GTable[Row,Col+1].str:=CellTextEdit.Text;
   StringGrid1.cells[Col,Row]:=CellTextEdit.Text;
 
+  val(CellGapEdit.Text,tmp,err);
+  GTable[Row,Col+1].Gap:=tmp;
+
   val(RowMerge.Text,tmp,err);
   GTable[Row,Col+1].RowMerge:=tmp;
   if tmp<>oldRowMerge then
@@ -321,6 +325,7 @@ begin
   oldRowMerge:=GTable[Row,Col+1].RowMerge;
   ColMerge.Text:=GTable[Row,Col+1].ColMerge.ToString;
   RowMerge.Text:=GTable[Row,Col+1].RowMerge.ToString;
+  CellGapEdit.Text:=GTable[Row,Col+1].Gap.ToString;
   EditFontSize.Text:=GTable[Row,Col+1].FontSize.ToString;
   LbxFontName.ItemIndex:=LbxFontName.Items.IndexOf(GTable[Row,Col+1].FontName);
   LbxFontSize.ItemIndex:=LbxFontSize.Items.IndexOf(GTable[Row,Col+1].FontSize.ToString);
