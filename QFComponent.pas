@@ -279,6 +279,8 @@ type
     procedure TableMerge;
     function Tableiniti:boolean;
     procedure DisplayTable(Sender: TObject);
+    procedure DrawTable;
+    procedure DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:Boolean=false);
     procedure SetCellLineColor(Value : TColor);
     procedure SetEditFocusColor(Value : TColor);
     procedure SetEditFontFocusColor(Value : TColor);
@@ -286,14 +288,14 @@ type
     procedure SetColCount(Value :integer);
     procedure SetRowCount(Value :integer);
     function FindChildControls(str:string):TControl;
-    procedure DrawTable;
     procedure MenuItemClick(Sender: TObject);
     procedure EditEnter(Sender: TObject);
     procedure EditExit(Sender: TObject);
     procedure InitPopupMenu;
-    procedure DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:byte=0);
     procedure LoadJSON(jsonstr:string);
     procedure SaveJSON(files:string);
+    function isCell(x,y:integer;out Rect:TRect):Boolean;
+    function isComponent(Control:TControl):Boolean;
   protected
     procedure SetLines(const AValue: TStrings);override;
     procedure DoOnChangeBounds; override;
@@ -4030,6 +4032,9 @@ end;
 
 procedure TQFGridPanelComponent.EditEnter(Sender: TObject);
 begin
+  //isCell((Sender as TControl).Left,(Sender as TControl).Top,FCurrentR);
+  //isCell((Sender as TControl).Left,(Sender as TControl).Top,FoldR);
+  //DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol);
   if sender is TDBEdit then
   begin
     (sender as TDBEdit).Color:=FEditFocusColor;
@@ -4044,6 +4049,8 @@ end;
 
 procedure TQFGridPanelComponent.EditExit(Sender: TObject);
 begin
+  //isCell((Sender as TControl).Left,(Sender as TControl).Top,FoldR);
+  //DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,true);
   if sender is TDBEdit then
   begin
     (sender as TDBEdit).Color:=FOldEditFocusColor;
@@ -4291,6 +4298,7 @@ procedure TQFGridPanelComponent.TableMerge;
 var
   i,j:integer;
   row1,col1:integer;
+  ss:real;
   oo,oo1:integer;
   NullTable:boolean;
   path:string;
@@ -4301,7 +4309,7 @@ begin
     FRowHeight:= FBuffer.Height div FRowCount;
 
   //计算合并后单元格的width和height
-  for i:=0 to FRowCount-1 do
+  for i:=0 to FRowCount do
   begin
     for j:=0 to FColCount do
     begin
@@ -4328,7 +4336,11 @@ begin
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
           FTable[i,j].Visible:=true;//将左上角单元格置为true
-          FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+          if FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge then
+            ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge)
+          else
+            ss:=1;
+          FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
           for oo1:=j to col1 do
           begin
@@ -4353,7 +4365,11 @@ begin
         //横向(col)合并单元格
         if FTable[i,j].ColMerge>0 then
         begin
-          FTable[i,j].Width:=FColWidth*FTable[i,j].ColMerge;
+          if FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge then
+            ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge)
+          else
+            ss:=1;
+          FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
           for oo:=j+1 to col1 do
@@ -4510,15 +4526,12 @@ var
   i,j,w1,h1:integer;
   hg:integer;
   k:integer;
-  x0,y0,x1,y1:integer;
+  x0,y0,x1,y1,y2:integer;
   Texth:integer;//文字高度
   TabStops:integer;
   Control: TControl;
   Index,y:integer;
 begin
-  //if (FColCount=-1) and (FRowCount=-1) then
-  //   Tableiniti;
-
   Index:=0;
   y:=0;
   BackgroundRefresh(FBuffer); //刷新背景
@@ -4532,19 +4545,25 @@ begin
   //画单元格
   hg:=0;
   x0:=0;
-  for i:=0 to FRowCount-1 do
+  y0:=0;
+  for i:=0 to FRowCount do
   begin
     x0:=0;
     for j:=1 to FColCount do
     begin
       if j>1 then
         x0:=x0+FTable[i,j-1].Width;
-      if FTable[i,j-1].Height>FRowHeight then
-        y0:=i*FRowHeight
-      else
-        y0:=i*FTable[i,j-1].Height;
+      //if FTable[i,j-1].Height>FRowHeight then
+      //  y0:=i*FRowHeight
+      //else
+      //  y0:=i*FTable[i,j-1].Height;
+
+      if (j=1) and (i>0) then
+        y0:=y0+FTable[i,j-1].Height;
+
       if FTable[i,j].Visible then
       begin
+
         FTable[i,j].x:=x0;
         FTable[i,j].y:=y0;
 
@@ -4619,12 +4638,16 @@ begin
   //绘表格内容（文字/图像/控件)
   FBuffer.Canvas.Brush.Style := bsClear;//透明文字
   TabStops:=0;
+
   x0:=0;
-  for i:=0 to FRowCount-1 do
+  y0:=0;
+  for i:=0 to FRowCount do
   begin
     x0:=0;
     for j:=1 to FColCount do
     begin
+      if (j=1) and (i>0) then
+         y0:=y0 + FTable[i,j-1].Height;
       if FTable[i,j].Visible then
       begin
         if (FTable[i,j].DispType=0) or (FTable[i,j+1].DispType=2)
@@ -4652,9 +4675,6 @@ begin
           h1:=FRowHeight;
           w1:=FTable[i,j].Width;
 
-          //if FTable[i,j].Height>0 then
-          //   h:=FTable[i,j].Height;
-
           x1:=x0; //居左
           if FTable[i,j].Align=0 then FTable[i,j].Align:=2;//默认居中
           if FTable[i,j].Align=1 then
@@ -4663,20 +4683,16 @@ begin
             x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width))) div 2; //居中
           if FTable[i,j].Align=3 then
              x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-5; //居右
-          if i=0 then
-          begin
-            y0:=y+i*FTable[i,j].Height+abs(FTable[i,j].Height- Texth) div 2;//垂直居中
-            DisplayChar(FBuffer,x1+2, y0,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));//截断超过单元格宽度的字符串
-          end
-          else
-          begin
-             if FTable[i,j].Height>FRowHeight then
-               y0:=y + i* FRowHeight + abs (FTable[i,j].Height-texth) div 2//垂直居中
-             else
-               y0:=y + i* FTable[i,j].Height + abs(FTable[i,j].Height- Texth) div 2;//垂直居中
-             DisplayChar(FBuffer,x1+2, y0,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
-          end;
-          //h:=h1;
+          //if i=0 then
+          //begin
+          //  y2:=abs(FTable[i,j].Height- Texth) div 2;//垂直居中
+          //  DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));//截断超过单元格宽度的字符串
+          //end
+          //else
+          //begin
+            y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
+            DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
+          //end;
         end;
         if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
         begin
@@ -4686,6 +4702,7 @@ begin
             Control.BringToFront;//将控件置前
             Control.Parent:=self.Parent;
             Control.Width:=FTable[i,j].Width-FGap*2;
+            //if isComponent(Control) then
             if (Control is TMemo) or
                (Control is TButton) or
                (Control is TDBMemo) or
@@ -4701,16 +4718,17 @@ begin
             Control.Left:=FTable[i,j].x+FGap+self.Left;
             y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-FGap;
             Control.Top:=FTable[i,j].y+FGap+self.Top+y1;//垂直居中显示控件
-            if (Control is TEdit) or
-               (Control is TDBEdit) or
-               (Control is TMemo) or
-               (Control is TDBMemo) or
-               (Control is TComboBox) or
-               (Control is TDBComboBox) or
-               (Control is TDateEdit) or
-               (Control is TDBDateEdit) or
-               (Control is TButton)
-               then
+            if isComponent(Control) then
+            //if (Control is TEdit) or
+            //   (Control is TDBEdit) or
+            //   (Control is TMemo) or
+            //   (Control is TDBMemo) or
+            //   (Control is TComboBox) or
+            //   (Control is TDBComboBox) or
+            //   (Control is TDateEdit) or
+            //   (Control is TDBDateEdit) or
+            //   (Control is TButton)
+            //   then
             begin
               FOldEditFocusColor:=TEdit(Control).Color;
               FOldEditFontFocusColor:=TEdit(Control).Font.Color;
@@ -4786,7 +4804,7 @@ begin
     Result := Result + TCustomForm(ParentControl).Top;
 end;
 
-procedure TQFGridPanelComponent.DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:byte=0);
+procedure TQFGridPanelComponent.DrawRect(rect:TRect;colors:TColor;Linewidth,x,y:integer;RepaintRect:Boolean=false);
 var
   CellControl:TControl;
 
@@ -4834,12 +4852,13 @@ begin
       Canvas.FillRect(rect);
     if CellControl<>nil then
     begin
-      if (CellControl is TEdit) or
-         (CellControl is TDBEdit) or
-         (CellControl is TMemo) or
-         (CellControl is TDBMemo) or
-         (CellControl is TComboBox) or
-         (CellControl is TDBComboBox) then
+      if isComponent(CellControl) then
+      //if (CellControl is TEdit) or
+      //   (CellControl is TDBEdit) or
+      //   (CellControl is TMemo) or
+      //   (CellControl is TDBMemo) or
+      //   (CellControl is TComboBox) or
+      //   (CellControl is TDBComboBox) then
       begin
         FOldEditFocusColor:=TEdit(CellControl).Color;
         FOldEditFontFocusColor:=TEdit(CellControl).Font.Color;
@@ -4862,7 +4881,7 @@ begin
   end
   else
   begin
-    if RepaintRect=1 then//重绘单元格
+    if RepaintRect then//重绘单元格
     begin
       Canvas.Pen.Style:=FTable[x,y].TopLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
@@ -4885,7 +4904,7 @@ begin
   end
   else
   begin
-    if RepaintRect=1 then
+    if RepaintRect then
     begin
       Canvas.Pen.Style:=FTable[x,y].RightLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
@@ -4908,7 +4927,7 @@ begin
   end
   else
   begin
-    if RepaintRect=1 then
+    if RepaintRect then
     begin
       Canvas.Pen.Style:=FTable[x,y].BottomLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
@@ -4931,7 +4950,7 @@ begin
   end
   else
   begin
-    if RepaintRect=1 then
+    if RepaintRect then
     begin
       Canvas.Pen.Style:=FTable[x,y].LeftLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
@@ -4946,6 +4965,59 @@ begin
   Canvas.LineTo(rect.Left,rect.Top);//左
   Canvas.Pen.Width:=1;
   //Canvas.Draw(0,0,FBuffer);
+end;
+
+function TQFGridPanelComponent.isComponent(Control:TControl):Boolean;
+begin
+  if (Control is TEdit) or
+     (Control is TDBEdit) or
+     (Control is TMemo) or
+     (Control is TDBMemo) or
+     (Control is TComboBox) or
+     (Control is TDBComboBox) or
+     (Control is TDateEdit) or
+     (Control is TDBDateEdit) or
+     (Control is TButton) then
+     Result:=true
+     else
+     Result:=false;
+end;
+
+function TQFGridPanelComponent.isCell(x,y:integer;out Rect:TRect):Boolean;
+var
+  i,j,x0,x1,y0,y1:integer;
+begin
+  Result:=false;
+  Rect.Left:=0;
+  Rect.Top:=0;
+  Rect.Width:=0;
+  Rect.Height:=0;
+  for i:=0 to FRowCount-1 do
+  begin
+    for j:=1 to FColCount do
+    begin
+      if (FTable[i,j].Visible)  then
+      begin
+        x0:=FTable[i,j].x;
+        x1:=x0+FTable[i,j].Width;
+
+        y0:=FTable[i,j].y;// i*FRowHeight;
+        y1:=y0+FTable[i,j].Height;
+
+        if (x>=x0) and (x<=x1) and (y>=y0) and (y<=y1) then
+        begin
+          Rect.Left:=x0;
+          Rect.Top:=y0;
+          Rect.Width:=FTable[i,j].Width;
+          Rect.Height:=FTable[i,j].Height;
+          FSelectCol:=j;
+          FSelectRow:=i;
+          Result:=true;
+          Break;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TQFGridPanelComponent.MouseDown(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
@@ -5139,43 +5211,6 @@ procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   i,j:integer;
 
-  function isCell(x,y:integer;out Rect:TRect):Boolean;
-  var
-    i,j,x0,x1,y0,y1:integer;
-  begin
-    Result:=false;
-    Rect.Left:=0;
-    Rect.Top:=0;
-    Rect.Width:=0;
-    Rect.Height:=0;
-    for i:=0 to FRowCount-1 do
-    begin
-      for j:=1 to FColCount do
-      begin
-        if (FTable[i,j].Visible)  then
-        begin
-          x0:=FTable[i,j].x;
-          x1:=x0+FTable[i,j].Width;
-
-          y0:=FTable[i,j].y;// i*FRowHeight;
-          y1:=y0+FTable[i,j].Height;
-
-          if (x>=x0) and (x<=x1) and (y>=y0) and (y<=y1) then
-          begin
-            Rect.Left:=x0;
-            Rect.Top:=y0;
-            Rect.Width:=FTable[i,j].Width;
-            Rect.Height:=FTable[i,j].Height;
-            FSelectCol:=j;
-            FSelectRow:=i;
-            Result:=true;
-            Break;
-          end;
-        end;
-      end;
-    end;
-  end;
-
   function isLine(x,y:integer;out i0,j0:integer):TCursor;
   var
     i,j,x0,x1,y0,y1:integer;
@@ -5225,7 +5260,7 @@ begin
   begin
     if isCell(x,y,FCurrentR) then
     begin
-      DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,1);
+      DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,true);
       FOldR:=FCurrentR;
       if FTable[FSelectRow,FSelectCol].DispType=5 then
         DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
