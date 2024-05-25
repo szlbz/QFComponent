@@ -36,7 +36,7 @@ type
     ShowBackImage: TCheckBox;
     ColEdit: TLabeledEdit;
     CellTextEdit: TLabeledEdit;
-    ColEdit1: TLabeledEdit;
+    GapEdit: TLabeledEdit;
     ColMerge: TLabeledEdit;
     EditFontSize: TEdit;
     GbxFontPreview: TGroupBox;

@@ -3753,6 +3753,7 @@ begin
   CellProper.PanelFontColor.Color:=FTable[FSelectRow,FSelectCol].FontColor;
   CellProper.PanelFontPreview1.Font.Color:=FTable[FSelectRow,FSelectCol].FontColor;
 
+  CellProper.GapEdit.Text:=FGap.ToString;
   CellProper.DrawBottomLine.Checked:=FTable[FSelectRow,FSelectCol].DrawBottom;
   CellProper.DrawLeftLine.Checked:=FTable[FSelectRow,FSelectCol].DrawLeft;
   CellProper.DrawRightLine.Checked:=FTable[FSelectRow,FSelectCol].DrawRight;
@@ -3821,6 +3822,9 @@ begin
     FBackImageFile:=CellProper.BackImageFile.Text;
     FShowBackImage:=CellProper.ShowBackImage.Checked;
     FBorder:=CellProper.TableBorder.Checked;
+
+    val(CellProper.GapEdit.Text,tmp,err);
+    FGap:=tmp;
 
     val(CellProper.ColEdit.Text,tmp,err);
     if tmp<>FColCount then

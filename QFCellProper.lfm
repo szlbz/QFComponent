@@ -331,7 +331,7 @@ object QFCellProper: TQFCellProper
       OnClick = CbxHAlignClick
     end
     object ColEdit: TLabeledEdit
-      Left = 272
+      Left = 400
       Height = 26
       Top = 573
       Width = 80
@@ -341,7 +341,7 @@ object QFCellProper: TQFCellProper
       TabOrder = 16
     end
     object RowEdit: TLabeledEdit
-      Left = 368
+      Left = 496
       Height = 26
       Top = 573
       Width = 80
@@ -351,7 +351,7 @@ object QFCellProper: TQFCellProper
       TabOrder = 17
     end
     object RowHeightEdit: TLabeledEdit
-      Left = 464
+      Left = 592
       Height = 26
       Top = 573
       Width = 96
@@ -361,7 +361,7 @@ object QFCellProper: TQFCellProper
       TabOrder = 18
     end
     object ColWidthEdit: TLabeledEdit
-      Left = 576
+      Left = 704
       Height = 26
       Top = 573
       Width = 96
@@ -371,7 +371,7 @@ object QFCellProper: TQFCellProper
       TabOrder = 19
     end
     object Button1: TButton
-      Left = 682
+      Left = 810
       Height = 42
       Top = 558
       Width = 128
@@ -729,6 +729,16 @@ object QFCellProper: TQFCellProper
       EditLabel.Caption = '单元格内边距'
       TabOrder = 40
       OnChange = RightLineStyleChange
+    end
+    object GapEdit: TLabeledEdit
+      Left = 271
+      Height = 26
+      Top = 573
+      Width = 80
+      EditLabel.Height = 18
+      EditLabel.Width = 80
+      EditLabel.Caption = '文字边距'
+      TabOrder = 41
     end
   end
   object StatusBar1: TStatusBar
