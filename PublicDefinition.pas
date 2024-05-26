@@ -5,7 +5,9 @@ interface
 uses
   Classes, SysUtils,Controls,FPCanvas,  Graphics,db;
 
-type
+type            //0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
+  TDispTypes = (dtText, dtPict, dtBookmak1, dtBookmak2, dtLink, dtComponent);
+
   TCell = record
      x:integer;
      y:integer;
@@ -14,7 +16,7 @@ type
      Height:integer;
      ColMerge:integer; //从当前单元格向右合并n个单元格
      RowMerge:integer; //从当单元格向下合并n个单元格
-     DispType:integer;//0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
+     DispType:TDispTypes;//0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
      str:string[255];
      URL:string[200];
      bookmarkstr:string[7];

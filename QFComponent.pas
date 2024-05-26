@@ -306,6 +306,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SetCellProper;//设置单元格参数
+    procedure ClearCells;
     procedure Refresh;
     procedure GetControlsList;
     procedure SaveQFConfig(filename:string);
@@ -417,7 +418,7 @@ var s1:string;
   tmp1,tmp2:string;
 begin
   CellType.bookmarkstr:='';
-  CellType.DispType:=0;
+  CellType.DispType:=dtText;
   CellType.FontStyle:=0;
   CellType.FontName:='';
   CellType.FontSize:=0;
@@ -498,14 +499,14 @@ begin
   begin
     s:=s.Replace('[C5]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.DispType:=0;
+    CellType.DispType:=dtText;
     CellType.Color := clBlue;
   end;
   if pos('[IMG]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.DispType:=1;
+    CellType.DispType:=dtPict;
   end;
   if (utf8Pos('<FONTSIZE=', s.ToUpper)>0) then
   begin
@@ -531,7 +532,7 @@ begin
     end;
     s:=s1;
     CellType.str:=s;
-    CellType.DispType:=0;//控件类
+    CellType.DispType:=dtText;
   end;
   if (utf8Pos('</FONTSIZE>', s.ToUpper)>0) then
   begin
@@ -539,7 +540,7 @@ begin
    // CellType.FontSize:=0;
     s1:=s1.Replace('</FONTSIZE>','',[rfReplaceAll, rfIgnoreCase]);
     CellType.str:=s1;
-    CellType.DispType:=0;//控件类
+    CellType.DispType:=dtText;
   end;
   if (utf8Pos('<COMPNAME=', s.ToUpper)>0) then
   begin
@@ -563,7 +564,7 @@ begin
       inc(i);
     end;
     CellType.str:='';//s1;
-    CellType.DispType:=5;//控件类
+    CellType.DispType:=dtComponent;//控件类
   end;
   if pos('<BM',s.ToUpper)>0 then
   begin
@@ -587,7 +588,7 @@ begin
       inc(i);
     end;
     CellType.str:=s1;
-    CellType.DispType:=2;
+    CellType.DispType:=dtBookmak1;
   end;
   if pos('[BM',s.ToUpper)>0 then
   begin
@@ -611,7 +612,7 @@ begin
       inc(i);
     end;
     CellType.str:=s1;
-    CellType.DispType:=3;
+    CellType.DispType:=dtBookmak2;
   end;
   if utf8pos('<COLMERGE=',s.ToUpper)>0 then
   begin
@@ -699,13 +700,13 @@ begin
     end;
     CellType.url:=url;
     CellType.str:=urldisptext;
-    CellType.DispType:=4;
+    CellType.DispType:=dtLink;
   end
   else
   if (pos('HTTP://',s.ToUpper)>0) or (pos('HTTPS://',s.ToUpper)>0) then
   begin
     CellType.str:=s;
-    CellType.DispType:=4;
+    CellType.DispType:=dtLink;
   end;
 end;
 
@@ -2554,12 +2555,12 @@ begin
 
   for i:=0 to row do  //绘表格文字
   begin
-    for j:=0 to col do
+    for j:=0 to col-1 do
     begin
       if FTable[i,j+1].Visible then
       begin
-        if (FTable[i,j+1].DispType=0) or (FTable[i,j+1].DispType=2)
-           or (FTable[i,j+1].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
+        if (FTable[i,j+1].DispType=dtText) or (FTable[i,j+1].DispType=dtBookmak1)
+           or (FTable[i,j+1].DispType=dtBookmak2) or (FTable[i,j+1].DispType=dtLink) then  //显示文字
         begin
           //设置字体属性
           if FTable[i,j+1].FontName<>'' then
@@ -2569,7 +2570,7 @@ begin
           if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
           if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
           if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
-          if FTable[i,j+1].DispType>1 then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
+          if FTable[i,j+1].DispType>dtPict then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
           else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
           //设置字体属性
 
@@ -2609,7 +2610,7 @@ begin
           h:=h1;
         end;
 
-        if FTable[i,j+1].DispType=4 then //确定URL在表格的位置
+        if FTable[i,j+1].DispType=dtLink then //确定URL在表格的位置
         begin
           for k:=0 to high(FHyperLink) do
           begin
@@ -2624,7 +2625,7 @@ begin
           end;
         end
         else
-        if FTable[i,j+1].DispType=2 then //BOOKMARK1
+        if FTable[i,j+1].DispType=dtBookmak1 then //BOOKMARK1
         begin
           for k:=0 to high(FBookMark1) do
           begin
@@ -2639,7 +2640,7 @@ begin
           end;
         end
         else
-        if FTable[i,j+1].DispType=3 then//BOOKMARK2
+        if FTable[i,j+1].DispType=dtBookmak2 then//BOOKMARK2
         begin
           for k:=0 to high(FBookMark2) do
           begin
@@ -2652,7 +2653,7 @@ begin
           end;
         end
         else
-        if FTable[i,j+1].DispType=1 then  //显示图形
+        if FTable[i,j+1].DispType=dtPict then  //显示图形
         begin
           x0:=FGapX+j*colWidth+1;
           y0:=FOffset + y+FGapY+(i)*h+4;
@@ -3696,6 +3697,36 @@ begin
   //FPopupMenu.Free;
 end;
 
+procedure TQFGridPanelComponent.ClearCells;
+begin
+  FTable[FSelectRow,FSelectCol].Gap:=0;
+  FTable[FSelectRow,FSelectCol].Align:=0;
+  FTable[FSelectRow,FSelectCol].BottomLineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].Color:=clWhite;
+  FTable[FSelectRow,FSelectCol].ColMerge:=0;
+  FTable[FSelectRow,FSelectCol].ComponentDataFieldName:=nil;
+  FTable[FSelectRow,FSelectCol].ComponentName:='';
+  FTable[FSelectRow,FSelectCol].ComponentDataSource:=nil;
+  FTable[FSelectRow,FSelectCol].ComponentType:='';
+  FTable[FSelectRow,FSelectCol].DispType:=dtText;
+  FTable[FSelectRow,FSelectCol].DrawBottom:=true;
+  FTable[FSelectRow,FSelectCol].DrawLeft:=true;
+  FTable[FSelectRow,FSelectCol].DrawRight:=true;
+  FTable[FSelectRow,FSelectCol].DrawTop:=true;
+  FTable[FSelectRow,FSelectCol].FontColor:=clBlack;
+  FTable[FSelectRow,FSelectCol].FontName:='';
+  FTable[FSelectRow,FSelectCol].FontSize:=0;
+  FTable[FSelectRow,FSelectCol].FontStyle:=0;//需改为枚举类型
+  FTable[FSelectRow,FSelectCol].LeftLineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].LineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].RightLineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].RowMerge:=0;
+  FTable[FSelectRow,FSelectCol].TopLineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].Visible:=true;
+  FTable[FSelectRow,FSelectCol].Width:=1;
+  FTable[FSelectRow,FSelectCol].str:='';
+end;
+
 procedure TQFGridPanelComponent.SetCellProper;
 var
   i,j:integer;
@@ -3734,11 +3765,11 @@ begin
   if FTable[FSelectRow,FSelectCol].Align>0 then
     CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
 
-  if FTable[FSelectRow,FSelectCol].DispType=0 then
+  if FTable[FSelectRow,FSelectCol].DispType=dtText then
     CellProper.CbxCellType.ItemIndex:=0;//文字
-  if FTable[FSelectRow,FSelectCol].DispType=3 then
+  if FTable[FSelectRow,FSelectCol].DispType=dtPict then
     CellProper.CbxCellType.ItemIndex:=1;//图像
-  if FTable[FSelectRow,FSelectCol].DispType=5 then
+  if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
     CellProper.CbxCellType.ItemIndex:=2;//控件
   CellProper.RowMerge.text:=FTable[FSelectRow,FSelectCol].RowMerge.ToString;
   CellProper.ColMerge.text:=FTable[FSelectRow,FSelectCol].ColMerge.ToString;
@@ -3953,8 +3984,8 @@ begin
     //   if Selection.Left>2 then   DeleteCol(TRect(Selection));
     //mtDeleteRow :
     // DeleteRow(TRect(Selection));
-    //mtClearCells :
-    //  ClearCells(TRect(Selection));
+    mtClearCells :
+      ClearCells;
     mtSetCellProp :
       SetCellProper;
   end;
@@ -4660,20 +4691,23 @@ begin
           CellGap:=FGap
         else
           CellGap:=FTable[i,j].Gap;
-        if (FTable[i,j].DispType=0) or (FTable[i,j+1].DispType=2)
-           or (FTable[i,j].DispType=3) or (FTable[i,j+1].DispType=4) then  //显示文字
+        if (FTable[i,j].DispType=dtText) or (FTable[i,j+1].DispType=dtBookmak1)
+           or (FTable[i,j].DispType=dtBookmak2) or (FTable[i,j+1].DispType=dtLink) then  //显示文字
         begin
           //设置字体属性
           if FTable[i,j].FontName<>'' then
             FBuffer.Canvas.Font.Name:=FTable[i,j].FontName
           else
             FBuffer.Canvas.Font.Name:=FOldFontName;
+
+            //TFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
+
           if FTable[i,j].FontStyle=0 then FBuffer.Canvas.Font.Style:=[];
           if FTable[i,j].FontStyle=1 then FBuffer.Canvas.Font.Style:=[fsBold];
           if FTable[i,j].FontStyle=2 then FBuffer.Canvas.Font.Style:=[fsStrikeOut];
           if FTable[i,j].FontStyle=3 then FBuffer.Canvas.Font.Style:=[fsItalic];
           if FTable[i,j].FontStyle=4 then FBuffer.Canvas.Font.Style:=[fsUnderline];
-          if (FTable[i,j].DispType>1) and (FTable[i,j].DispType<5) then  FBuffer.Canvas.Font.Color:=clBlue //URL,bookmark
+          if (FTable[i,j].DispType>dtPict) and (FTable[i,j].DispType<dtComponent) then  FBuffer.Canvas.Font.Color:=clBlue //URL,bookmark
           else FBuffer.Canvas.Font.Color:=FTable[i,j].Color;
           FBuffer.Canvas.Font.Size:=FTable[i,j].FontSize;
           FBuffer.Canvas.Font.Color:=FTable[i,j].FontColor;
@@ -4700,7 +4734,7 @@ begin
           //在指定位置显示文字
           DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
         end;
-        if (FTable[i,j].DispType=5) and (FRun=0) then  //控件
+        if (FTable[i,j].DispType=dtComponent) and (FRun=0) then  //控件
         begin
           Control:=FindChildControls(FTable[i,j].ComponentName);//查找控件
           if Control<>nil then
@@ -4746,7 +4780,7 @@ begin
             end;
           end;
         end;
-        if FTable[i,j].DispType=1 then  //显示图形
+        if FTable[i,j].DispType=dtPict then  //显示图形
         begin
           x0:=FTable[i,j].x+1;
           y0:=FTable[i,j].y+1;
@@ -4834,7 +4868,7 @@ var
 
           if (Rect.Left>=x0) and (Rect.Left+Rect.Width<=x1) and (Rect.top>=y0) and (Rect.top+Rect.Height<=y1) then
           begin
-            if FTable[i,j].DispType=5 then
+            if FTable[i,j].DispType=dtComponent then
             begin
               Control:= FindChildControls(FTable[i,j].ComponentName);
               Result:=true;
@@ -5040,7 +5074,7 @@ begin
       FMouseDownXY.Y := Y;
       if (FSelectRow>=0) and (FSelectCol>=0) then
       begin
-        if FTable[FSelectRow,FSelectCol].DispType=5 then
+        if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
           DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
         else
           DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
@@ -5198,7 +5232,7 @@ begin
   begin
     if (FSelectRow>-1) and (FSelectCol>-1) then
     begin
-      if FTable[FSelectRow,FSelectCol].DispType=5 then
+      if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
         DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
       else
         DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
@@ -5268,7 +5302,7 @@ begin
     begin
       DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,true);
       FOldR:=FCurrentR;
-      if FTable[FSelectRow,FSelectCol].DispType=5 then
+      if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
         DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
       else
         DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
@@ -5474,7 +5508,7 @@ begin
       jsonParamObj.Add('Height', FTable[i,j].Height);
       jsonParamObj.Add('ColMerge', FTable[i,j].ColMerge);
       jsonParamObj.Add('RowMerge', FTable[i,j].RowMerge);
-      jsonParamObj.Add('DispType', FTable[i,j].DispType);
+      jsonParamObj.Add('DispType', ord(FTable[i,j].DispType));
       jsonParamObj.Add('str', FTable[i,j].str);
       jsonParamObj.Add('Color', FTable[i,j].Color);
       jsonParamObj.Add('Align', FTable[i,j].Align);

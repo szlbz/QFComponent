@@ -260,11 +260,11 @@ begin
     GTable[Row,Col+1].Align:=CbxHAlign.ItemIndex+1;
 
   if CbxCellType.ItemIndex=0 then
-    GTable[Row,Col+1].DispType:=0; //文字
+    GTable[Row,Col+1].DispType:=dtText; //文字
   if CbxCellType.ItemIndex=1 then
-    GTable[Row,Col+1].DispType:=1; //图像
+    GTable[Row,Col+1].DispType:=dtPict; //图像
   if CbxCellType.ItemIndex=2 then
-    GTable[Row,Col+1].DispType:=5; //控件
+    GTable[Row,Col+1].DispType:=dtComponent; //控件
 
   if ComboBox1.ItemIndex>-1 then
     GTable[Row,Col+1].ComponentName:=ComboBox1.Items[ComboBox1.ItemIndex];
@@ -315,11 +315,11 @@ begin
   if GTable[Row,Col+1].Align>0 then
     CbxHAlign.ItemIndex:=GTable[Row,Col+1].Align-1;
 
-  if GTable[Row,Col+1].DispType=0 then
+  if GTable[Row,Col+1].DispType=dtText then
     CbxCellType.ItemIndex:=0;//文字
-  if GTable[Row,Col+1].DispType=1 then
+  if GTable[Row,Col+1].DispType=dtPict then
     CbxCellType.ItemIndex:=1;//图像
-  if GTable[Row,Col+1].DispType=5 then
+  if GTable[Row,Col+1].DispType=dtComponent then
     CbxCellType.ItemIndex:=2;//控件
   oldColMerge:=GTable[Row,Col+1].ColMerge;
   oldRowMerge:=GTable[Row,Col+1].RowMerge;

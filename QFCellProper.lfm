@@ -16,6 +16,7 @@ object QFCellProper: TQFCellProper
   OnCreate = FormCreate
   OnShow = FormShow
   Position = poScreenCenter
+  LCLVersion = '3.0.0.3'
   object Panel1: TPanel
     Left = 0
     Height = 624
