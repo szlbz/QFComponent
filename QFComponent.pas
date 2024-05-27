@@ -3704,7 +3704,6 @@ end;
 
 procedure TQFGridPanelComponent.CopyCells;
 begin
-
   FCopyTable.Gap:= FTable[FSelectRow,FSelectCol].Gap;
   FCopyTable.Align:= FTable[FSelectRow,FSelectCol].Align;
   FCopyTable.Color:= FTable[FSelectRow,FSelectCol].Color;
@@ -3737,7 +3736,6 @@ end;
 
 procedure TQFGridPanelComponent.PasteCells;
 begin
-
   FTable[FSelectRow,FSelectCol].Gap:=FCopyTable.Gap;
   FTable[FSelectRow,FSelectCol].Align:=FCopyTable.Align;
   FTable[FSelectRow,FSelectCol].Color:=FCopyTable.Color;
@@ -3795,7 +3793,6 @@ begin
   FTable[FSelectRow,FSelectCol].TopLineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].BottomLineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].Visible:=true;
-  FTable[FSelectRow,FSelectCol].Width:=1;
   FTable[FSelectRow,FSelectCol].str:='';
   TableMerge;
   DrawTable;
@@ -4767,8 +4764,6 @@ begin
             FBuffer.Canvas.Font.Name:=FTable[i,j].FontName
           else
             FBuffer.Canvas.Font.Name:=FOldFontName;
-
-            //TFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
 
           if FTable[i,j].FontStyle=cfsNone then FBuffer.Canvas.Font.Style:=[];
           if FTable[i,j].FontStyle=cfsBold then FBuffer.Canvas.Font.Style:=[fsBold];
