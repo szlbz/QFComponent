@@ -7,9 +7,7 @@ interface
 uses
   Classes, SysUtils, DB, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   ColorBox, ComCtrls, ComboEx, DBCtrls, EditBtn, Grids, QFComponent, Types,
-  LCLIntf,
-
-  fpjson, jsonparser,TypInfo;
+  LCLIntf,LCLType, DBExtCtrls,TypInfo,Process;
 
 type
 
@@ -170,9 +168,12 @@ begin
 end;
 
 procedure TForm1.Button9Click(Sender: TObject);
- begin
-   OpenURL('http://bbs.2ccc.com');
- end;
+var i: int64;
+begin
+i := -5;
+ShowMessage(IntToStr(i mod 8));
+//OpenURL('http://bbs.2ccc.com');
+end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);
 begin
