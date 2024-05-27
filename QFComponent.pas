@@ -435,19 +435,19 @@ begin
   begin
     s:=s.Replace('[L]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.Align :=1;
+    CellType.Align :=calLeft;
   end;
   if pos('[C]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[C]','',[rfReplaceAll,rfIgnoreCase]);
     CellType.str:=s;
-    CellType.Align :=2;
+    CellType.Align :=calClient;
   end;
   if pos('[R]',s.ToUpper)>0 then
   begin
     s:=s.Replace('[R]','',[rfReplaceAll,rfIgnoreCase]);
     CellType.str:=s;
-    CellType.Align :=3;
+    CellType.Align :=calRight;
   end;
   if pos('[#]',s.ToUpper)>0 then
   begin
@@ -1729,13 +1729,13 @@ begin
             if row=1 then  //第2行为表格单元的对齐方式
             begin
               if str=':-' then
-              FTable[0,col].Align:=1//居左
+              FTable[0,col].Align:=calLeft//居左
               else
               if str=':-:' then
-              FTable[0,col].Align:=2//居中
+              FTable[0,col].Align:=calClient//居中
               else
               if str='-:' then
-               FTable[0,col].Align:=3//居右
+               FTable[0,col].Align:=calRight//居右
             end
             else
             begin
@@ -2586,11 +2586,11 @@ begin
              h:=FTable[i,j+1].Height;
 
           x1:=x0; //居左
-          if FTable[0,j+1].Align=1 then
+          if FTable[0,j+1].Align=calLeft then
             x1:=x0 ;//居左
-         if FTable[0,j+1].Align=2 then
+         if FTable[0,j+1].Align=calClient then
             x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth))) div 2; //居中
-          if FTable[0,j+1].Align=3 then
+          if FTable[0,j+1].Align=calRight then
              x1:=x0+(colWidth-GetStringTextWidth(Buffer,TruncationStr(Buffer,FTable[i,j+1].str,colWidth)))-5; //居右
           if i=0 then
           begin
@@ -3702,13 +3702,13 @@ end;
 procedure TQFGridPanelComponent.ClearCells;
 begin
   FTable[FSelectRow,FSelectCol].Gap:=0;
-  FTable[FSelectRow,FSelectCol].Align:=0;
-  FTable[FSelectRow,FSelectCol].BottomLineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].Align:=calNone;
   FTable[FSelectRow,FSelectCol].Color:=clWhite;
-  FTable[FSelectRow,FSelectCol].ColMerge:=0;
+  //FTable[FSelectRow,FSelectCol].ColMerge:=0;
+  //FTable[FSelectRow,FSelectCol].RowMerge:=0;
   FTable[FSelectRow,FSelectCol].ComponentDataFieldName:=nil;
-  FTable[FSelectRow,FSelectCol].ComponentName:='';
   FTable[FSelectRow,FSelectCol].ComponentDataSource:=nil;
+  FTable[FSelectRow,FSelectCol].ComponentName:='';
   FTable[FSelectRow,FSelectCol].ComponentType:='';
   FTable[FSelectRow,FSelectCol].DispType:=dtText;
   FTable[FSelectRow,FSelectCol].DrawBottom:=true;
@@ -3719,11 +3719,12 @@ begin
   FTable[FSelectRow,FSelectCol].FontName:='';
   FTable[FSelectRow,FSelectCol].FontSize:=0;
   FTable[FSelectRow,FSelectCol].FontStyle:=cfsDefault;
+
   FTable[FSelectRow,FSelectCol].LeftLineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].LineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].RightLineStyle:=psSolid;
-  FTable[FSelectRow,FSelectCol].RowMerge:=0;
   FTable[FSelectRow,FSelectCol].TopLineStyle:=psSolid;
+  FTable[FSelectRow,FSelectCol].BottomLineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].Visible:=true;
   FTable[FSelectRow,FSelectCol].Width:=1;
   FTable[FSelectRow,FSelectCol].str:='';
@@ -3765,9 +3766,9 @@ begin
   CellProper.oldRowMerge:=FTable[FSelectRow,FSelectCol].RowMerge;
 
   CellProper.CellGapEdit.Text:=FTable[FSelectRow,FSelectCol].Gap.ToString;
-  if FTable[FSelectRow,FSelectCol].Align=0 then FTable[FSelectRow,FSelectCol].Align:=2;
-  if FTable[FSelectRow,FSelectCol].Align>0 then
-    CellProper.CbxHAlign.ItemIndex:=FTable[FSelectRow,FSelectCol].Align-1;
+  if FTable[FSelectRow,FSelectCol].Align=calNone then FTable[FSelectRow,FSelectCol].Align:=calClient;
+  if FTable[FSelectRow,FSelectCol].Align>calNone then
+    CellProper.CbxHAlign.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].Align)-1;
 
   if FTable[FSelectRow,FSelectCol].DispType=dtText then
     CellProper.CbxCellType.ItemIndex:=0;//文字
@@ -4724,14 +4725,14 @@ begin
           w1:=FTable[i,j].Width;
 
           x1:=x0+CellGap; //居左
-          if FTable[i,j].Align=0 then
-            FTable[i,j].Align:=2;//默认居中
-          if FTable[i,j].Align=1 then
+          if FTable[i,j].Align=calNone then
+            FTable[i,j].Align:=calClient;//默认居中
+          if FTable[i,j].Align=calLeft then
             x1:=x0+CellGap ;//居左
-          if FTable[i,j].Align=2 then
+          if FTable[i,j].Align=calClient then
             x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,
                 TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width))) div 2; //居中
-          if FTable[i,j].Align=3 then
+          if FTable[i,j].Align=calRight then
              x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,
                  TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-CellGap; //居右
           y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
@@ -5513,7 +5514,7 @@ begin
       jsonParamObj.Add('DispType', ord(FTable[i,j].DispType));
       jsonParamObj.Add('str', FTable[i,j].str);
       jsonParamObj.Add('Color', FTable[i,j].Color);
-      jsonParamObj.Add('Align', FTable[i,j].Align);
+      jsonParamObj.Add('Align', ord(FTable[i,j].Align));
       jsonParamObj.Add('FontName', FTable[i,j].FontName);
       jsonParamObj.Add('FontSize', FTable[i,j].FontSize);
       jsonParamObj.Add('FontStyle', ord(FTable[i,j].FontStyle));

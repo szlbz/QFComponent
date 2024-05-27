@@ -257,7 +257,7 @@ var
   tmp,err:integer;
 begin
   if CbxHAlign.ItemIndex>=0 then
-    GTable[Row,Col+1].Align:=CbxHAlign.ItemIndex+1;
+    GTable[Row,Col+1].Align:=CellAlign(CbxHAlign.ItemIndex+1);
 
   if CbxCellType.ItemIndex=0 then
     GTable[Row,Col+1].DispType:=dtText; //文字
@@ -311,9 +311,9 @@ begin
   col:=StringGrid1.Col;
   ComboBox1.ItemIndex:=
      ComboBox1.Items.IndexOf(GTable[Row,Col+1].ComponentName);
-  if GTable[Row,Col+1].Align=0 then GTable[Row,Col+1].Align:=2;
-  if GTable[Row,Col+1].Align>0 then
-    CbxHAlign.ItemIndex:=GTable[Row,Col+1].Align-1;
+  if GTable[Row,Col+1].Align=calNone then GTable[Row,Col+1].Align:=calClient;
+  if GTable[Row,Col+1].Align>calNone then
+    CbxHAlign.ItemIndex:=ord(GTable[Row,Col+1].Align)-1;
 
   if GTable[Row,Col+1].DispType=dtText then
     CbxCellType.ItemIndex:=0;//文字

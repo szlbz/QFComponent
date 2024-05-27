@@ -8,6 +8,7 @@ uses
 type            //0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
   TDispTypes = (dtText, dtPict, dtBookmak1, dtBookmak2, dtLink, dtComponent);
   TCellFontStyle  =(cfsDefault,cfsBold,cfsStrikeOut,cfsItalic,cfsUnderline);
+  CellAlign = (calNone, calLeft, calClient, calRight);
 
   TCell = record
      x:integer;
@@ -22,7 +23,7 @@ type            //0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
      URL:string[200];
      bookmarkstr:string[7];
      Color:TColor;
-     Align:byte;
+     Align:CellAlign;
      FontName:string[20];
      FontSize:integer;
      FontColor:TColor;
