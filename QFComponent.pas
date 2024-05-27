@@ -48,6 +48,8 @@ const
 
 type
 
+  TLineDispType = (ltText,ltLine,lt2Line,ltImg,ltUrl,ltComponent,ltBookMark1,ltBookMark2);
+
   TLineType = record
      str:string;
      FontName:string[30];
@@ -58,7 +60,7 @@ type
      Align:integer;
      URL:string;
      URLStr:string;
-     DispType:string[10];
+     DispType:TLineDispType;
      BookMark1:string;
      BookMark2:string;
   end;
@@ -419,7 +421,7 @@ var s1:string;
 begin
   CellType.bookmarkstr:='';
   CellType.DispType:=dtText;
-  CellType.FontStyle:=0;
+  CellType.FontStyle:=cfsDefault;
   CellType.FontName:='';
   CellType.FontSize:=0;
   CellType.Color:=clBlack;
@@ -451,25 +453,25 @@ begin
   begin
     s:=s.Replace('[#]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.FontStyle :=1;//[fsBold];
+    CellType.FontStyle :=cfsBold;
   end;
   if pos('[@]',s)>0 then
   begin
     s:=s.Replace('[@]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.FontStyle :=2;//[fsStrikeOut];
+    CellType.FontStyle :=cfsStrikeOut;
   end;
   if pos('[$]',s)>0 then
   begin
     s:=s.Replace('[$]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.FontStyle :=3;//[fsItalic];
+    CellType.FontStyle :=cfsItalic;
   end;
   if pos('[!]',s)>0 then
   begin
     s:=s.Replace('[!]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     CellType.str:=s;
-    CellType.FontStyle :=4;//[fsUnderline];
+    CellType.FontStyle :=cfsUnderline;
   end;
   if pos('[C1]',s.ToUpper)>0 then
   begin
@@ -1216,7 +1218,7 @@ var newbmstr,nbms:string;
 begin
   Result:=str;
   textstyle:='';
-  FLineList[i].DispType:='';
+  FLineList[i].DispType:=ltText;
   FLineList[i].URLStr:='';
   FLineList[i].URL:='';
   FLineList[i].FontSize:=FOldFontSize;
@@ -1333,21 +1335,21 @@ begin
      (pos('___',str.ToUpper)>0) or (pos('---',str.ToUpper)>0) then
   begin
     textstyle:=textstyle+'[LINE]';
-    FLineList[i].DispType:='LINE';
+    FLineList[i].DispType:=ltLine;
     str:=str.Replace('[LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
   end;
   //双分割线
   if pos('[2LINE]',str.ToUpper)>0 then
   begin
     textstyle:=textstyle+'[2LINE]';
-    FLineList[i].DispType:='2LINE';
+    FLineList[i].DispType:=lt2Line;
     str:=str.Replace('[2LING]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
   end;
   //图像
   if pos('[IMG]',str.ToUpper)>0 then
   begin
     textstyle:=textstyle+'[IMG]';
-    FLineList[i].DispType:='IMG';
+    FLineList[i].DispType:=ltImg;
     str:=str.Replace('[IMG]','',[rfReplaceAll,rfIgnoreCase]);//全部替换，忽略大小写
     if  FileExists(FPathConfig+str) then
     begin
@@ -1382,7 +1384,7 @@ begin
 
     FLineList[i].FontColor := clBlue;
     FLineList[i].url:=hlkstr;
-    FLineList[i].DispType:='URL';
+    FLineList[i].DispType:=ltUrl;
   end
   else
   if (utf8Pos('<COMPNAME=', str.ToUpper)>0) then
@@ -1399,7 +1401,7 @@ begin
     nbms:=utf8copy(str,pos1+1,pos2-pos1-1);
     textstyle:=textstyle+'<COMPNAME='+nbms+'>';
     str:=str.Replace('<COMPNAME='+nbms+'>','',[rfReplaceAll,rfIgnoreCase]);
-    FLineList[i].DispType:='COMPONENT';
+    FLineList[i].DispType:=ltComponent;
   end
   else
   if (utf8Pos('<BM', str.ToUpper)>0) then
@@ -1418,7 +1420,7 @@ begin
     textstyle:=textstyle+'<'+nbms+'>';
     str:=newbmstr;
     FLineList[i].BookMark1:=nbms;
-    FLineList[i].DispType:='BOOKMARK1';
+    FLineList[i].DispType:=ltBookMark1;
     FLineList[i].FontColor := clBlue;
   end;
   if (Pos('[BM', str.ToUpper)>0) then
@@ -1437,7 +1439,7 @@ begin
     textstyle:=textstyle+'['+nbms+']';
     str:=newbmstr;
     FLineList[i].BookMark2:=nbms;
-    FLineList[i].DispType:='BOOKMARK2';
+    FLineList[i].DispType:=ltBookMark2;
   end;
   Result:=str;
 end;
@@ -1594,7 +1596,7 @@ begin
         s:=TextPreprocessing(i,s,textstyle);
         Buffer.Canvas.Font.Size:=FLineList[i].FontSize;
         w:=Buffer.Canvas.TextWidth(ReplaceCharacters(s));
-        if FLineList[i].DispType='URL' then
+        if FLineList[i].DispType=ltUrl then
         begin
           FHyperLink[hls].URL:= FLineList[i].url;
           FHyperLink[hls].URLStr:= FLineList[i].URLStr;
@@ -1658,14 +1660,14 @@ begin
           inc(hls);
         end
         else
-        if FLineList[i].DispType='BOOKMARK1' then
+        if FLineList[i].DispType=ltBookMark1 then
         begin
            FBookMark1[bmsl1].BookMark:=FLineList[i].BookMark1;
            FBookMark1[bmsl1].hs:=i;//所在行数
            inc(bmsl1);
         end
         else
-        if FLineList[i].DispType='BOOKMARK2' then
+        if FLineList[i].DispType=ltBookMark2 then
         begin
           FBookMark2[bmsl2].BookMark:=FLineList[i].BookMark2;
           FBookMark2[bmsl2].hs:=i;//所在行数
@@ -2565,11 +2567,11 @@ begin
           //设置字体属性
           if FTable[i,j+1].FontName<>'' then
             Buffer.Canvas.Font.Name:=FTable[i,j+1].FontName;
-          if FTable[i,j+1].FontStyle=0 then Buffer.Canvas.Font.Style:=[];
-          if FTable[i,j+1].FontStyle=1 then Buffer.Canvas.Font.Style:=[fsBold];
-          if FTable[i,j+1].FontStyle=2 then Buffer.Canvas.Font.Style:=[fsStrikeOut];
-          if FTable[i,j+1].FontStyle=3 then Buffer.Canvas.Font.Style:=[fsItalic];
-          if FTable[i,j+1].FontStyle=4 then Buffer.Canvas.Font.Style:=[fsUnderline];
+          if FTable[i,j+1].FontStyle=cfsDefault then Buffer.Canvas.Font.Style:=[];
+          if FTable[i,j+1].FontStyle=cfsBold then Buffer.Canvas.Font.Style:=[fsBold];
+          if FTable[i,j+1].FontStyle=cfsStrikeOut then Buffer.Canvas.Font.Style:=[fsStrikeOut];
+          if FTable[i,j+1].FontStyle=cfsItalic then Buffer.Canvas.Font.Style:=[fsItalic];
+          if FTable[i,j+1].FontStyle=cfsUnderline then Buffer.Canvas.Font.Style:=[fsUnderline];
           if FTable[i,j+1].DispType>dtPict then  Buffer.Canvas.Font.Color:=clBlue //URL,bookmark
           else Buffer.Canvas.Font.Color:=FTable[i,j+1].Color;
           //设置字体属性
@@ -2702,14 +2704,14 @@ begin
   FTextHeigth:=0;
   for i:=0 to  Lineno - 1 do
   begin
-    if FLineList[i].DispType='LINE' then
+    if FLineList[i].DispType=ltLine then
     begin
       Buffer.Canvas.Pen.Color:=FLineList[i].FontColor;
       Buffer.Canvas.Line(FGapX,FOffset + y+FGapY+3,Buffer.Width-FGapX,FOffset + y+FGapY+3);
       y:=y+5;
     end
     else
-    if FLineList[i].DispType='2LINE' then
+    if FLineList[i].DispType=lt2Line then
     begin
       Buffer.Canvas.Pen.Color:=FLineList[i].FontColor;
       Buffer.Canvas.Line(FGapX,FOffset + y+FGapY,Buffer.Width-FGapX,FOffset + y+FGapY);
@@ -2717,7 +2719,7 @@ begin
       y:=y+5;
     end
     else
-    if FLineList[i].DispType='IMG' then
+    if FLineList[i].DispType=ltImg then
     begin
       if  FileExists(FPathConfig+FLineList[i].str) then
       begin
@@ -2774,7 +2776,7 @@ begin
       //在指定的位置显示字符串
       DisplayChar(Buffer,x, FOffset + y+FGapY, FLineList[i].str);
 
-      if FLineList[i].DispType='BOOKMARK1' then
+      if FLineList[i].DispType=ltBookMark1 then
       begin
         for k:=0 to high(FBookMark1) do
         begin
@@ -2789,7 +2791,7 @@ begin
         end;
       end
       else
-      if FLineList[i].DispType='BOOKMARK2' then
+      if FLineList[i].DispType=ltBookMark2 then
       begin
         for k:=0 to high(FBookMark2) do
         begin
@@ -3716,7 +3718,7 @@ begin
   FTable[FSelectRow,FSelectCol].FontColor:=clBlack;
   FTable[FSelectRow,FSelectCol].FontName:='';
   FTable[FSelectRow,FSelectCol].FontSize:=0;
-  FTable[FSelectRow,FSelectCol].FontStyle:=0;//需改为枚举类型
+  FTable[FSelectRow,FSelectCol].FontStyle:=cfsDefault;
   FTable[FSelectRow,FSelectCol].LeftLineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].LineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].RightLineStyle:=psSolid;
@@ -3725,6 +3727,8 @@ begin
   FTable[FSelectRow,FSelectCol].Visible:=true;
   FTable[FSelectRow,FSelectCol].Width:=1;
   FTable[FSelectRow,FSelectCol].str:='';
+  TableMerge;
+  DrawTable;
 end;
 
 procedure TQFGridPanelComponent.SetCellProper;
@@ -4702,11 +4706,11 @@ begin
 
             //TFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
 
-          if FTable[i,j].FontStyle=0 then FBuffer.Canvas.Font.Style:=[];
-          if FTable[i,j].FontStyle=1 then FBuffer.Canvas.Font.Style:=[fsBold];
-          if FTable[i,j].FontStyle=2 then FBuffer.Canvas.Font.Style:=[fsStrikeOut];
-          if FTable[i,j].FontStyle=3 then FBuffer.Canvas.Font.Style:=[fsItalic];
-          if FTable[i,j].FontStyle=4 then FBuffer.Canvas.Font.Style:=[fsUnderline];
+          if FTable[i,j].FontStyle=cfsDefault then FBuffer.Canvas.Font.Style:=[];
+          if FTable[i,j].FontStyle=cfsBold then FBuffer.Canvas.Font.Style:=[fsBold];
+          if FTable[i,j].FontStyle=cfsStrikeOut then FBuffer.Canvas.Font.Style:=[fsStrikeOut];
+          if FTable[i,j].FontStyle=cfsItalic then FBuffer.Canvas.Font.Style:=[fsItalic];
+          if FTable[i,j].FontStyle=cfsUnderline then FBuffer.Canvas.Font.Style:=[fsUnderline];
           if (FTable[i,j].DispType>dtPict) and (FTable[i,j].DispType<dtComponent) then  FBuffer.Canvas.Font.Color:=clBlue //URL,bookmark
           else FBuffer.Canvas.Font.Color:=FTable[i,j].Color;
           FBuffer.Canvas.Font.Size:=FTable[i,j].FontSize;
@@ -5434,8 +5438,6 @@ begin
           FTable[j-no,k].FontColor:=TJSONObject(lItem.Items[0]).Get('FontColor');
           FTable[j-no,k].ComponentType:=TJSONObject(lItem.Items[0]).Get('ComponentType');
           FTable[j-no,k].ComponentName:=TJSONObject(lItem.Items[0]).Get('ComponentName');
-          //FTable[j-no,k].Width:=TJSONObject(lItem.Items[l]).Get('ComponentDataSource', TJSONObject.Create(FTable[i,j].ComponentDataSource));
-          //FTable[j-no,k].Width:=TJSONObject(lItem.Items[l]).Get('ComponentDataFieldName',TJSONObjectClass.Create(FTable[i,j].ComponentDataFieldName.ClassName));
           FTable[j-no,k].Visible:=TJSONObject(lItem.Items[0]).Get('Visible');
           FTable[j-no,k].DrawTop:=TJSONObject(lItem.Items[0]).Get('DrawTop');
           FTable[j-no,k].DrawLeft:=TJSONObject(lItem.Items[0]).Get('DrawLeft');
@@ -5514,7 +5516,7 @@ begin
       jsonParamObj.Add('Align', FTable[i,j].Align);
       jsonParamObj.Add('FontName', FTable[i,j].FontName);
       jsonParamObj.Add('FontSize', FTable[i,j].FontSize);
-      jsonParamObj.Add('FontStyle', FTable[i,j].FontStyle);
+      jsonParamObj.Add('FontStyle', ord(FTable[i,j].FontStyle));
       jsonParamObj.Add('FontColor', FTable[i,j].FontColor);
       jsonParamObj.Add('ComponentType', FTable[i,j].ComponentType);
       jsonParamObj.Add('ComponentName', FTable[i,j].ComponentName);
