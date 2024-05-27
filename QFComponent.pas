@@ -118,6 +118,7 @@ type
     FHyperLink:array of THyperLink;
     FTablesl:array of TTableSL;
     FTable:Array of Array of TCell;
+    FCopyTable:Tcell;
     FOldFontSize:integer;
     FLineList:array of TLineType;
     FActive: boolean;
@@ -298,6 +299,9 @@ type
     procedure SaveJSON(files:string);
     function isCell(x,y:integer;out Rect:TRect):Boolean;
     function isComponent(Control:TControl):Boolean;
+    procedure ClearCells;
+    procedure CopyCells;
+    procedure PasteCells;
   protected
     procedure SetLines(const AValue: TStrings);override;
     procedure DoOnChangeBounds; override;
@@ -308,7 +312,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SetCellProper;//设置单元格参数
-    procedure ClearCells;
     procedure Refresh;
     procedure GetControlsList;
     procedure SaveQFConfig(filename:string);
@@ -3699,6 +3702,72 @@ begin
   //FPopupMenu.Free;
 end;
 
+procedure TQFGridPanelComponent.CopyCells;
+begin
+
+  FCopyTable.Gap:= FTable[FSelectRow,FSelectCol].Gap;
+  FCopyTable.Align:= FTable[FSelectRow,FSelectCol].Align;
+  FCopyTable.Color:= FTable[FSelectRow,FSelectCol].Color;
+  FCopyTable.ColMerge:= FTable[FSelectRow,FSelectCol].ColMerge;
+  FCopyTable.RowMerge:= FTable[FSelectRow,FSelectCol].RowMerge;
+  FCopyTable.ComponentDataFieldName:= FTable[FSelectRow,FSelectCol].ComponentDataFieldName;
+  FCopyTable.ComponentDataSource:= FTable[FSelectRow,FSelectCol].ComponentDataSource;
+  FCopyTable.ComponentName:= FTable[FSelectRow,FSelectCol].ComponentName;
+  FCopyTable.ComponentName:= FTable[FSelectRow,FSelectCol].ComponentType;
+  FCopyTable.DispType:= FTable[FSelectRow,FSelectCol].DispType;
+  FCopyTable.DrawBottom:= FTable[FSelectRow,FSelectCol].DrawBottom;
+  FCopyTable.DrawLeft:= FTable[FSelectRow,FSelectCol].DrawLeft;
+  FCopyTable.DrawRight:= FTable[FSelectRow,FSelectCol].DrawRight;
+  FCopyTable.DrawTop:= FTable[FSelectRow,FSelectCol].DrawTop;
+  FCopyTable.FontColor:= FTable[FSelectRow,FSelectCol].FontColor;
+  FCopyTable.FontName:= FTable[FSelectRow,FSelectCol].FontName;
+  FCopyTable.FontSize:= FTable[FSelectRow,FSelectCol].FontSize;
+  FCopyTable.FontStyle:= FTable[FSelectRow,FSelectCol].FontStyle;
+
+  FCopyTable.LeftLineStyle:= FTable[FSelectRow,FSelectCol].LeftLineStyle;
+  FCopyTable.LineStyle:= FTable[FSelectRow,FSelectCol].LineStyle;
+  FCopyTable.RightLineStyle:= FTable[FSelectRow,FSelectCol].RightLineStyle;
+  FCopyTable.TopLineStyle:= FTable[FSelectRow,FSelectCol].TopLineStyle;
+  FCopyTable.BottomLineStyle:= FTable[FSelectRow,FSelectCol].BottomLineStyle;
+  FCopyTable.Visible:= FTable[FSelectRow,FSelectCol].Visible;
+  FCopyTable.Width:= FTable[FSelectRow,FSelectCol].Width;
+  FCopyTable.str:= FTable[FSelectRow,FSelectCol].str;
+  FPOpupMenu.Items[1].Enabled:=true;  //粘贴
+end;
+
+procedure TQFGridPanelComponent.PasteCells;
+begin
+
+  FTable[FSelectRow,FSelectCol].Gap:=FCopyTable.Gap;
+  FTable[FSelectRow,FSelectCol].Align:=FCopyTable.Align;
+  FTable[FSelectRow,FSelectCol].Color:=FCopyTable.Color;
+  FTable[FSelectRow,FSelectCol].ColMerge:=FCopyTable.ColMerge;
+  FTable[FSelectRow,FSelectCol].RowMerge:= FCopyTable.RowMerge;
+  FTable[FSelectRow,FSelectCol].ComponentDataFieldName:=FCopyTable.ComponentDataFieldName;
+  FTable[FSelectRow,FSelectCol].ComponentDataSource:=FCopyTable.ComponentDataSource;
+  FTable[FSelectRow,FSelectCol].ComponentName:=FCopyTable.ComponentName;
+  FTable[FSelectRow,FSelectCol].ComponentType:=FCopyTable.ComponentName;
+  FTable[FSelectRow,FSelectCol].DispType:=FCopyTable.DispType;
+  FTable[FSelectRow,FSelectCol].DrawBottom:=FCopyTable.DrawBottom;
+  FTable[FSelectRow,FSelectCol].DrawLeft:=FCopyTable.DrawLeft;
+  FTable[FSelectRow,FSelectCol].DrawRight:=FCopyTable.DrawRight;
+  FTable[FSelectRow,FSelectCol].DrawTop:=FCopyTable.DrawTop;
+  FTable[FSelectRow,FSelectCol].FontColor:=FCopyTable.FontColor;
+  FTable[FSelectRow,FSelectCol].FontName:=FCopyTable.FontName;
+  FTable[FSelectRow,FSelectCol].FontSize:=FCopyTable.FontSize;
+  FTable[FSelectRow,FSelectCol].FontStyle:=FCopyTable.FontStyle;
+
+  FTable[FSelectRow,FSelectCol].LeftLineStyle:=FCopyTable.LeftLineStyle;
+  FTable[FSelectRow,FSelectCol].LineStyle:=FCopyTable.LineStyle;
+  FTable[FSelectRow,FSelectCol].RightLineStyle:=FCopyTable.RightLineStyle;
+  FCopyTable.TopLineStyle:= FTable[FSelectRow,FSelectCol].TopLineStyle;
+  FTable[FSelectRow,FSelectCol].BottomLineStyle:=FCopyTable.BottomLineStyle;
+  FTable[FSelectRow,FSelectCol].Visible:=FCopyTable.Visible;
+  FTable[FSelectRow,FSelectCol].Width:=FCopyTable.Width;
+  FTable[FSelectRow,FSelectCol].str:=FCopyTable.str;
+  DrawTable;
+end;
+
 procedure TQFGridPanelComponent.ClearCells;
 begin
   FTable[FSelectRow,FSelectCol].Gap:=0;
@@ -3975,12 +4044,10 @@ begin
   //selectcell:= FOnSelectCell;
   //FOnSelectCell:=nil;
   case TStMenuItemTag(TMenuItem(Sender).Tag) of
-    //mtCut :
-    //  CutCells(TRect(Selection));
-    //mtCopy :
-    //  CopyCells(TRect(Selection));
-    //mtPaste :
-    //  PasteCells(TPoint(FCurrent));
+    mtCopy :
+      CopyCells;
+    mtPaste :
+      PasteCells;
     //mtInsertCol :
     //  InsertCol(TRect(Selection));
     //mtInsertRow :
@@ -4003,12 +4070,6 @@ var
   AMenuItem, BMenuItem: TMenuItem;
 begin
   AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '剪切(&T)';
-  AMenuItem.Tag := Ord(mtCut);
-  AMenuItem.OnClick := @MenuItemClick;
-  FPOpupMenu.Items.Add(AMenuItem);
-
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
   AMenuItem.Caption := '复制(&C)';
   AMenuItem.Tag := Ord(mtCopy);
   AMenuItem.OnClick := @MenuItemClick;
@@ -4018,6 +4079,8 @@ begin
   AMenuItem.Caption := '粘贴(&P)';
   AMenuItem.Tag := Ord(mtPaste);
   AMenuItem.OnClick := @MenuItemClick;
+  AMenuItem.Enabled:=false;
+  AMenuItem.Name:='miPaste';
   FPOpupMenu.Items.Add(AMenuItem);
 
   AMenuItem := TMenuItem.Create(FPOpupMenu);
