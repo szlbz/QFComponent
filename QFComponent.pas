@@ -44,7 +44,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='0.9.9.11';
+  Version ='0.9.9.12';
 
 type
 
@@ -3702,6 +3702,7 @@ begin
   //FPopupMenu.Free;
 end;
 
+//复制单元格
 procedure TQFGridPanelComponent.CopyCells;
 begin
   FCopyTable.Gap:= FTable[FSelectRow,FSelectCol].Gap;
@@ -3731,9 +3732,10 @@ begin
   FCopyTable.Visible:= FTable[FSelectRow,FSelectCol].Visible;
   FCopyTable.Width:= FTable[FSelectRow,FSelectCol].Width;
   FCopyTable.str:= FTable[FSelectRow,FSelectCol].str;
-  FPOpupMenu.Items[1].Enabled:=true;  //粘贴
+  FPOpupMenu.Items[1].Enabled:=true;  //粘贴菜单项设置true
 end;
 
+//粘贴单元格
 procedure TQFGridPanelComponent.PasteCells;
 begin
   FTable[FSelectRow,FSelectCol].Gap:=FCopyTable.Gap;
@@ -3766,6 +3768,7 @@ begin
   DrawTable;
 end;
 
+//清除单元格
 procedure TQFGridPanelComponent.ClearCells;
 begin
   FTable[FSelectRow,FSelectCol].Gap:=0;
@@ -3798,6 +3801,7 @@ begin
   DrawTable;
 end;
 
+//设置单元格
 procedure TQFGridPanelComponent.SetCellProper;
 var
   i,j:integer;

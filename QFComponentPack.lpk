@@ -35,7 +35,7 @@
 {                                                                                        }
 {*******************************************************}
 "/>
-    <Version Minor="9" Release="9" Build="9"/>
+    <Version Minor="9" Release="9" Build="12"/>
     <Files>
       <Item>
         <Filename Value="QFComponent.pas"/>
