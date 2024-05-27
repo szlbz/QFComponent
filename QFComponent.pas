@@ -424,7 +424,7 @@ var s1:string;
 begin
   CellType.bookmarkstr:='';
   CellType.DispType:=dtText;
-  CellType.FontStyle:=cfsDefault;
+  CellType.FontStyle:=cfsNone;
   CellType.FontName:='';
   CellType.FontSize:=0;
   CellType.Color:=clBlack;
@@ -2570,7 +2570,7 @@ begin
           //设置字体属性
           if FTable[i,j+1].FontName<>'' then
             Buffer.Canvas.Font.Name:=FTable[i,j+1].FontName;
-          if FTable[i,j+1].FontStyle=cfsDefault then Buffer.Canvas.Font.Style:=[];
+          if FTable[i,j+1].FontStyle=cfsNone then Buffer.Canvas.Font.Style:=[];
           if FTable[i,j+1].FontStyle=cfsBold then Buffer.Canvas.Font.Style:=[fsBold];
           if FTable[i,j+1].FontStyle=cfsStrikeOut then Buffer.Canvas.Font.Style:=[fsStrikeOut];
           if FTable[i,j+1].FontStyle=cfsItalic then Buffer.Canvas.Font.Style:=[fsItalic];
@@ -3787,7 +3787,7 @@ begin
   FTable[FSelectRow,FSelectCol].FontColor:=clBlack;
   FTable[FSelectRow,FSelectCol].FontName:='';
   FTable[FSelectRow,FSelectCol].FontSize:=0;
-  FTable[FSelectRow,FSelectCol].FontStyle:=cfsDefault;
+  FTable[FSelectRow,FSelectCol].FontStyle:=cfsNone;
 
   FTable[FSelectRow,FSelectCol].LeftLineStyle:=psSolid;
   FTable[FSelectRow,FSelectCol].LineStyle:=psSolid;
@@ -4770,7 +4770,7 @@ begin
 
             //TFontStyle = (fsBold, fsItalic, fsUnderline, fsStrikeOut);
 
-          if FTable[i,j].FontStyle=cfsDefault then FBuffer.Canvas.Font.Style:=[];
+          if FTable[i,j].FontStyle=cfsNone then FBuffer.Canvas.Font.Style:=[];
           if FTable[i,j].FontStyle=cfsBold then FBuffer.Canvas.Font.Style:=[fsBold];
           if FTable[i,j].FontStyle=cfsStrikeOut then FBuffer.Canvas.Font.Style:=[fsStrikeOut];
           if FTable[i,j].FontStyle=cfsItalic then FBuffer.Canvas.Font.Style:=[fsItalic];

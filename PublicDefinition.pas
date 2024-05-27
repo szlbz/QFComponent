@@ -7,7 +7,7 @@ uses
 
 type            //0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
   TDispTypes = (dtText, dtPict, dtBookmak1, dtBookmak2, dtLink, dtComponent);
-  TCellFontStyle  =(cfsDefault,cfsBold,cfsStrikeOut,cfsItalic,cfsUnderline);
+  TCellFontStyle  =(cfsNone,cfsBold,cfsStrikeOut,cfsItalic,cfsUnderline);
   CellAlign = (calNone, calLeft, calClient, calRight);
 
   TCell = record
