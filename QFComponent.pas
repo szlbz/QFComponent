@@ -37,7 +37,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
   OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,Grids,DBGrids,  FPCanvas,
-  fpjson,lazutf8,PublicDefinition,LazIDEIntf,EditBtn,DBExtCtrls,
+  fpjson,lazutf8,PublicUnit,LazIDEIntf,EditBtn,DBExtCtrls,
   lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit;
 
 const
@@ -95,10 +95,7 @@ type
   end;
 
   // 弹出菜单的标识
-  TStMenuItemTag = (mtCut, mtCopy, mtPaste,
-                  mtInsertRow, mtInsertCol,
-                  mtDeleteRow, mtDeleteCol,
-                  mtClearCells, mtSetCellProp);
+  TStMenuItemTag = (mtCopy, mtPaste, mtClearCells, mtSetCellProp);
 
   TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private

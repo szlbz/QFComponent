@@ -4,7 +4,7 @@ interface
 
 uses
   LCLType, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, ExtCtrls, Grids, ExtDlgs,PublicDefinition,FPCanvas;
+  StdCtrls, ComCtrls, ExtCtrls, Grids, ExtDlgs,PublicUnit,FPCanvas;
 
 type
 
