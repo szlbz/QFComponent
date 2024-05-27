@@ -3951,41 +3951,9 @@ begin
     begin
       FCellLineStyle:=TFPPenStyle(CellProper.CbxLineStyle.ItemIndex);
     end;
-{
-    if CellProper.CbxHAlign.ItemIndex>=0 then
-      FTable[FSelectRow,FSelectCol].Align:=CellProper.CbxHAlign.ItemIndex+1;
-}
-    //val(CellProper.RowMerge.Text,tmp,err);
-    //FTable[FSelectRow,FSelectCol].RowMerge:=tmp;
-    //val(CellProper.ColMerge.Text,tmp,err);
-    //FTable[FSelectRow,FSelectCol].ColMerge:=tmp;
 
     FColSizing:=CellProper.ChkColSizing.Checked;
     FRowSizing:=CellProper.ChkRowSizing.Checked;
-{
-    if CellProper.LbxFontName.ItemIndex>=0 then
-      FTable[FSelectRow,FSelectCol].FontName:=CellProper.LbxFontName.Items.ValueFromIndex[CellProper.LbxFontName.ItemIndex];
-    if CellProper.LbxFontSize.itemindex>=0 then
-    begin
-      val(CellProper.LbxFontSize.Items.ValueFromIndex[CellProper.LbxFontSize.itemindex],tmp,err);
-      FTable[FSelectRow,FSelectCol].FontSize:=tmp;
-    end;
-    FTable[FSelectRow,FSelectCol].FontColor:=CellProper.PanelFontColor.Color;
-}
-    //val(CellProper.ColWidthEdit.Text,tmp,err);
-    //FColWidth:=tmp;
-    //val(CellProper.RowHeightEdit.Text,tmp,err);
-    //FRowHeight:=tmp;
-{
-    FTable[FSelectRow,FSelectCol].DrawBottom:=CellProper.DrawBottomLine.Checked;
-    FTable[FSelectRow,FSelectCol].DrawLeft:=CellProper.DrawLeftLine.Checked;
-    FTable[FSelectRow,FSelectCol].DrawRight:=CellProper.DrawRightLine.Checked;
-    FTable[FSelectRow,FSelectCol].DrawTop:=CellProper.DrawTopLine.Checked;
-    FTable[FSelectRow,FSelectCol].LeftLineStyle:=TFPPenStyle(CellProper.LeftLineStyle.ItemIndex);
-    FTable[FSelectRow,FSelectCol].RightLineStyle:=TFPPenStyle(CellProper.RightLineStyle.ItemIndex);
-    FTable[FSelectRow,FSelectCol].BottomLineStyle:=TFPPenStyle(CellProper.BottomLineStyle.ItemIndex);
-    FTable[FSelectRow,FSelectCol].TopLineStyle:=TFPPenStyle(CellProper.TopLineStyle.ItemIndex);
-}
 
     for i:=0 to FRowCount-1 do
     begin
@@ -4038,33 +4006,22 @@ end;
 
 procedure TQFGridPanelComponent.MenuItemClick(Sender: TObject);
 begin
-  //selectcell:= FOnSelectCell;
-  //FOnSelectCell:=nil;
   case TStMenuItemTag(TMenuItem(Sender).Tag) of
     mtCopy :
       CopyCells;
     mtPaste :
       PasteCells;
-    //mtInsertCol :
-    //  InsertCol(TRect(Selection));
-    //mtInsertRow :
-    //  InsertRow(TRect(Selection));
-    //mtDeleteCol :
-    //   if Selection.Left>2 then   DeleteCol(TRect(Selection));
-    //mtDeleteRow :
-    // DeleteRow(TRect(Selection));
     mtClearCells :
       ClearCells;
     mtSetCellProp :
       SetCellProper;
   end;
-  //FOnSelectCell:=selectcell;
 end;
 
 // 初始化弹出式菜单
 procedure TQFGridPanelComponent.InitPopupMenu;
 var
-  AMenuItem, BMenuItem: TMenuItem;
+  AMenuItem: TMenuItem;
 begin
   AMenuItem := TMenuItem.Create(FPOpupMenu);
   AMenuItem.Caption := '复制(&C)';
@@ -4077,45 +4034,12 @@ begin
   AMenuItem.Tag := Ord(mtPaste);
   AMenuItem.OnClick := @MenuItemClick;
   AMenuItem.Enabled:=false;
-  AMenuItem.Name:='miPaste';
   FPOpupMenu.Items.Add(AMenuItem);
 
   AMenuItem := TMenuItem.Create(FPOpupMenu);
   AMenuItem.Caption := '-';
   FPOpupMenu.Items.Add(AMenuItem);
-{
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '插入';
-  FPOpupMenu.Items.Add(AMenuItem);
 
-    BMenuItem := TMenuItem.Create(AMenuItem);
-    BMenuItem.Caption := '插入整行';
-    BMenuItem.Tag := Ord(mtInsertRow);
-    BMenuItem.OnClick := @MenuItemClick;
-    AMenuItem.Add(BMenuItem);
-
-    BMenuItem := TMenuItem.Create(AMenuItem);
-    BMenuItem.Caption := '插入整列';
-    BMenuItem.Tag := Ord(mtInsertCol);
-    BMenuItem.OnClick := @MenuItemClick;
-    AMenuItem.Add(BMenuItem);
-
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '删除';
-    FPOpupMenu.Items.Add(AMenuItem);
-
-    BMenuItem := TMenuItem.Create(AMenuItem);
-    BMenuItem.Caption := '删除整行';
-    BMenuItem.Tag := Ord(mtDeleteRow);
-    BMenuItem.OnClick := @MenuItemClick;
-    AMenuItem.Add(BMenuItem);
-
-    BMenuItem := TMenuItem.Create(AMenuItem);
-    BMenuItem.Caption := '删除整列';
-    BMenuItem.Tag := Ord(mtDeleteCol);
-    BMenuItem.OnClick := @MenuItemClick;
-    AMenuItem.Add(BMenuItem);
-}
   AMenuItem := TMenuItem.Create(FPOpupMenu);
   AMenuItem.Caption := '清除单元格内容';
   AMenuItem.Tag := Ord(mtClearCells);
