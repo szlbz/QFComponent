@@ -38,7 +38,10 @@ uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
   OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,Grids,DBGrids,  FPCanvas,
   fpjson,lazutf8,PublicUnit,LazIDEIntf,EditBtn,DBExtCtrls,
-  lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit;
+  lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit,
+  //添加设计时鼠标右按弹出菜单需要用到的单元
+  ComponentEditors,PropEdits
+  ;
 
 const
   ReservedSpace = 1024;
@@ -329,6 +332,13 @@ type
     property ColSizing:Boolean read FColSizing write FColSizing default true;
     property RowSizing:Boolean read FRowSizing write FRowSizing default true;
     property ConfigFileName:string read FConfigFileName write FConfigFileName;
+  end;
+
+  TQFGridPanelComponentEditor = class(TComponentEditor)
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
   end;
 
 procedure Register;
@@ -3656,7 +3666,10 @@ var m:TMenuItem;
 begin
   inherited Create(AOwner);
 
-  FPopupMenu:=TPopupMenu.Create(self);
+  //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
+  //  FPOpupMenu:=TPopupMenu.Create(AOwner)
+  //else
+    FPopupMenu:=TPopupMenu.Create(self);
   InitPopupMenu;
   FEditFocusColor:=clWhite;
   FEditFontFocusColor:=clBlack;
@@ -3826,7 +3839,7 @@ begin
   CellProper.StringGrid1.Row:=FSelectRow;
   CellProper.StringGrid1.Col:=FSelectCol-1;
   CellProper.CellTextEdit.Text:=FTable[FSelectRow,FSelectCol].str;
-  CellProper.StatusBar1.Panels[0].Text:='行:'+FSelectRow.ToString+'  列:'+(FSelectCol-1).ToString;
+  CellProper.StatusBar1.Panels[0].Text:='行:'+(FSelectRow+1).ToString+'  列:'+(FSelectCol).ToString;
   CellProper.StatusBar1.Panels[1].Text:=FTable[FSelectRow,FSelectCol].str;//StringGrid1.Cells[col,row];
 
   CellProper.oldColMerge:=FTable[FSelectRow,FSelectCol].ColMerge;
@@ -4024,38 +4037,38 @@ procedure TQFGridPanelComponent.InitPopupMenu;
 var
   AMenuItem: TMenuItem;
 begin
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '复制(&C)';
-  AMenuItem.Tag := Ord(mtCopy);
-  AMenuItem.OnClick := @MenuItemClick;
-  FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '复制(&C)';
+    AMenuItem.Tag := Ord(mtCopy);
+    AMenuItem.OnClick := @MenuItemClick;
+    FPOpupMenu.Items.Add(AMenuItem);
 
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '粘贴(&P)';
-  AMenuItem.Tag := Ord(mtPaste);
-  AMenuItem.OnClick := @MenuItemClick;
-  AMenuItem.Enabled:=false;
-  FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '粘贴(&P)';
+    AMenuItem.Tag := Ord(mtPaste);
+    AMenuItem.OnClick := @MenuItemClick;
+    AMenuItem.Enabled:=false;
+    FPOpupMenu.Items.Add(AMenuItem);
 
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '-';
-  FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '-';
+    FPOpupMenu.Items.Add(AMenuItem);
 
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '清除单元格内容';
-  AMenuItem.Tag := Ord(mtClearCells);
-  AMenuItem.OnClick := @MenuItemClick;
-  FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '清除单元格内容';
+    AMenuItem.Tag := Ord(mtClearCells);
+    AMenuItem.OnClick := @MenuItemClick;
+    FPOpupMenu.Items.Add(AMenuItem);
 
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '-';
-  FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '-';
+    FPOpupMenu.Items.Add(AMenuItem);
 
-  AMenuItem := TMenuItem.Create(FPOpupMenu);
-  AMenuItem.Caption := '设置单元格';
-  AMenuItem.Tag := Ord(mtSetCellProp);
-  AMenuItem.OnClick := @MenuItemClick;
-  FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '设置单元格';
+    AMenuItem.Tag := Ord(mtSetCellProp);
+    AMenuItem.OnClick := @MenuItemClick;
+    FPOpupMenu.Items.Add(AMenuItem);
 end;
 
 procedure TQFGridPanelComponent.EditEnter(Sender: TObject);
@@ -5533,7 +5546,247 @@ begin
   jsonRoot:=nil;
 end;
 
+//添加设计时鼠标右按弹出菜单
+function EditQFGridPanel(AGrid: TQFGridPanelComponent): Boolean;
+var
+  i,j:integer;
+  Index,tmp,err: Integer;
+  CellProper :TQFCellProper;
+  oldRowCount,oldColCount:integer;
+begin
+  AGrid.GetControlsList;
+  CellProper := TQFCellProper.Create(Application);
+  try
+    setlength(CellProper.GTable,AGrid.FRowCount+1,AGrid.FColCount+2);
+    AGrid.FSelectRow:=0;
+    AGrid.FSelectCol:=1;
+    oldRowCount:= AGrid.FRowCount;
+    oldColCount:= AGrid.FColCount;
+    //根据当前单元格信息设置
+    CellProper.ColEdit.Text:=AGrid.FColCount.ToString;
+    CellProper.RowEdit.Text:=AGrid.FRowCount.ToString;
+    CellProper.LineColor.Color:=AGrid.FCellLineColor;
+    CellProper.CbxLineStyle.ItemIndex:=ord(AGrid.FCellLineStyle);
+    CellProper.ComboBox1.Items.Clear;
+    CellProper.ComboBox1.text:='';
+    CellProper.ComboBox1.Items.Assign(AGrid.FControlsList);
+    CellProper.ComboBox1.ItemIndex:=
+       CellProper.ComboBox1.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].ComponentName);
+    CellProper.StringGrid1.Row:=AGrid.FSelectRow;
+    CellProper.StringGrid1.Col:=AGrid.FSelectCol-1;
+    CellProper.CellTextEdit.Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].str;
+    CellProper.StatusBar1.Panels[0].Text:='行:'+(AGrid.FSelectRow+1).ToString+'  列:'+(AGrid.FSelectCol).ToString;
+    CellProper.StatusBar1.Panels[1].Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].str;//StringGrid1.Cells[col,row];
+
+    CellProper.oldColMerge:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].ColMerge;
+    CellProper.oldRowMerge:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].RowMerge;
+
+    CellProper.CellGapEdit.Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Gap.ToString;
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align=calNone then AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align:=calClient;
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align>calNone then
+      CellProper.CbxHAlign.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align)-1;
+
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DispType=dtText then
+      CellProper.CbxCellType.ItemIndex:=0;//文字
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DispType=dtPict then
+      CellProper.CbxCellType.ItemIndex:=1;//图像
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DispType=dtComponent then
+      CellProper.CbxCellType.ItemIndex:=2;//控件
+    CellProper.RowMerge.text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].RowMerge.ToString;
+    CellProper.ColMerge.text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].ColMerge.ToString;
+
+    CellProper.ChkColSizing.Checked:=AGrid.FColSizing;
+    CellProper.ChkRowSizing.Checked:=AGrid.FRowSizing;
+    CellProper.ColWidthEdit.Text:=AGrid.FColWidth.ToString;
+    CellProper.RowHeightEdit.Text:=AGrid.FRowHeight.ToString;
+    CellProper.EditFontSize.Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontSize.ToString;
+    CellProper.LbxFontName.ItemIndex:=CellProper.LbxFontName.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName);
+    CellProper.PanelFontPreview1.Font.Name:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName;
+    CellProper.LbxFontSize.ItemIndex:=CellProper.LbxFontSize.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontSize.ToString);
+    CellProper.PanelFontColor.Color:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontColor;
+    CellProper.PanelFontPreview1.Font.Color:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontColor;
+
+    CellProper.GapEdit.Text:=AGrid.FGap.ToString;
+    CellProper.DrawBottomLine.Checked:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DrawBottom;
+    CellProper.DrawLeftLine.Checked:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DrawLeft;
+    CellProper.DrawRightLine.Checked:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DrawRight;
+    CellProper.DrawTopLine.Checked:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DrawTop;
+    CellProper.LeftLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].LeftLineStyle);
+    CellProper.RightLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].RightLineStyle);
+    CellProper.BottomLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].BottomLineStyle);
+    CellProper.TopLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].TopLineStyle);
+    //根据控件的FRowCount和FColCount设置StringGrid的行和列
+    CellProper.StringGrid1.RowCount:=AGrid.FRowCount;
+    CellProper.StringGrid1.ColCount:=AGrid.FColCount;
+
+    CellProper.EditFontFocusColor.Color:=AGrid.FEditFontFocusColor;
+    CellProper.EditFocusColor.Color:=AGrid.FEditFocusColor;
+    CellProper.BackImageFile.Text:=AGrid.FBackImageFile;
+    CellProper.ShowBackImage.Checked:=AGrid.FShowBackImage;
+    CellProper.TableBorder.Checked:=AGrid.FBorder;
+
+    for i:=0 to AGrid.FRowCount-1 do
+    begin
+      //CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
+      for j:=0 to AGrid.FColCount do
+      begin
+        CellProper.GTable[i,j].Gap:=AGrid.FTable[i,j].Gap;
+        CellProper.GTable[i,j].Align:=AGrid.FTable[i,j].Align;
+        CellProper.GTable[i,j].BottomLineStyle:=AGrid.FTable[i,j].BottomLineStyle;
+        CellProper.GTable[i,j].Color:=AGrid.FTable[i,j].Color;
+        CellProper.GTable[i,j].ColMerge:=AGrid.FTable[i,j].ColMerge;
+        CellProper.GTable[i,j].RowMerge:=AGrid.FTable[i,j].RowMerge;
+        CellProper.GTable[i,j].ComponentDataFieldName:=AGrid.FTable[i,j].ComponentDataFieldName;
+        CellProper.GTable[i,j].ComponentName:=AGrid.FTable[i,j].ComponentName;
+        CellProper.GTable[i,j].ComponentDataSource:=AGrid.FTable[i,j].ComponentDataSource;
+        CellProper.GTable[i,j].ComponentType:=AGrid.FTable[i,j].ComponentType;
+        CellProper.GTable[i,j].DispType:=AGrid.FTable[i,j].DispType;
+        CellProper.GTable[i,j].DrawBottom:=AGrid.FTable[i,j].DrawBottom;
+        CellProper.GTable[i,j].DrawLeft:=AGrid.FTable[i,j].DrawLeft;
+        CellProper.GTable[i,j].DrawRight:=AGrid.FTable[i,j].DrawRight;
+        CellProper.GTable[i,j].DrawTop:=AGrid.FTable[i,j].DrawTop;
+        CellProper.GTable[i,j].FontColor:=AGrid.FTable[i,j].FontColor;
+        CellProper.GTable[i,j].FontName:=AGrid.FTable[i,j].FontName;
+        CellProper.GTable[i,j].FontSize:=AGrid.FTable[i,j].FontSize;
+        CellProper.GTable[i,j].FontStyle:=AGrid.FTable[i,j].FontStyle;
+        CellProper.GTable[i,j].Height:=AGrid.FTable[i,j].Height;
+        CellProper.GTable[i,j].LeftLineStyle:=AGrid.FTable[i,j].LeftLineStyle;
+        CellProper.GTable[i,j].LineStyle:=AGrid.FTable[i,j].LineStyle;
+        CellProper.GTable[i,j].RightLineStyle:=AGrid.FTable[i,j].RightLineStyle;
+        CellProper.GTable[i,j].str:=AGrid.FTable[i,j].str;
+        CellProper.GTable[i,j].TopLineStyle:=AGrid.FTable[i,j].TopLineStyle;
+        CellProper.GTable[i,j].Visible:=AGrid.FTable[i,j].Visible;
+        CellProper.GTable[i,j].Width:=AGrid.FTable[i,j].Width;
+        CellProper.GTable[i,j].x:=AGrid.FTable[i,j].x;
+        CellProper.GTable[i,j].y:=AGrid.FTable[i,j].y;
+        if j>0 then
+        CellProper.StringGrid1.cells[j-1,i]:=AGrid.FTable[i,j].str;
+      end;
+    end;
+
+    ////////////////////////////////
+    //单元格设置后
+    if CellProper.ShowModal = mrOk then
+    begin
+      if QFCellProperReturn then
+      begin
+        AGrid.FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
+        AGrid.FEditFocusColor:=CellProper.EditFocusColor.Color;
+        AGrid.FBackImageFile:=CellProper.BackImageFile.Text;
+        AGrid.FShowBackImage:=CellProper.ShowBackImage.Checked;
+        AGrid.FBorder:=CellProper.TableBorder.Checked;
+
+        val(CellProper.GapEdit.Text,tmp,err);
+        AGrid.FGap:=tmp;
+
+        val(CellProper.ColEdit.Text,tmp,err);
+        if tmp<>AGrid.FColCount then
+          AGrid.FColCount:=tmp;
+        val(CellProper.RowEdit.Text,tmp,err);
+        if tmp<>AGrid.FRowCount then
+          AGrid.FRowCount:=tmp;
+
+        if (AGrid.FColCount<>oldColCount) or (AGrid.FRowCount<>oldRowCount) then
+        begin
+          AGrid.FTable:=nil;
+          setlength(AGrid.FTable,AGrid.FRowcount+1,AGrid.FColcount+1);
+          if AGrid.FRowcount<>oldRowcount then
+          AGrid.FRowHeight:=AGrid.FBuffer.Height div AGrid.FRowcount;
+        end;
+        if AGrid.FCellLineColor<>CellProper.LineColor.Color then
+        begin
+          AGrid.FCellLineColor:=CellProper.LineColor.Color;
+          //DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+        end;
+        if AGrid.FCellLineStyle<>TFPPenStyle(CellProper.CbxLineStyle.ItemIndex) then
+        begin
+          AGrid.FCellLineStyle:=TFPPenStyle(CellProper.CbxLineStyle.ItemIndex);
+        end;
+
+        AGrid.FColSizing:=CellProper.ChkColSizing.Checked;
+        AGrid.FRowSizing:=CellProper.ChkRowSizing.Checked;
+
+        for i:=0 to AGrid.FRowCount-1 do
+        begin
+          for j:=0 to AGrid.FColCount do
+          begin
+            AGrid.FTable[i,j].Gap:=CellProper.GTable[i,j].Gap;
+            AGrid.FTable[i,j].Align:=CellProper.GTable[i,j].Align;
+            AGrid.FTable[i,j].BottomLineStyle:=CellProper.GTable[i,j].BottomLineStyle;
+            AGrid.FTable[i,j].Color:=CellProper.GTable[i,j].Color;
+            AGrid.FTable[i,j].ColMerge:=CellProper.GTable[i,j].ColMerge;
+            AGrid.FTable[i,j].ComponentDataFieldName:=CellProper.GTable[i,j].ComponentDataFieldName;
+            AGrid.FTable[i,j].ComponentName:=CellProper.GTable[i,j].ComponentName;
+            AGrid.FTable[i,j].ComponentDataSource:=CellProper.GTable[i,j].ComponentDataSource;
+            AGrid.FTable[i,j].ComponentType:=CellProper.GTable[i,j].ComponentType;
+            AGrid.FTable[i,j].DispType:=CellProper.GTable[i,j].DispType;
+            AGrid.FTable[i,j].DrawBottom:=CellProper.GTable[i,j].DrawBottom;
+            AGrid.FTable[i,j].DrawLeft:=CellProper.GTable[i,j].DrawLeft;
+            AGrid.FTable[i,j].DrawRight:=CellProper.GTable[i,j].DrawRight;
+            AGrid.FTable[i,j].DrawTop:=CellProper.GTable[i,j].DrawTop;
+            AGrid.FTable[i,j].FontColor:=CellProper.GTable[i,j].FontColor;
+            AGrid.FTable[i,j].FontName:=CellProper.GTable[i,j].FontName;
+            AGrid.FTable[i,j].FontSize:=CellProper.GTable[i,j].FontSize;
+            AGrid.FTable[i,j].FontStyle:=CellProper.GTable[i,j].FontStyle;
+            AGrid.FTable[i,j].Height:=CellProper.GTable[i,j].Height;
+            AGrid.FTable[i,j].LeftLineStyle:=CellProper.GTable[i,j].LeftLineStyle;
+            AGrid.FTable[i,j].LineStyle:=CellProper.GTable[i,j].LineStyle;
+            AGrid.FTable[i,j].RightLineStyle:=CellProper.GTable[i,j].RightLineStyle;
+            AGrid.FTable[i,j].RowMerge:=CellProper.GTable[i,j].RowMerge;
+            AGrid.FTable[i,j].TopLineStyle:=CellProper.GTable[i,j].TopLineStyle;
+            AGrid.FTable[i,j].Visible:=true;//CellProper.GTable[i,j].Visible;
+            AGrid.FTable[i,j].Width:=CellProper.GTable[i,j].Width;
+            AGrid.FTable[i,j].x:=CellProper.GTable[i,j].x;
+            AGrid.FTable[i,j].y:=CellProper.GTable[i,j].y;
+            AGrid.FTable[i,j].str:=CellProper.GTable[i,j].str
+         end;
+        end;
+        AGrid.FOldR.Left:=0;
+        AGrid.FOldR.Top:=0;
+        AGrid.FOldR.Width:=0;
+        AGrid.FOldR.Height:=0;
+
+        AGrid.TableMerge;
+        AGrid.SaveQFConfig;
+        AGrid.DrawTable;
+      end;
+    end;
+    //if CellProper.ShowModal = mrOk then
+    //begin
+    //  //StringGridEditorDlg.SaveToGrid;
+    //end;
+    //Result := StringGridEditorDlg.Modified;
+  finally
+    CellProper.Free;
+  end;
+end;
+
+procedure TQFGridPanelComponentEditor.ExecuteVerb(Index: Integer);
+var
+  Hook: TPropertyEditorHook;
+begin
+  if Index = 0 then
+  begin
+    GetHook(Hook);
+    if EditQFGridPanel(GetComponent as TQFGridPanelComponent) then
+      if Assigned(Hook) then
+        Hook.Modified(Self);
+  end;
+end;
+
+function TQFGridPanelComponentEditor.GetVerb(Index: Integer): string;
+begin
+  if Index = 0 then Result := 'QFGrid Panel编辑'
+  else Result := '';
+end;
+
+function TQFGridPanelComponentEditor.GetVerbCount: Integer;
+begin
+  Result := 1;
+end;
+//添加设计时鼠标右按弹出菜单--end
 
 initialization
-//
+RegisterComponentEditor(TQFGridPanelComponent, TQFGridPanelComponentEditor);
+
 end.
