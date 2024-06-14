@@ -9,8 +9,7 @@ interface
 
 uses
   QFComponent, QFRichEdit, setfontcolor, SetFontSize, SetImage, SetTable, 
-  Tools, SetHyeperLink, setfont, QFCellProper, PublicDefinition, 
-  LazarusPackageIntf;
+  Tools, SetHyeperLink, setfont, QFCellProper, PublicUnit, LazarusPackageIntf;
 
 implementation
 
