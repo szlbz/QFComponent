@@ -83,8 +83,8 @@
         <UnitName Value="QFCellProper"/>
       </Item>
       <Item>
-        <Filename Value="PublicDefinition.pas"/>
-        <UnitName Value="PublicDefinition"/>
+        <Filename Value="PublicUnit.pas"/>
+        <UnitName Value="PublicUnit"/>
       </Item>
     </Files>
     <RequiredPkgs>
