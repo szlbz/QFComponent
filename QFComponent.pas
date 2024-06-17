@@ -247,6 +247,8 @@ type
 
   TQFGridPanelComponent =  class(TCustomText)
   private
+    FOldSelectRow:integer;
+    FOldSelectCol:integer;
     FSelectRow:integer;
     FSelectCol:integer;
     FMVLineX:integer;
@@ -3685,6 +3687,8 @@ begin
   FOldR.Top:=0;
   FOldR.Width:=0;
   FOldR.Height:=0;
+  FOldSelectRow:=0;
+  FOldSelectCol:=0;
   FRun:=0;
   FGap:=5;
   FBorder:=true;
@@ -3928,10 +3932,9 @@ begin
 
     end;
   end;
-  CellProper.ShowModal;
   ////////////////////////////////
   //单元格设置后
-  if QFCellProperReturn then
+  if CellProper.ShowModal=mrOk then
   begin
     FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
     FEditFocusColor:=CellProper.EditFocusColor.Color;
@@ -4008,6 +4011,8 @@ begin
     FOldR.Top:=0;
     FOldR.Width:=0;
     FOldR.Height:=0;
+    FOldSelectRow:=0;
+    FOldSelectCol:=0;
 
     TableMerge;
     SaveQFConfig;
@@ -4111,6 +4116,8 @@ var
 begin
   inherited DoOnChangeBounds;
 
+  FOldSelectRow:=0;
+  FOldSelectCol:=0;
   FOldR.Left:=0;
   FOldR.Top:=0;
   FOldR.Width:=0;
@@ -4708,7 +4715,8 @@ begin
           if FTable[i,j].FontStyle=cfsStrikeOut then FBuffer.Canvas.Font.Style:=[fsStrikeOut];
           if FTable[i,j].FontStyle=cfsItalic then FBuffer.Canvas.Font.Style:=[fsItalic];
           if FTable[i,j].FontStyle=cfsUnderline then FBuffer.Canvas.Font.Style:=[fsUnderline];
-          if (FTable[i,j].DispType>dtPict) and (FTable[i,j].DispType<dtComponent) then  FBuffer.Canvas.Font.Color:=clBlue //URL,bookmark
+          if (FTable[i,j].DispType>dtPict) and (FTable[i,j].DispType<dtComponent) then
+            FBuffer.Canvas.Font.Color:=clBlue //URL,bookmark
           else FBuffer.Canvas.Font.Color:=FTable[i,j].Color;
           FBuffer.Canvas.Font.Size:=FTable[i,j].FontSize;
           FBuffer.Canvas.Font.Color:=FTable[i,j].FontColor;
@@ -4894,117 +4902,134 @@ begin
     if CellControl<>nil then
     begin
       if isComponent(CellControl) then
-      //if (CellControl is TEdit) or
-      //   (CellControl is TDBEdit) or
-      //   (CellControl is TMemo) or
-      //   (CellControl is TDBMemo) or
-      //   (CellControl is TComboBox) or
-      //   (CellControl is TDBComboBox) then
       begin
         FOldEditFocusColor:=TEdit(CellControl).Color;
         FOldEditFontFocusColor:=TEdit(CellControl).Font.Color;
         TEdit(CellControl).Color:=Canvas.Brush.Color;
       end;
     end;
-    Canvas.Brush.Color:=FoldEditFocusColor;
+    //Canvas.Brush.Color:=FoldEditFocusColor;
   end;
   Canvas.Pen.Color:=colors;
   Canvas.MoveTo(rect.Left,rect.Top);
   if rect.Left+rect.Width>=FTableWidth-1 then
   rect.Width:=rect.Width-1;
+
   //顶
   if (rect.Top=0) and (FBorder) then
   begin
-    Canvas.Pen.Style:=psSolid;
+    Canvas.Pen.Style:=FTable[x,y].TopLineStyle;
+    //Canvas.Pen.Style:=psSolid;
     if Canvas.Pen.Color=FCellLineColor then
       Canvas.Pen.Color:=clBlack;
     Canvas.Pen.Width:=3;
+    Canvas.LineTo(rect.Left+rect.Width,rect.Top);  //顶
   end
   else
   begin
+    Canvas.Pen.Width:=1;
+    Canvas.Pen.Style:=FTable[x,y].TopLineStyle;
     if RepaintRect then//重绘单元格
     begin
-      Canvas.Pen.Style:=FTable[x,y].TopLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
+      if FTable[x,y].DrawTop then
+        Canvas.LineTo(rect.Left+rect.Width,rect.Top);  //顶
     end
     else
     begin
-      Canvas.Pen.Style:=psSolid;
+      //Canvas.Pen.Style:=FTable[x,y].TopLineStyle;
+      //Canvas.Pen.Style:=psSolid;
       Canvas.Pen.Color:=colors;
+      Canvas.LineTo(rect.Left+rect.Width,rect.Top);  //顶
     end;
-    Canvas.Pen.Width:=1;
   end;
-  Canvas.LineTo(rect.Left+rect.Width,rect.Top);  //顶
+
   //右;
   if (rect.Left+rect.Width>=FTableWidth-1)  and (FBorder) then
   begin
-    Canvas.Pen.Style:=psSolid;
+    Canvas.Pen.Style:=FTable[x,y].RightLineStyle;
+    //Canvas.Pen.Style:=psSolid;
     if Canvas.Pen.Color=FCellLineColor then
       Canvas.Pen.Color:=clBlack;
     Canvas.Pen.Width:=2;
+    Canvas.LineTo(rect.Left+rect.Width,rect.Top+rect.Height);//右;
   end
   else
   begin
+    Canvas.Pen.Width:=1;
+    Canvas.Pen.Style:=FTable[x,y].RightLineStyle;
     if RepaintRect then
     begin
-      Canvas.Pen.Style:=FTable[x,y].RightLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
+      if FTable[x,y].DrawRight then
+        Canvas.LineTo(rect.Left+rect.Width,rect.Top+rect.Height);//右;
     end
     else
     begin
-      Canvas.Pen.Style:=psSolid;
+      //Canvas.Pen.Style:=FTable[x,y].RightLineStyle;
+      //Canvas.Pen.Style:=psSolid;
       Canvas.Pen.Color:=colors;
+      Canvas.LineTo(rect.Left+rect.Width,rect.Top+rect.Height);//右;
     end;
-    Canvas.Pen.Width:=1;
   end;
-  Canvas.LineTo(rect.Left+rect.Width,rect.Top+rect.Height);//右;
+
   //底
   if (rect.Top+rect.Height=FTableHeight) and (FBorder)  then
   begin
-    Canvas.Pen.Style:=psSolid;
+    Canvas.Pen.Style:=FTable[x,y].BottomLineStyle;
+    //Canvas.Pen.Style:=psSolid;
     if Canvas.Pen.Color=FCellLineColor then
       Canvas.Pen.Color:=clBlack;
     Canvas.Pen.Width:=2;
+    Canvas.LineTo(rect.Left,rect.Top+rect.Height); //底
   end
   else
   begin
+    Canvas.Pen.Width:=1;
+    Canvas.Pen.Style:=FTable[x,y].BottomLineStyle;
     if RepaintRect then
     begin
-      Canvas.Pen.Style:=FTable[x,y].BottomLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
+      if FTable[x,y].DrawBottom then
+        Canvas.LineTo(rect.Left,rect.Top+rect.Height); //底
     end
     else
     begin
-      Canvas.Pen.Style:=psSolid;
+      //Canvas.Pen.Style:=FTable[x,y].BottomLineStyle;
+      //Canvas.Pen.Style:=psSolid;
       Canvas.Pen.Color:=colors;
+      Canvas.LineTo(rect.Left,rect.Top+rect.Height); //底
     end;
-    Canvas.Pen.Width:=1;
   end;
-  Canvas.LineTo(rect.Left,rect.Top+rect.Height); //底
+
   //左
   if (rect.Left=0) and (FBorder)  then
   begin
-    Canvas.Pen.Style:=psSolid;
+    Canvas.Pen.Style:=FTable[x,y].LeftLineStyle;
+    //Canvas.Pen.Style:=psSolid;
     if Canvas.Pen.Color=FCellLineColor then
       Canvas.Pen.Color:=clBlack;
     Canvas.Pen.Width:=2;
+    Canvas.LineTo(rect.Left,rect.Top);//左
   end
   else
   begin
+    Canvas.Pen.Width:=1;
+    Canvas.Pen.Style:=FTable[x,y].LeftLineStyle;
     if RepaintRect then
     begin
-      Canvas.Pen.Style:=FTable[x,y].LeftLineStyle;
       Canvas.Pen.Color:=FCellLineColor;
+      if FTable[x,y].DrawLeft then
+        Canvas.LineTo(rect.Left,rect.Top);//左
     end
     else
     begin
-      Canvas.Pen.Style:=psSolid;
+      //Canvas.Pen.Style:=FTable[x,y].LeftLineStyle;
+      //Canvas.Pen.Style:=psSolid;
       Canvas.Pen.Color:=colors;
+      Canvas.LineTo(rect.Left,rect.Top);//左
     end;
-    Canvas.Pen.Width:=1;
   end;
-  Canvas.LineTo(rect.Left,rect.Top);//左
-  Canvas.Pen.Width:=1;
   //Canvas.Draw(0,0,FBuffer);
 end;
 
@@ -5095,6 +5120,8 @@ begin
     //=================调整单元格高度======================
     if FResultCursor=crVSplit then
     begin
+      FOldSelectRow:=0;
+      FOldSelectCol:=0;
       FOldR.Left:=0;
       FOldR.Top:=0;
       FOldR.Width:=0;
@@ -5112,6 +5139,8 @@ begin
     //=================调整单元格宽度======================
     if FResultCursor=crHSplit then
     begin
+      FOldSelectRow:=0;
+      FOldSelectCol:=0;
       FOldR.Left:=0;
       FOldR.Top:=0;
       FOldR.Width:=0;
@@ -5301,8 +5330,10 @@ begin
   begin
     if isCell(x,y,FCurrentR) then
     begin
-      DrawRect(FoldR,FCellLineColor,1,FSelectRow,FSelectCol,true);
+      DrawRect(FoldR,FCellLineColor,1,FOldSelectRow,FOldSelectCol,true);
       FOldR:=FCurrentR;
+      FOldSelectRow:=FSelectRow;
+      FOldSelectCol:=FSelectCol;
       if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
         DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
       else
@@ -5668,115 +5699,104 @@ begin
     //单元格设置后
     if CellProper.ShowModal = mrOk then
     begin
-      if QFCellProperReturn then
+      AGrid.FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
+      AGrid.FEditFocusColor:=CellProper.EditFocusColor.Color;
+      AGrid.FBackImageFile:=CellProper.BackImageFile.Text;
+      AGrid.FShowBackImage:=CellProper.ShowBackImage.Checked;
+      AGrid.FBorder:=CellProper.TableBorder.Checked;
+
+      val(CellProper.GapEdit.Text,tmp,err);
+      AGrid.FGap:=tmp;
+
+      val(CellProper.ColEdit.Text,tmp,err);
+      if tmp<>AGrid.FColCount then
+        AGrid.FColCount:=tmp;
+      val(CellProper.RowEdit.Text,tmp,err);
+      if tmp<>AGrid.FRowCount then
+        AGrid.FRowCount:=tmp;
+
+      if (AGrid.FColCount<>oldColCount) or (AGrid.FRowCount<>oldRowCount) then
       begin
-        AGrid.FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
-        AGrid.FEditFocusColor:=CellProper.EditFocusColor.Color;
-        AGrid.FBackImageFile:=CellProper.BackImageFile.Text;
-        AGrid.FShowBackImage:=CellProper.ShowBackImage.Checked;
-        AGrid.FBorder:=CellProper.TableBorder.Checked;
-
-        val(CellProper.GapEdit.Text,tmp,err);
-        AGrid.FGap:=tmp;
-
-        val(CellProper.ColEdit.Text,tmp,err);
-        if tmp<>AGrid.FColCount then
-          AGrid.FColCount:=tmp;
-        val(CellProper.RowEdit.Text,tmp,err);
-        if tmp<>AGrid.FRowCount then
-          AGrid.FRowCount:=tmp;
-
-        if (AGrid.FColCount<>oldColCount) or (AGrid.FRowCount<>oldRowCount) then
-        begin
-          AGrid.FTable:=nil;
-          setlength(AGrid.FTable,AGrid.FRowcount+1,AGrid.FColcount+1);
-          if AGrid.FRowcount<>oldRowcount then
-          AGrid.FRowHeight:=AGrid.FBuffer.Height div AGrid.FRowcount;
-        end;
-        if AGrid.FCellLineColor<>CellProper.LineColor.Color then
-        begin
-          AGrid.FCellLineColor:=CellProper.LineColor.Color;
-          //DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
-        end;
-        if AGrid.FCellLineStyle<>TFPPenStyle(CellProper.CbxLineStyle.ItemIndex) then
-        begin
-          AGrid.FCellLineStyle:=TFPPenStyle(CellProper.CbxLineStyle.ItemIndex);
-        end;
-
-        AGrid.FColSizing:=CellProper.ChkColSizing.Checked;
-        AGrid.FRowSizing:=CellProper.ChkRowSizing.Checked;
-
-        for i:=0 to AGrid.FRowCount-1 do
-        begin
-          for j:=0 to AGrid.FColCount do
-          begin
-            AGrid.FTable[i,j].Gap:=CellProper.GTable[i,j].Gap;
-            AGrid.FTable[i,j].Align:=CellProper.GTable[i,j].Align;
-            AGrid.FTable[i,j].BottomLineStyle:=CellProper.GTable[i,j].BottomLineStyle;
-            AGrid.FTable[i,j].Color:=CellProper.GTable[i,j].Color;
-            AGrid.FTable[i,j].ColMerge:=CellProper.GTable[i,j].ColMerge;
-            AGrid.FTable[i,j].ComponentDataFieldName:=CellProper.GTable[i,j].ComponentDataFieldName;
-            AGrid.FTable[i,j].ComponentName:=CellProper.GTable[i,j].ComponentName;
-            AGrid.FTable[i,j].ComponentDataSource:=CellProper.GTable[i,j].ComponentDataSource;
-            AGrid.FTable[i,j].ComponentType:=CellProper.GTable[i,j].ComponentType;
-            AGrid.FTable[i,j].DispType:=CellProper.GTable[i,j].DispType;
-            AGrid.FTable[i,j].DrawBottom:=CellProper.GTable[i,j].DrawBottom;
-            AGrid.FTable[i,j].DrawLeft:=CellProper.GTable[i,j].DrawLeft;
-            AGrid.FTable[i,j].DrawRight:=CellProper.GTable[i,j].DrawRight;
-            AGrid.FTable[i,j].DrawTop:=CellProper.GTable[i,j].DrawTop;
-            AGrid.FTable[i,j].FontColor:=CellProper.GTable[i,j].FontColor;
-            AGrid.FTable[i,j].FontName:=CellProper.GTable[i,j].FontName;
-            AGrid.FTable[i,j].FontSize:=CellProper.GTable[i,j].FontSize;
-            AGrid.FTable[i,j].FontStyle:=CellProper.GTable[i,j].FontStyle;
-            AGrid.FTable[i,j].Height:=CellProper.GTable[i,j].Height;
-            AGrid.FTable[i,j].LeftLineStyle:=CellProper.GTable[i,j].LeftLineStyle;
-            AGrid.FTable[i,j].LineStyle:=CellProper.GTable[i,j].LineStyle;
-            AGrid.FTable[i,j].RightLineStyle:=CellProper.GTable[i,j].RightLineStyle;
-            AGrid.FTable[i,j].RowMerge:=CellProper.GTable[i,j].RowMerge;
-            AGrid.FTable[i,j].TopLineStyle:=CellProper.GTable[i,j].TopLineStyle;
-            AGrid.FTable[i,j].Visible:=true;//CellProper.GTable[i,j].Visible;
-            AGrid.FTable[i,j].Width:=CellProper.GTable[i,j].Width;
-            AGrid.FTable[i,j].x:=CellProper.GTable[i,j].x;
-            AGrid.FTable[i,j].y:=CellProper.GTable[i,j].y;
-            AGrid.FTable[i,j].str:=CellProper.GTable[i,j].str
-         end;
-        end;
-        AGrid.FOldR.Left:=0;
-        AGrid.FOldR.Top:=0;
-        AGrid.FOldR.Width:=0;
-        AGrid.FOldR.Height:=0;
-
-        AGrid.TableMerge;
-        AGrid.SaveQFConfig;
-        AGrid.DrawTable;
+        AGrid.FTable:=nil;
+        setlength(AGrid.FTable,AGrid.FRowcount+1,AGrid.FColcount+1);
+        if AGrid.FRowcount<>oldRowcount then
+        AGrid.FRowHeight:=AGrid.FBuffer.Height div AGrid.FRowcount;
       end;
+      if AGrid.FCellLineColor<>CellProper.LineColor.Color then
+      begin
+        AGrid.FCellLineColor:=CellProper.LineColor.Color;
+        //DrawTable(FBuffer,FColWidth,FRowHeight,0,0);
+      end;
+      if AGrid.FCellLineStyle<>TFPPenStyle(CellProper.CbxLineStyle.ItemIndex) then
+      begin
+        AGrid.FCellLineStyle:=TFPPenStyle(CellProper.CbxLineStyle.ItemIndex);
+      end;
+
+      AGrid.FColSizing:=CellProper.ChkColSizing.Checked;
+      AGrid.FRowSizing:=CellProper.ChkRowSizing.Checked;
+
+      for i:=0 to AGrid.FRowCount-1 do
+      begin
+        for j:=0 to AGrid.FColCount do
+        begin
+          AGrid.FTable[i,j].Gap:=CellProper.GTable[i,j].Gap;
+          AGrid.FTable[i,j].Align:=CellProper.GTable[i,j].Align;
+          AGrid.FTable[i,j].BottomLineStyle:=CellProper.GTable[i,j].BottomLineStyle;
+          AGrid.FTable[i,j].Color:=CellProper.GTable[i,j].Color;
+          AGrid.FTable[i,j].ColMerge:=CellProper.GTable[i,j].ColMerge;
+          AGrid.FTable[i,j].ComponentDataFieldName:=CellProper.GTable[i,j].ComponentDataFieldName;
+          AGrid.FTable[i,j].ComponentName:=CellProper.GTable[i,j].ComponentName;
+          AGrid.FTable[i,j].ComponentDataSource:=CellProper.GTable[i,j].ComponentDataSource;
+          AGrid.FTable[i,j].ComponentType:=CellProper.GTable[i,j].ComponentType;
+          AGrid.FTable[i,j].DispType:=CellProper.GTable[i,j].DispType;
+          AGrid.FTable[i,j].DrawBottom:=CellProper.GTable[i,j].DrawBottom;
+          AGrid.FTable[i,j].DrawLeft:=CellProper.GTable[i,j].DrawLeft;
+          AGrid.FTable[i,j].DrawRight:=CellProper.GTable[i,j].DrawRight;
+          AGrid.FTable[i,j].DrawTop:=CellProper.GTable[i,j].DrawTop;
+          AGrid.FTable[i,j].FontColor:=CellProper.GTable[i,j].FontColor;
+          AGrid.FTable[i,j].FontName:=CellProper.GTable[i,j].FontName;
+          AGrid.FTable[i,j].FontSize:=CellProper.GTable[i,j].FontSize;
+          AGrid.FTable[i,j].FontStyle:=CellProper.GTable[i,j].FontStyle;
+          AGrid.FTable[i,j].Height:=CellProper.GTable[i,j].Height;
+          AGrid.FTable[i,j].LeftLineStyle:=CellProper.GTable[i,j].LeftLineStyle;
+          AGrid.FTable[i,j].LineStyle:=CellProper.GTable[i,j].LineStyle;
+          AGrid.FTable[i,j].RightLineStyle:=CellProper.GTable[i,j].RightLineStyle;
+          AGrid.FTable[i,j].RowMerge:=CellProper.GTable[i,j].RowMerge;
+          AGrid.FTable[i,j].TopLineStyle:=CellProper.GTable[i,j].TopLineStyle;
+          AGrid.FTable[i,j].Visible:=true;//CellProper.GTable[i,j].Visible;
+          AGrid.FTable[i,j].Width:=CellProper.GTable[i,j].Width;
+          AGrid.FTable[i,j].x:=CellProper.GTable[i,j].x;
+          AGrid.FTable[i,j].y:=CellProper.GTable[i,j].y;
+          AGrid.FTable[i,j].str:=CellProper.GTable[i,j].str
+       end;
+      end;
+      AGrid.FOldR.Left:=0;
+      AGrid.FOldR.Top:=0;
+      AGrid.FOldR.Width:=0;
+      AGrid.FOldR.Height:=0;
+      AGrid.FOldSelectRow:=0;
+      AGrid.FOldSelectCol:=0;
+
+      AGrid.TableMerge;
+      AGrid.SaveQFConfig;
+      AGrid.DrawTable;
     end;
-    //if CellProper.ShowModal = mrOk then
-    //begin
-    //  //StringGridEditorDlg.SaveToGrid;
-    //end;
-    //Result := StringGridEditorDlg.Modified;
   finally
     CellProper.Free;
   end;
 end;
 
 procedure TQFGridPanelComponentEditor.ExecuteVerb(Index: Integer);
-var
-  Hook: TPropertyEditorHook;
 begin
   if Index = 0 then
   begin
-    GetHook(Hook);
-    if EditQFGridPanel(GetComponent as TQFGridPanelComponent) then
-      if Assigned(Hook) then
-        Hook.Modified(Self);
+    EditQFGridPanel(GetComponent as TQFGridPanelComponent);
   end;
 end;
 
 function TQFGridPanelComponentEditor.GetVerb(Index: Integer): string;
 begin
-  if Index = 0 then Result := 'QFGrid Panel编辑'
+  if Index = 0 then Result := 'QFGridPanelComponent Editor'
   else Result := '';
 end;
 
