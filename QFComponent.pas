@@ -4605,8 +4605,10 @@ begin
     x0:=0;
     for j:=1 to FColCount do
     begin
-      if j>1 then
-        x0:=x0+FTable[i,j-1].Width;
+      if (j>1) and (FTable[i,j-1].Width=FColWidth) then
+        x0:=x0+FTable[i,j-1].Width
+      else x0:=x0+FTable[i,j-1].x;
+
       //if FTable[i,j-1].Height>FRowHeight then
       //  y0:=i*FRowHeight
       //else
