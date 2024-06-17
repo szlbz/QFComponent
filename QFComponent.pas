@@ -4391,11 +4391,10 @@ begin
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
           FTable[i,j].Visible:=true;//将左上角单元格置为true
-          if FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge then
-            ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge)
-          else
-            ss:=1;
-          if  FTable[i,j].Width=FColWidth then ss:=1;
+          ss:=1;
+          if (FTable[i,j].Width<>FColWidth) and
+             (FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge) then
+            ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge);
           FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
           for oo1:=j to col1 do
@@ -4421,11 +4420,10 @@ begin
         //横向(col)合并单元格
         if FTable[i,j].ColMerge>0 then
         begin
-          if FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge then
-            ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge)
-          else
-            ss:=1;
-          if  FTable[i,j].Width=FColWidth then ss:=1;
+          ss:=1;
+          if (FTable[i,j].Width<>FColWidth) and
+             (FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge) then
+            ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge);
           FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
