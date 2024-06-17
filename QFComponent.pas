@@ -4223,7 +4223,14 @@ begin
 end;
 
 procedure TQFGridPanelComponent.SaveQFConfig;
+var Path:string;
 begin
+  //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
+  //begin
+  //  Path:= ExtractFilePath(LazarusIDE.ActiveProject.Files[0].Filename);
+  //  if pos(path,FConfigFileName)<1 THEN
+  //    FConfigFileName:=Path+DirectorySeparator+FConfigFileName;
+  //end;
   savejson(FConfigFileName);
 end;
 
@@ -4388,6 +4395,7 @@ begin
             ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge)
           else
             ss:=1;
+          if  FTable[i,j].Width=FColWidth then ss:=1;
           FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           FTable[i,j].Height:=FRowHeight*FTable[i,j].RowMerge;
           for oo1:=j to col1 do
@@ -4417,6 +4425,7 @@ begin
             ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge)
           else
             ss:=1;
+          if  FTable[i,j].Width=FColWidth then ss:=1;
           FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
@@ -5569,7 +5578,7 @@ begin
   str:=jsonRoot.FormatJSON;
   savejsonfile:=TStringList.Create;
   savejsonfile.add(str);
-  savejsonfile.SaveToFile(files);
+  savejsonfile.SaveToFile(FPathConfig+files);
   savejsonfile.Free;
 
   jsonGrid:=nil;
@@ -5776,7 +5785,6 @@ begin
       AGrid.FOldR.Height:=0;
       AGrid.FOldSelectRow:=0;
       AGrid.FOldSelectCol:=0;
-
       AGrid.TableMerge;
       AGrid.SaveQFConfig;
       AGrid.DrawTable;
