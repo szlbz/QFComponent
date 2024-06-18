@@ -39,7 +39,7 @@ uses
   OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,Grids,DBGrids,  FPCanvas,
   fpjson,lazutf8,PublicUnit,LazIDEIntf,EditBtn,DBExtCtrls,
   lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit,
-  //添加设计时鼠标右按弹出菜单需要用到的单元
+  //添加IDE design时鼠标右按弹出菜单需要用到的单元
   ComponentEditors,PropEdits
   ;
 
@@ -47,7 +47,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='0.9.9.12';
+  Version ='1.0.0.0';
 
 type
 
@@ -336,6 +336,7 @@ type
     property ConfigFileName:string read FConfigFileName write FConfigFileName;
   end;
 
+  //添加IDE design时控件右键设置功能
   TQFGridPanelComponentEditor = class(TComponentEditor)
   public
     procedure ExecuteVerb(Index: Integer); override;
@@ -4223,14 +4224,7 @@ begin
 end;
 
 procedure TQFGridPanelComponent.SaveQFConfig;
-var Path:string;
 begin
-  //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
-  //begin
-  //  Path:= ExtractFilePath(LazarusIDE.ActiveProject.Files[0].Filename);
-  //  if pos(path,FConfigFileName)<1 THEN
-  //    FConfigFileName:=Path+DirectorySeparator+FConfigFileName;
-  //end;
   savejson(FConfigFileName);
 end;
 
@@ -5706,6 +5700,7 @@ begin
 
     ////////////////////////////////
     //单元格设置后
+    ////////////////////////////////
     if CellProper.ShowModal = mrOk then
     begin
       AGrid.FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
@@ -5772,7 +5767,7 @@ begin
           AGrid.FTable[i,j].RightLineStyle:=CellProper.GTable[i,j].RightLineStyle;
           AGrid.FTable[i,j].RowMerge:=CellProper.GTable[i,j].RowMerge;
           AGrid.FTable[i,j].TopLineStyle:=CellProper.GTable[i,j].TopLineStyle;
-          AGrid.FTable[i,j].Visible:=true;//CellProper.GTable[i,j].Visible;
+          AGrid.FTable[i,j].Visible:=true;
           AGrid.FTable[i,j].Width:=CellProper.GTable[i,j].Width;
           AGrid.FTable[i,j].x:=CellProper.GTable[i,j].x;
           AGrid.FTable[i,j].y:=CellProper.GTable[i,j].y;
@@ -5795,7 +5790,6 @@ begin
   finally
     CellProper.Free;
   end;
-
 end;
 
 procedure TQFGridPanelComponentEditor.ExecuteVerb(Index: Integer);
