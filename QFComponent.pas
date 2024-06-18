@@ -5788,18 +5788,27 @@ begin
       AGrid.TableMerge;
       AGrid.SaveQFConfig;
       AGrid.DrawTable;
-    end;
+      Result:=true;
+    end
+    else
+      Result:=false;
   finally
     CellProper.Free;
   end;
+
 end;
 
 procedure TQFGridPanelComponentEditor.ExecuteVerb(Index: Integer);
+var
+  Hook: TPropertyEditorHook;
 begin
   if Index = 0 then
   begin
-    EditQFGridPanel(GetComponent as TQFGridPanelComponent);
-  end;
+    GetHook(Hook);
+   if EditQFGridPanel(GetComponent as TQFGridPanelComponent) then
+      if Assigned(Hook) then //控件内容有变化，则将IDE状态改为修改
+        Hook.Modified(Self);
+ end;
 end;
 
 function TQFGridPanelComponentEditor.GetVerb(Index: Integer): string;

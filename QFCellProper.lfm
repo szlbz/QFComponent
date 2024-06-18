@@ -341,7 +341,7 @@ object QFCellProper: TQFCellProper
       Left = 24
       Height = 48
       Hint = '保存当前单元格参数'
-      Top = 388
+      Top = 392
       Width = 256
       Caption = '保存'
       ParentShowHint = False
@@ -667,6 +667,7 @@ object QFCellProper: TQFCellProper
       EditLabel.Height = 18
       EditLabel.Width = 96
       EditLabel.Caption = '单元格高度'
+      ReadOnly = True
       TabOrder = 7
     end
     object ColWidthEdit: TLabeledEdit
@@ -677,6 +678,7 @@ object QFCellProper: TQFCellProper
       EditLabel.Height = 18
       EditLabel.Width = 96
       EditLabel.Caption = '单元格宽度'
+      ReadOnly = True
       TabOrder = 8
     end
     object Button1: TButton
@@ -811,7 +813,8 @@ object QFCellProper: TQFCellProper
       'ColorS=F0FBFF'
       'ColorT=A4A0A0'
     )
-    Left = 612
+    Left = 920
+    Top = 24
   end
   object OpenPictureDialog1: TOpenPictureDialog
     Title = '选择图像文件'

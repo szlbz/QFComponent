@@ -153,14 +153,14 @@ end;
 
 procedure TQFCellProper.BtnCancelClick(Sender: TObject);
 begin
-  QFCellProperReturn:=false;
+  self.ModalResult:=mrCancel;
 end;
 
 procedure TQFCellProper.BtnOkClick(Sender: TObject);
 begin
   if panel1.Enabled then
     Button2Click(self);//保存最后的修改
-  QFCellProperReturn:=true;
+  self.ModalResult:=mrOk;
 end;
 
 procedure TQFCellProper.Button1Click(Sender: TObject);
@@ -172,6 +172,8 @@ begin
   val(ColEdit.Text,ColCount,err);
   val(RowHeightEdit.Text,hh,err);
   val(ColWidthEdit.Text,cw,err);
+  hh:=0;
+  cw:=0;
   //if (RowCount<>StringGrid1.RowCount) or (StringGrid1.ColCount<>ColCount) then
   //begin
     StringGrid1.RowCount:=RowCount;
@@ -244,6 +246,17 @@ begin
   GTable[Row,Col+1].RightLineStyle:=TFPPenStyle(RightLineStyle.ItemIndex);
   GTable[Row,Col+1].BottomLineStyle:=TFPPenStyle(BottomLineStyle.ItemIndex);
   GTable[Row,Col+1].TopLineStyle:=TFPPenStyle(TopLineStyle.ItemIndex);
+  if col+1>1 then
+  begin
+    GTable[Row,Col].RightLineStyle:=GTable[Row,Col+1].LeftLineStyle;
+    GTable[Row,Col+2].LeftLineStyle:=GTable[Row,Col+1].RightLineStyle;
+  end;
+  if Row>1 then
+  begin
+    GTable[Row-1,Col+1].BottomLineStyle:=GTable[Row,Col+1].TopLineStyle;
+    GTable[Row+1,Col+1].TopLineStyle:=GTable[Row,Col+1].BottomLineStyle;
+    //psSolid
+  end;
 end;
 
 procedure TQFCellProper.SetNumControls(Value: boolean);
