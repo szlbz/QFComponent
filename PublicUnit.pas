@@ -5,9 +5,12 @@ interface
 uses
   Classes, SysUtils,Controls,FPCanvas,  Graphics,db;
 
-type            //0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
+type
+
   TDispTypes = (dtText, dtPict, dtBookmak1, dtBookmak2, dtLink, dtComponent);
+
   TCellFontStyle  =(cfsNone,cfsBold,cfsStrikeOut,cfsItalic,cfsUnderline);
+
   CellAlign = (calNone, calLeft, calClient, calRight);
 
   TCell = record
@@ -43,8 +46,8 @@ type            //0--文字 1--图像 2-bookmark1 3-bookmark2 4--link 5--控件
      LineStyle:TFPPenStyle;
      Visible:Boolean;//
   end;
-var
-  QFCellProperReturn:Boolean;
+//var
+  //QFCellProperReturn:Boolean;
 
 implementation
 
