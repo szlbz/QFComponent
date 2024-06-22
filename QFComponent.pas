@@ -4809,6 +4809,7 @@ begin
                  TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-CellGap; //居右
           y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
 
+          //文字类型单元格填充颜色 2024-06-22
           if (FTable[i,j].str<>'') and (FTable[i,j].TextCellColor<>clBlack)then
           begin
             FBuffer.Canvas.Brush.Color:= FTable[i,j].TextCellColor;
@@ -5191,8 +5192,38 @@ end;
 procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 var movedX:integer;
   movedY:integer;
-  i,j:integer;
+  i,j,cols:integer;
   X1,w1,w2:integer;
+  function jscell1(c:integer):integer;
+  var
+    i:integer;
+  begin
+    Result:=-1;
+    while c>0 do
+    begin
+      if FTable[FSelectRow,c].Visible then
+      begin
+        Result:=c;
+        Break;
+      end;
+      dec(c);
+    end;
+  end;
+  function jscell2(c:integer):integer;
+  var
+    i:integer;
+  begin
+    Result:=-1;
+    while c>0 do
+    begin
+      if FTable[FSelectRow,c].Visible then
+      begin
+        Result:=c;
+        Break;
+      end;
+      inc(c);
+    end;
+  end;
 begin
   if FisLeftButtonDown then  //按下鼠标左键
   begin
@@ -5294,8 +5325,13 @@ begin
       begin
         if movedX>0 then
         begin
-          if FTable[FSelectRow,FSelectCol-1].x+FTable[FSelectRow,FSelectCol-1].Width+movedX<FTableWidth then
-            FTable[FSelectRow,FSelectCol-1].Width:=FTable[FSelectRow,FSelectCol-1].Width+movedX;
+          cols:=jscell1(FSelectCol-1);
+          if FTable[FSelectRow,cols].x+FTable[FSelectRow,cols].Width+movedX<FTableWidth then
+          begin
+            FTable[FSelectRow,cols].Width:=FTable[FSelectRow,cols].Width+movedX;
+            if cols<>FSelectCol-1 then
+              FTable[FSelectRow,FSelectCol-1].Width:=FTable[FSelectRow,FSelectCol-1].Width+movedX;
+          end;
 
           if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-movedX=FTableWidth then
             FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width+movedX
@@ -5303,7 +5339,7 @@ begin
           if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-movedX<FTableWidth then
             FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-movedX;
 
-          FTable[FSelectRow,FSelectCol].x:=FTable[FSelectRow,FSelectCol-1].x+movedX;
+          FTable[FSelectRow,FSelectCol].x:=FTable[FSelectRow,cols].x+movedX;
         end
         else
         begin
@@ -5315,16 +5351,22 @@ begin
           end
           else
           begin
+            cols:=jscell2(FSelectCol+1);
             if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-abs(movedX)<FTableWidth then
+            begin
               FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-abs(movedX);
+              if cols<>FSelectCol+1 then
+                FTable[FSelectRow,cols-1].Width:=FTable[FSelectRow,cols-1].Width-abs(movedX);
+            end;
+            if FTable[FSelectRow,cols].x+FTable[FSelectRow,cols].Width=FTableWidth then
+              FTable[FSelectRow,cols].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
 
-            if FTable[FSelectRow,FSelectCol+1].x+FTable[FSelectRow,FSelectCol+1].Width=FTableWidth then
-              FTable[FSelectRow,FSelectCol+1].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
+            if FTable[FSelectRow,cols].x+ FTable[FSelectRow,cols].Width+abs(movedX)<FTableWidth then
+            begin
+              FTable[FSelectRow,cols].Width:=FTable[FSelectRow,cols].Width+abs(movedX);
+            end;
 
-            if FTable[FSelectRow,FSelectCol+1].x+ FTable[FSelectRow,FSelectCol+1].Width+abs(movedX)<FTableWidth then
-              FTable[FSelectRow,FSelectCol+1].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
-
-            FTable[FSelectRow,FSelectCol+1].x:=FTable[FSelectRow,FSelectCol+1].x-abs(movedX);
+            FTable[FSelectRow,cols].x:=FTable[FSelectRow,cols].x-abs(movedX);
           end;
         end;
       end;
