@@ -59,14 +59,14 @@ object QFCellProper: TQFCellProper
     object LabelControl1: TLabel
       Left = 603
       Height = 18
-      Top = 184
+      Top = 168
       Width = 126
       Caption = '单元格边框颜色'
     end
     object LineColor: TPanel
       Left = 603
       Height = 35
-      Top = 216
+      Top = 200
       Width = 103
       BevelOuter = bvNone
       Color = clWhite
@@ -82,14 +82,14 @@ object QFCellProper: TQFCellProper
     object BevelCellType1: TBevel
       Left = 600
       Height = 3
-      Top = 206
+      Top = 190
       Width = 146
       Shape = bsBottomLine
     end
     object BtnSetCellLineColor1: TButton
       Left = 711
       Height = 38
-      Top = 216
+      Top = 200
       Width = 38
       Caption = '…'
       Font.CharSet = GB2312_CHARSET
@@ -113,7 +113,6 @@ object QFCellProper: TQFCellProper
       )
       Style = csDropDownList
       TabOrder = 3
-      OnClick = CbxHAlignClick
     end
     object LabelControl2: TLabel
       Left = 216
@@ -137,6 +136,7 @@ object QFCellProper: TQFCellProper
       ItemHeight = 18
       Style = csOwnerDrawFixed
       TabOrder = 4
+      OnChange = ComboBox1Change
     end
     object LabelControl3: TLabel
       Left = 216
@@ -368,14 +368,14 @@ object QFCellProper: TQFCellProper
     object LabelFontColor: TLabel
       Left = 768
       Height = 18
-      Top = 376
-      Width = 99
-      Caption = '字体颜色(&C)'
+      Top = 373
+      Width = 72
+      Caption = '字体颜色'
     end
     object PanelFontColor: TPanel
       Left = 768
       Height = 38
-      Top = 400
+      Top = 402
       Width = 110
       BevelOuter = bvNone
       Color = clWhite
@@ -389,9 +389,9 @@ object QFCellProper: TQFCellProper
       TabOrder = 17
     end
     object BtnSetFontColor: TButton
-      Left = 888
+      Left = 883
       Height = 38
-      Top = 400
+      Top = 402
       Width = 38
       Caption = '…'
       Font.CharSet = GB2312_CHARSET
@@ -469,7 +469,7 @@ object QFCellProper: TQFCellProper
       Caption = '字形(&O)'
     end
     object ChkBoxUnderLine: TCheckBox
-      Left = 920
+      Left = 944
       Height = 24
       Top = 370
       Width = 106
@@ -480,18 +480,18 @@ object QFCellProper: TQFCellProper
       OnClick = ChkBoxUnderLineClick
     end
     object GbxFontPreview: TGroupBox
-      Left = 307
-      Height = 142
-      Top = 296
+      Left = 304
+      Height = 98
+      Top = 340
       Width = 447
       Caption = '预览'
-      ClientHeight = 119
+      ClientHeight = 75
       ClientWidth = 443
       ParentBackground = False
       TabOrder = 23
       object PanelFontPreview1: TPanel
         Left = 16
-        Height = 101
+        Height = 58
         Top = 8
         Width = 411
         BevelOuter = bvNone
@@ -510,7 +510,7 @@ object QFCellProper: TQFCellProper
     object CellTextEdit: TLabeledEdit
       Left = 24
       Height = 26
-      Top = 224
+      Top = 200
       Width = 363
       EditLabel.Height = 18
       EditLabel.Width = 363
@@ -520,12 +520,63 @@ object QFCellProper: TQFCellProper
     object CellGapEdit: TLabeledEdit
       Left = 432
       Height = 26
-      Top = 224
+      Top = 200
       Width = 144
       EditLabel.Height = 18
       EditLabel.Width = 144
       EditLabel.Caption = '单元格内边距'
       TabOrder = 25
+    end
+    object LabelFontColor3: TLabel
+      Left = 603
+      Height = 18
+      Top = 256
+      Width = 126
+      Caption = '文字单元格颜色'
+    end
+    object TextCellColor: TPanel
+      Left = 603
+      Height = 36
+      Top = 288
+      Width = 103
+      BevelOuter = bvNone
+      Color = clWhite
+      Font.CharSet = GB2312_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -30
+      Font.Name = '楷体_GB2312'
+      ParentBackground = False
+      ParentColor = False
+      ParentFont = False
+      TabOrder = 26
+    end
+    object BtnSetFontColor4: TButton
+      Left = 711
+      Height = 38
+      Top = 286
+      Width = 38
+      Caption = '…'
+      Font.CharSet = GB2312_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -18
+      Font.Name = '宋体'
+      ParentFont = False
+      TabOrder = 27
+      OnClick = BtnSetFontColor4Click
+    end
+    object BevelCellType5: TBevel
+      Left = 600
+      Height = 3
+      Top = 279
+      Width = 146
+      Shape = bsBottomLine
+    end
+    object BevelCellType7: TBevel
+      Left = 768
+      Height = 3
+      Top = 393
+      Width = 153
+      Shape = bsBottomLine
     end
   end
   object StatusBar1: TStatusBar
@@ -748,8 +799,8 @@ object QFCellProper: TQFCellProper
       Left = 521
       Height = 18
       Top = 16
-      Width = 225
-      Caption = '编辑控件聚焦时字体颜色(&C)'
+      Width = 198
+      Caption = '编辑控件聚焦时字体颜色'
     end
     object EditFocusColor: TPanel
       Left = 257
@@ -788,6 +839,13 @@ object QFCellProper: TQFCellProper
       TabOrder = 15
       OnClick = BtnSetFontColor1Click
     end
+  end
+  object BevelCellType6: TBevel
+    Left = 600
+    Height = 3
+    Top = 272
+    Width = 146
+    Shape = bsBottomLine
   end
   object ColorDialogCellProp: TColorDialog
     Color = clBlack

@@ -47,7 +47,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='1.0.0.0';
+  Version ='1.0.0.1';
 
 type
 
@@ -98,7 +98,7 @@ type
   end;
 
   // 弹出菜单的标识
-  TStMenuItemTag = (mtCopy, mtPaste, mtClearCells, mtSetCellProp);
+  TStMenuItemTag = (mtCopy, mtPaste, mtClearCells, mtSetCellProp, mtSaveCellProp);
 
   TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
@@ -270,6 +270,7 @@ type
     FRun:integer;
     FGap:integer;
     FBorder:Boolean;
+    FRunEdit:Boolean;
     FOldR:TRect;
     FCurrentR:TRect;
     FResultCursor:TCursor;
@@ -292,6 +293,9 @@ type
     procedure SetCellLineStyle(Value : TFPPenStyle);
     procedure SetColCount(Value :integer);
     procedure SetRowCount(Value :integer);
+    procedure SetRunEdit(Value :Boolean);
+    procedure SetColSizing(Value :Boolean);
+    procedure SetRowSizing(Value :Boolean);
     function FindChildControls(str:string):TControl;
     procedure MenuItemClick(Sender: TObject);
     procedure EditEnter(Sender: TObject);
@@ -331,9 +335,10 @@ type
     property Font;
     property ColCount:integer read FColCount write FColCount;// SetColCount default 5;
     property RowCount:integer read FRowCount write FRowCount;//SetRowCount default 5;
-    property ColSizing:Boolean read FColSizing write FColSizing default true;
-    property RowSizing:Boolean read FRowSizing write FRowSizing default true;
+    property ColSizing:Boolean read FColSizing write SetColSizing;
+    property RowSizing:Boolean read FRowSizing write SetRowSizing;
     property ConfigFileName:string read FConfigFileName write FConfigFileName;
+    property RunEdit:Boolean read FRunEdit write SetRunEdit;
   end;
 
   //添加IDE design时控件右键设置功能
@@ -394,7 +399,8 @@ begin
     Init(FBuffer);
     FOffset:=0;
     DrawTexts(FBuffer,FOffset);
-    Canvas.Draw(0,0,FBuffer)
+    Canvas.Draw(0,0,FBuffer);
+    Invalidate;
   end;
 end;
 
@@ -403,6 +409,7 @@ begin
   if (AValue <> FBackImageFile) then
   begin
     FBackImageFile:=AValue;
+    Invalidate;
   end;
 end;
 
@@ -3672,7 +3679,7 @@ begin
   //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
   //  FPOpupMenu:=TPopupMenu.Create(AOwner)
   //else
-    FPopupMenu:=TPopupMenu.Create(self);
+  FPopupMenu:=TPopupMenu.Create(self);
   InitPopupMenu;
   FEditFocusColor:=clWhite;
   FEditFontFocusColor:=clBlack;
@@ -3690,6 +3697,7 @@ begin
   FOldR.Height:=0;
   FOldSelectRow:=0;
   FOldSelectCol:=0;
+  FRunEdit:=false;
   FRun:=0;
   FGap:=5;
   FBorder:=true;
@@ -3839,13 +3847,13 @@ begin
   CellProper.ComboBox1.Items.Clear;
   CellProper.ComboBox1.text:='';
   CellProper.ComboBox1.Items.Assign(FControlsList);
-  CellProper.ComboBox1.ItemIndex:=
-     CellProper.ComboBox1.Items.IndexOf(FTable[FSelectRow,FSelectCol].ComponentName);
   CellProper.StringGrid1.Row:=FSelectRow;
   CellProper.StringGrid1.Col:=FSelectCol-1;
+  CellProper.row :=FSelectRow;
+  CellProper.col :=FSelectCol-1;
   CellProper.CellTextEdit.Text:=FTable[FSelectRow,FSelectCol].str;
   CellProper.StatusBar1.Panels[0].Text:='行:'+(FSelectRow+1).ToString+'  列:'+(FSelectCol).ToString;
-  CellProper.StatusBar1.Panels[1].Text:=FTable[FSelectRow,FSelectCol].str;//StringGrid1.Cells[col,row];
+  CellProper.StatusBar1.Panels[1].Text:=FTable[FSelectRow,FSelectCol].str;
 
   CellProper.oldColMerge:=FTable[FSelectRow,FSelectCol].ColMerge;
   CellProper.oldRowMerge:=FTable[FSelectRow,FSelectCol].RowMerge;
@@ -3854,6 +3862,9 @@ begin
   if FTable[FSelectRow,FSelectCol].Align=calNone then FTable[FSelectRow,FSelectCol].Align:=calClient;
   if FTable[FSelectRow,FSelectCol].Align>calNone then
     CellProper.CbxHAlign.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].Align)-1;
+
+  if FTable[FSelectRow,FSelectCol].DispType<>dtComponent then
+    CellProper.TextCellColor.Color:=FTable[FSelectRow,FSelectCol].TextCellColor;
 
   if FTable[FSelectRow,FSelectCol].DispType=dtText then
     CellProper.CbxCellType.ItemIndex:=0;//文字
@@ -3930,11 +3941,16 @@ begin
       if j>0 then
       CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
       //CellProper.StringGrid1.ColWidths[j]:=FColWidth;
+      CellProper.GTable[i,j].TextCellColor:=FTable[i,j].TextCellColor;
 
     end;
   end;
+  CellProper.ComboBox1.ItemIndex:=
+     CellProper.ComboBox1.Items.IndexOf(FTable[FSelectRow,FSelectCol].ComponentName);
+
   ////////////////////////////////
   //单元格设置后
+  ////////////////////////////////
   if CellProper.ShowModal=mrOk then
   begin
     FEditFontFocusColor:=CellProper.EditFontFocusColor.Color;
@@ -4005,7 +4021,8 @@ begin
         FTable[i,j].Width:=CellProper.GTable[i,j].Width;
         FTable[i,j].x:=CellProper.GTable[i,j].x;
         FTable[i,j].y:=CellProper.GTable[i,j].y;
-        FTable[i,j].str:=CellProper.GTable[i,j].str
+        FTable[i,j].str:=CellProper.GTable[i,j].str;
+        FTable[i,j].TextCellColor:=CellProper.GTable[i,j].TextCellColor;
      end;
     end;
     FOldR.Left:=0;
@@ -4016,26 +4033,31 @@ begin
     FOldSelectCol:=0;
 
     TableMerge;
+    DoOnChangeBounds;
     SaveQFConfig;
     DrawTable;
-    //Invalidate;
-
   end;
   CellProper.Free;
 end;
 
 procedure TQFGridPanelComponent.MenuItemClick(Sender: TObject);
 begin
-  case TStMenuItemTag(TMenuItem(Sender).Tag) of
-    mtCopy :
-      CopyCells;
-    mtPaste :
-      PasteCells;
-    mtClearCells :
-      ClearCells;
-    mtSetCellProp :
-      SetCellProper;
-  end;
+  if FRunEdit then //允许运行编辑单元格
+  begin
+    case TStMenuItemTag(TMenuItem(Sender).Tag) of
+      mtCopy :
+        CopyCells;
+      mtPaste :
+        PasteCells;
+      mtClearCells :
+        ClearCells;
+      mtSetCellProp :
+        SetCellProper;
+      mtSaveCellProp :
+        SaveQFConfig;
+    end;
+  end
+  else showmessage('不允许运行编辑！');
 end;
 
 // 初始化弹出式菜单
@@ -4073,6 +4095,16 @@ begin
     AMenuItem := TMenuItem.Create(FPOpupMenu);
     AMenuItem.Caption := '设置单元格';
     AMenuItem.Tag := Ord(mtSetCellProp);
+    AMenuItem.OnClick := @MenuItemClick;
+    FPOpupMenu.Items.Add(AMenuItem);
+
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+    AMenuItem.Caption := '-';
+    FPOpupMenu.Items.Add(AMenuItem);
+    AMenuItem := TMenuItem.Create(FPOpupMenu);
+
+    AMenuItem.Caption := '保存单元格设置';
+    AMenuItem.Tag := Ord(mtSaveCellProp);
     AMenuItem.OnClick := @MenuItemClick;
     FPOpupMenu.Items.Add(AMenuItem);
 end;
@@ -4283,6 +4315,29 @@ begin
   DrawTable;
 end;
 
+procedure TQFGridPanelComponent.SetColSizing(Value :Boolean);
+begin
+  if (FColSizing <> Value) then
+    FColSizing:=Value;
+  Invalidate;
+end;
+
+procedure TQFGridPanelComponent.SetRowSizing(Value :Boolean);
+begin
+  if (FRowSizing <> Value) then
+  begin
+    FRowSizing:=Value;
+  end;
+  Invalidate;
+end;
+
+procedure TQFGridPanelComponent.SetRunEdit(Value :Boolean);
+begin
+  if (FRunEdit <> Value) then
+    FRunEdit:=Value;
+  Invalidate;
+end;
+
 procedure TQFGridPanelComponent.SetRowCount(Value :integer);
 begin
   if (FRowCount <> Value) and (FRowCount>-1) then
@@ -4415,9 +4470,11 @@ begin
         if FTable[i,j].ColMerge>0 then
         begin
           ss:=1;
+
           if (FTable[i,j].Width<>FColWidth) and
              (FTable[i,j].Width<>FColWidth*FTable[i,j].ColMerge) then
             ss:=FTable[i,j].Width/(FColWidth*FTable[i,j].ColMerge);
+
           FTable[i,j].Width:=round(FColWidth*FTable[i,j].ColMerge*ss);
           col1:=FTable[i,j].ColMerge+j-1;
           if col1>FColCount then col1:=FColCount;
@@ -4579,6 +4636,7 @@ var
   TabStops:integer;
   Control: TControl;
   CellGap,Index,y:integer;
+  rect:TRect;
 begin
   Index:=0;
   y:=0;
@@ -4599,9 +4657,16 @@ begin
     x0:=0;
     for j:=1 to FColCount do
     begin
-      if (j>1) and (FTable[i,j-1].Width=FColWidth) then
-        x0:=x0+FTable[i,j-1].Width
-      else x0:=x0+FTable[i,j-1].x;
+      if (j>1) then
+      begin
+        //if (FTable[i,j-1].Width=FColWidth)  then
+        //  x0:=x0+FColWidth
+        //else
+        if FTable[i,j].Visible then
+          x0:=x0+FTable[i,j-1].Width
+        else
+          x0:=x0+FColWidth;
+      end;
 
       //if FTable[i,j-1].Height>FRowHeight then
       //  y0:=i*FRowHeight
@@ -4743,6 +4808,17 @@ begin
              x1:=x0+(FTable[i,j].Width-GetStringTextWidth(FBuffer,
                  TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-CellGap; //居右
           y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
+
+          if (FTable[i,j].str<>'') and (FTable[i,j].TextCellColor<>clBlack)then
+          begin
+            FBuffer.Canvas.Brush.Color:= FTable[i,j].TextCellColor;
+            rect.Left:=FTable[i,j].x+1;
+            Rect.Top:=FTable[i,j].y+1;
+            Rect.Width:=FTable[i,j].Width-1;
+            Rect.Height:=FTable[i,j].Height-1;
+            FBuffer.Canvas.FillRect(rect);
+          end;
+
           //在指定位置显示文字
           DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
         end;
@@ -5242,8 +5318,12 @@ begin
             if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-abs(movedX)<FTableWidth then
               FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-abs(movedX);
 
+            if FTable[FSelectRow,FSelectCol+1].x+FTable[FSelectRow,FSelectCol+1].Width=FTableWidth then
+              FTable[FSelectRow,FSelectCol+1].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
+
             if FTable[FSelectRow,FSelectCol+1].x+ FTable[FSelectRow,FSelectCol+1].Width+abs(movedX)<FTableWidth then
               FTable[FSelectRow,FSelectCol+1].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
+
             FTable[FSelectRow,FSelectCol+1].x:=FTable[FSelectRow,FSelectCol+1].x-abs(movedX);
           end;
         end;
@@ -5440,6 +5520,8 @@ begin
             FBackImageFile:=TJSONObject(jItem).get('FBackImageFile');
             FShowBackImage:=TJSONObject(jItem).get('FShowBackImage');
           end;
+          //if VersionNum>=1000000 then//1.0.0.0
+          //  FRunEdit:=TJSONObject(jItem).get('FRunEdit');
           FTable:=nil;
           setlength(FTable,FRowcount+1,FColcount+1);
         end;
@@ -5479,6 +5561,8 @@ begin
           FTable[j-no,k].LeftLineStyle:=TJSONObject(lItem.Items[0]).Get('LeftLineStyle');
           FTable[j-no,k].BottomLineStyle:=TJSONObject(lItem.Items[0]).Get('BottomLineStyle');
           FTable[j-no,k].RightLineStyle:=TJSONObject(lItem.Items[0]).Get('RightLineStyle');
+          if VersionNum>=1000001 then//1.0.0.1
+            FTable[j-no,k].TextCellColor:=TJSONObject(lItem.Items[0]).Get('TextCellColor');
         end;
       end;
     end;
@@ -5523,6 +5607,7 @@ begin
   jsonGrid.Add('FEditFocusColor', FEditFocusColor);
   jsonGrid.Add('FBackImageFile', FBackImageFile);
   jsonGrid.Add('FShowBackImage', FShowBackImage);
+  jsonGrid.Add('FRunEdit', FRunEdit);
 
   for i := 0 to FRowCount-1 do
   begin
@@ -5563,6 +5648,7 @@ begin
       jsonParamObj.Add('LeftLineStyle', ord(FTable[i,j].LeftLineStyle));
       jsonParamObj.Add('BottomLineStyle', ord(FTable[i,j].BottomLineStyle));
       jsonParamObj.Add('RightLineStyle', ord(FTable[i,j].RightLineStyle));
+      jsonParamObj.Add('TextCellColor', FTable[i,j].TextCellColor);
 
       jsonCol.Add(jsonParamObj);
       jsonParamObj:=nil;
@@ -5597,6 +5683,8 @@ begin
     oldRowCount:= AGrid.FRowCount;
     oldColCount:= AGrid.FColCount;
     //根据当前单元格信息设置
+    CellProper.col:=AGrid.FColCount;
+    CellProper.row:=AGrid.FRowCount;
     CellProper.ColEdit.Text:=AGrid.FColCount.ToString;
     CellProper.RowEdit.Text:=AGrid.FRowCount.ToString;
     CellProper.LineColor.Color:=AGrid.FCellLineColor;
@@ -5604,8 +5692,6 @@ begin
     CellProper.ComboBox1.Items.Clear;
     CellProper.ComboBox1.text:='';
     CellProper.ComboBox1.Items.Assign(AGrid.FControlsList);
-    CellProper.ComboBox1.ItemIndex:=
-       CellProper.ComboBox1.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].ComponentName);
     CellProper.StringGrid1.Row:=AGrid.FSelectRow;
     CellProper.StringGrid1.Col:=AGrid.FSelectCol-1;
     CellProper.CellTextEdit.Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].str;
@@ -5619,7 +5705,8 @@ begin
     if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align=calNone then AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align:=calClient;
     if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align>calNone then
       CellProper.CbxHAlign.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].Align)-1;
-
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DispType<>dtComponent then
+      CellProper.TextCellColor.Color:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].TextCellColor;
     if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DispType=dtText then
       CellProper.CbxCellType.ItemIndex:=0;//文字
     if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].DispType=dtPict then
@@ -5693,10 +5780,13 @@ begin
         CellProper.GTable[i,j].Width:=AGrid.FTable[i,j].Width;
         CellProper.GTable[i,j].x:=AGrid.FTable[i,j].x;
         CellProper.GTable[i,j].y:=AGrid.FTable[i,j].y;
+        CellProper.GTable[i,j].TextCellColor:=AGrid.FTable[i,j].TextCellColor;
         if j>0 then
         CellProper.StringGrid1.cells[j-1,i]:=AGrid.FTable[i,j].str;
       end;
     end;
+    CellProper.ComboBox1.ItemIndex:=
+       CellProper.ComboBox1.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].ComponentName);
 
     ////////////////////////////////
     //单元格设置后
@@ -5771,7 +5861,8 @@ begin
           AGrid.FTable[i,j].Width:=CellProper.GTable[i,j].Width;
           AGrid.FTable[i,j].x:=CellProper.GTable[i,j].x;
           AGrid.FTable[i,j].y:=CellProper.GTable[i,j].y;
-          AGrid.FTable[i,j].str:=CellProper.GTable[i,j].str
+          AGrid.FTable[i,j].str:=CellProper.GTable[i,j].str;
+          AGrid.FTable[i,j].TextCellColor:=CellProper.GTable[i,j].TextCellColor;
        end;
       end;
       AGrid.FOldR.Left:=0;
@@ -5781,6 +5872,7 @@ begin
       AGrid.FOldSelectRow:=0;
       AGrid.FOldSelectCol:=0;
       AGrid.TableMerge;
+      AGrid.DoOnChangeBounds;
       AGrid.SaveQFConfig;
       AGrid.DrawTable;
       Result:=true;

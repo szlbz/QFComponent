@@ -18,6 +18,9 @@ type
     BevelCellType2: TBevel;
     BevelCellType3: TBevel;
     BevelCellType4: TBevel;
+    BevelCellType5: TBevel;
+    BevelCellType6: TBevel;
+    BevelCellType7: TBevel;
     BtnCancel: TButton;
     BtnOk: TButton;
     BtnSetCellLineColor1: TButton;
@@ -25,6 +28,7 @@ type
     BtnSetFontColor1: TButton;
     BtnSetFontColor2: TButton;
     BtnSetFontColor3: TButton;
+    BtnSetFontColor4: TButton;
     Button1: TButton;
     Button2: TButton;
     CbxCellType: TComboBox;
@@ -39,12 +43,14 @@ type
     ColWidthEdit: TLabeledEdit;
     EditFocusColor: TPanel;
     EditFontFocusColor: TPanel;
+    TextCellColor: TPanel;
     EditFontSize: TEdit;
     GapEdit: TLabeledEdit;
     GbxFontPreview: TGroupBox;
     LabelFontColor: TLabel;
     LabelFontColor1: TLabel;
     LabelFontColor2: TLabel;
+    LabelFontColor3: TLabel;
     LabelFontName: TLabel;
     LabelFontSize: TLabel;
     LabelFontStyle: TLabel;
@@ -89,8 +95,10 @@ type
     procedure BtnSetFontColor1Click(Sender: TObject);
     procedure BtnSetFontColor2Click(Sender: TObject);
     procedure BtnSetFontColor3Click(Sender: TObject);
+    procedure BtnSetFontColor4Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LbxFontStyleClick(Sender: TObject);
@@ -104,12 +112,12 @@ type
     procedure CbxHAlignClick(Sender: TObject);
     procedure EditFontSizeChange(Sender: TObject);
   private
-    row,col:integer;
     CellRange: TRect;
     procedure SetNumControls(Value: boolean);
     procedure GetFirstCellProp;
     procedure SetControlState;
   public
+    row,col:integer;
     oldColMerge,oldRowMerge:integer;
     GTable:Array of Array of TCell;
     ParentGrid: Pointer;
@@ -151,6 +159,14 @@ begin
   end;
 end;
 
+procedure TQFCellProper.BtnSetFontColor4Click(Sender: TObject);
+begin
+  if ColorDialogCellProp.Execute then
+  begin
+    TextCellColor.Color := ColorDialogCellProp.Color;
+  end;
+end;
+
 procedure TQFCellProper.BtnCancelClick(Sender: TObject);
 begin
   self.ModalResult:=mrCancel;
@@ -170,32 +186,27 @@ var err,cw,hh:integer;
 begin
   val(RowEdit.Text,RowCount,err);
   val(ColEdit.Text,ColCount,err);
-  val(RowHeightEdit.Text,hh,err);
-  val(ColWidthEdit.Text,cw,err);
   hh:=0;
   cw:=0;
-  //if (RowCount<>StringGrid1.RowCount) or (StringGrid1.ColCount<>ColCount) then
-  //begin
-    StringGrid1.RowCount:=RowCount;
-    StringGrid1.ColCount:=ColCount;
-    GTable:=nil;
-    setlength(GTable,RowCount+1,ColCount+2);
-    for i:=0 to RowCount-1 do
+  StringGrid1.RowCount:=RowCount;
+  StringGrid1.ColCount:=ColCount;
+  GTable:=nil;
+  setlength(GTable,RowCount+1,ColCount+2);
+  for i:=0 to RowCount-1 do
+  begin
+    for j:=0 to ColCount-1 do
     begin
-      for j:=0 to ColCount-1 do
-      begin
-        StringGrid1.Cells[j,i]:='';
-        GTable[i,j].x:=j*cw;
-        GTable[i,j].y:=i*hh;
-        GTable[i,j].Width:=cw;
-        GTable[i,j].Height:=hh;
-        GTable[i,j].Visible:=true;
-        GTable[i,j].ComponentName:='';
-        GTable[i,j].ComponentDataFieldName:=nil;
-        GTable[i,j].ComponentDataSource:=nil;
-      end;
+      StringGrid1.Cells[j,i]:='';
+      GTable[i,j].x:=j*cw;
+      GTable[i,j].y:=i*hh;
+      GTable[i,j].Width:=cw;
+      GTable[i,j].Height:=hh;
+      GTable[i,j].Visible:=true;
+      GTable[i,j].ComponentName:='';
+      GTable[i,j].ComponentDataFieldName:=nil;
+      GTable[i,j].ComponentDataSource:=nil;
     end;
-  //end;
+  end;
 end;
 
 procedure TQFCellProper.Button2Click(Sender: TObject);
@@ -214,8 +225,10 @@ begin
     GTable[Row,Col+1].DispType:=dtComponent; //控件
   GTable[Row,Col+1].str:=CellTextEdit.Text;
   StringGrid1.cells[Col,Row]:=CellTextEdit.Text;
-  if ComboBox1.ItemIndex>-1 then
-    GTable[Row,Col+1].ComponentName:=ComboBox1.Items[ComboBox1.ItemIndex];
+  if (ComboBox1.ItemIndex>-1) and (CbxCellType.ItemIndex=2) then
+    GTable[Row,Col+1].ComponentName:=ComboBox1.Items[ComboBox1.ItemIndex]
+  else
+    GTable[Row,Col+1].ComponentName:='';
 
   val(CellGapEdit.Text,tmp,err);
   GTable[Row,Col+1].Gap:=tmp;
@@ -237,6 +250,7 @@ begin
     val(LbxFontSize.Items.ValueFromIndex[LbxFontSize.itemindex],tmp,err);
     GTable[Row,Col+1].FontSize:=tmp;
   end;
+  GTable[Row,Col+1].TextCellColor:=TextCellColor.Color;
   GTable[Row,Col+1].FontColor:=PanelFontColor.Color;
   GTable[Row,Col+1].DrawBottom:=DrawBottomLine.Checked;
   GTable[Row,Col+1].DrawLeft:=DrawLeftLine.Checked;
@@ -257,6 +271,12 @@ begin
     GTable[Row+1,Col+1].TopLineStyle:=GTable[Row,Col+1].BottomLineStyle;
     //psSolid
   end;
+end;
+
+procedure TQFCellProper.ComboBox1Change(Sender: TObject);
+begin
+  if combobox1.ItemIndex>-1 then
+    CbxCellType.ItemIndex:=2;
 end;
 
 procedure TQFCellProper.SetNumControls(Value: boolean);
@@ -343,7 +363,9 @@ begin
   BottomLineStyle.ItemIndex:=ord(GTable[Row,Col+1].BottomLineStyle);
   TopLineStyle.ItemIndex:=ord(GTable[Row,Col+1].TopLineStyle);
   PanelFontPreview1.Font.Name:=GTable[Row,Col+1].FontName;
-  //PanelFontColor.Color:=GTable[Row,Col+1].Color;
+  if GTable[Row,Col+1].TextCellColor<> ClBlack then
+    TextCellColor.Color:=GTable[Row,Col+1].TextCellColor
+  else TextCellColor.Color:=clWhite;
   StatusBar1.Panels[0].Text:='行:'+(row+1).ToString+'  列:'+(col+1).ToString;
   StatusBar1.Panels[1].Text:=GTable[Row,Col+1].str;//StringGrid1.Cells[col,row];
   CellTextEdit.Text:=GTable[Row,Col+1].str;

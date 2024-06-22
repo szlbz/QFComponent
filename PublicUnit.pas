@@ -26,6 +26,7 @@ type
      URL:string[200];
      bookmarkstr:string[7];
      Color:TColor;
+     TextCellColor:TColor;
      Align:CellAlign;
      FontName:string[20];
      FontSize:integer;
