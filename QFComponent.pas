@@ -47,7 +47,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='1.0.0.1';
+  Version ='1.0.0.2';
 
 type
 
@@ -260,7 +260,7 @@ type
     FRowSizing:Boolean;
     FCellLineColor:TColor;
     FCellLineStyle:TFPPenStyle;
-    FMouseDownXY:Tpoint;//用于存储鼠标按下时的初始位置
+    FMouseDownXY:TPoint;//用于存储鼠标按下时的初始位置
     FMoveRow:integer;
     FMoveCol:integer;
     FColWidth:integer;
@@ -4679,7 +4679,10 @@ begin
       if FTable[i,j].Visible then
       begin
 
-        FTable[i,j].x:=x0;
+        if FTable[i,j].x=0 then
+          FTable[i,j].x:=x0
+        else
+          x0:=FTable[i,j].x;
         FTable[i,j].y:=y0;
 
         x1:=x0+FTable[i,j].Width;
@@ -5192,16 +5195,17 @@ end;
 procedure TQFGridPanelComponent.MouseUp(Button: TMouseButton; Shift:TShiftState; X,Y:Integer);
 var movedX:integer;
   movedY:integer;
-  i,j,cols:integer;
-  X1,w1,w2:integer;
-  function jscell1(c:integer):integer;
+  c,c2:integer;
+  i,j,cols1,cols2,col1,col2,rows1:integer;
+  X1,x2,w1,w2:integer;
+  function jscell1(r,c:integer):integer;
   var
     i:integer;
   begin
     Result:=-1;
     while c>0 do
     begin
-      if FTable[FSelectRow,c].Visible then
+      if FTable[r,c].Visible then
       begin
         Result:=c;
         Break;
@@ -5209,19 +5213,48 @@ var movedX:integer;
       dec(c);
     end;
   end;
-  function jscell2(c:integer):integer;
+  function jscell2(r,c:integer):integer;
   var
     i:integer;
   begin
     Result:=-1;
     while c>0 do
     begin
-      if FTable[FSelectRow,c].Visible then
+      if FTable[r,c].Visible then
       begin
         Result:=c;
         Break;
       end;
       inc(c);
+    end;
+  end;
+  procedure isLine(xy:TPoint;out x1,x2,row:integer);
+  var i,j,r,c,c2:integer;
+  begin
+    x1:=-1;
+    x2:=-1;
+    for r:=0 to FRowCount-1 do
+    begin
+      for c:=0 to FColCount do
+      begin
+        if (xy.Y>=FTable[r,c].y) and
+           (xy.Y<=FTable[r,c].y+FTable[r,c].Height) then
+        begin
+          if (xy.x>=FTable[r,c].x+FTable[r,c].Width-2) and
+             (xy.x<=FTable[r,c].x+FTable[r,c].Width+2) and
+             FTable[r,c].Visible then
+          begin
+            row:=r;
+            x1:=c;
+            c2:=c+FTable[r,c].ColMerge;
+            if (xy.x>=FTable[r,c2].x-2) and
+               (xy.x<=FTable[r,c2].x+2) and
+               FTable[r,c].Visible then
+              x2:=c2;
+            Break;
+          end;
+        end;
+      end;
     end;
   end;
 begin
@@ -5256,118 +5289,60 @@ begin
       FOldR.Width:=0;
       FOldR.Height:=0;
       movedX := X - FMouseDownXY.X; // 计算Y轴水平移动距离
-      if ssShift in Shift then//整列调整宽度
+      isLine(FMouseDownXY,x1,x2,rows1);
+      for i:=0 to FRowCount-1 do
       begin
-        if FSelectCol=1 then
+        x1:=-1;
+        x2:=-1;
+        for j:=0 to FColCount do
         begin
-          x1:=FTable[FSelectRow,FSelectCol+1].x;
-          w1:=FTable[FSelectRow,FSelectCol].Width;
-          w2:=FTable[FSelectRow,FSelectCol+1].Width;
-          j:=FSelectCol+1;
-        end
-        else
-        begin
-          x1:=FTable[FSelectRow,FSelectCol].x;
-          w1:=FTable[FSelectRow,FSelectCol].Width;
-          w2:=FTable[FSelectRow,FSelectCol-1].Width;
-          j:=FSelectCol;
-        end;
-        for i:=0 to FRowCount-1 do
-        begin
-          if ((FMouseDownXY.x>=FTable[i,j].x-2) and (FMouseDownXY.x<=FTable[i,j].x+2)) or
-             ((FMouseDownXY.x>=FTable[i,j].x-2+FTable[i,j].Width) and (FMouseDownXY.x<=FTable[i,j].x+2++FTable[i,j].Width))
-             and (FTable[i,j].Visible) then
+          ///////////////////////////////////////////////////////////////
+          if (FMouseDownXY.x>=FTable[i,j].x+FTable[i,j].Width-2) and
+             (FMouseDownXY.x<=FTable[i,j].x+FTable[i,j].Width+2) and
+             FTable[i,j].Visible then
           begin
-            if movedX>0 then
+            x1:=j;
+            c2:=j+FTable[i,x1].ColMerge;
+            if (FMouseDownXY.x>=FTable[i,c2].x-2) and
+               (FMouseDownXY.x<=FTable[i,c2].x+2) and
+               FTable[i,c2].Visible then
             begin
-              if FTable[i,FSelectCol-1].x+FTable[i,FSelectCol-1].Width+movedX<FTableWidth then
-              begin
-                if FTable[i,FSelectCol-1].Width<>FTableWidth then
-                  FTable[i,FSelectCol-1].Width:=FTable[i,FSelectCol-1].Width+movedX;
-              end;
-
-              if FTable[i,FSelectCol].x+FTable[i,FSelectCol].Width-movedX=FTableWidth then
-              begin
-                if FTable[i,FSelectCol].Width<>FTableWidth then
-                  FTable[i,FSelectCol].Width:=FTable[i,FSelectCol].Width+movedX
-              end
-              else
-              if FTable[i,FSelectCol].x+FTable[i,FSelectCol].Width-movedX<FTableWidth then
-                FTable[i,FSelectCol].Width:=FTable[i,FSelectCol].Width-movedX;
-              FTable[i,FSelectCol].x:=FTable[i,FSelectCol-1].x+movedX;
+                x2:=c2;
             end
             else
             begin
-              //if FTable[i,FSelectCol].Width=w1 then
+              x2:=c2+1;
+            end;
+
+            //按鼠标左键左右移动时，调整整列单元格宽度
+            //否则，调整单一单元格宽度
+            if ssShift in Shift then rows1:=i;
+
+            if (x1>-1) and (x2>-1) and (rows1=i) then
+            begin
+              if (movedX>0)  then //向右
               begin
-                if FTable[i,FSelectCol].x+ FTable[i,FSelectCol].Width=FTableWidth then
+                FTable[i,x1].Width:=FTable[i,x1].Width+abs(movedX);
                 begin
-                  FTable[i,FSelectCol-1].Width:=FTable[i,FSelectCol-1].Width-abs(movedX);
-                  FTable[i,FSelectCol].Width:=FTable[i,FSelectCol].Width+abs(movedX);
-                  FTable[i,FSelectCol].x:=FTable[i,FSelectCol].x-abs(movedX);
-                end
-                else
-                begin
-                  if (FTable[i,FSelectCol].x+ FTable[i,FSelectCol].Width+abs(movedX)<FTableWidth) and
-                     (FTable[i,FSelectCol].Width<> FTableWidth) then
-                  begin
-                    FTable[i,FSelectCol].Width:=FTable[i,FSelectCol].Width+movedX;
-                    FTable[i,FSelectCol+1].Width:=FTable[i,FSelectCol+1].Width+abs(movedX);
-                    FTable[i,FSelectCol].x:=FTable[i,FSelectCol].x-abs(movedX);
-                  end;
+                  FTable[i,x2].Width:=FTable[i,x2].Width-movedX;
+                  if (abs(x1-x2)>1) then
+                    FTable[i,x2-1].Width:=FTable[i,x2-1].Width+movedX;
+                  FTable[i,x2].x:=FTable[i,x2].x+movedX;
                 end;
+              end
+              else
+              begin
+                FTable[i,x1].Width:=FTable[i,x1].Width-abs(movedX);
+                FTable[i,x2].Width:=FTable[i,x2].Width+abs(movedX);
+                if abs(x1-x2)>1 then
+                begin
+                  FTable[i,x2-1].Width:=FTable[i,x2-1].Width-abs(movedX);
+                end;
+                FTable[i,x2].x:=FTable[i,x2].x-abs(movedX);
               end;
             end;
           end;
-        end;
-      end
-      else
-      begin
-        if movedX>0 then
-        begin
-          cols:=jscell1(FSelectCol-1);
-          if FTable[FSelectRow,cols].x+FTable[FSelectRow,cols].Width+movedX<FTableWidth then
-          begin
-            FTable[FSelectRow,cols].Width:=FTable[FSelectRow,cols].Width+movedX;
-            if cols<>FSelectCol-1 then
-              FTable[FSelectRow,FSelectCol-1].Width:=FTable[FSelectRow,FSelectCol-1].Width+movedX;
-          end;
-
-          if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-movedX=FTableWidth then
-            FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width+movedX
-          else
-          if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-movedX<FTableWidth then
-            FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-movedX;
-
-          FTable[FSelectRow,FSelectCol].x:=FTable[FSelectRow,cols].x+movedX;
-        end
-        else
-        begin
-          if FTable[FSelectRow,FSelectCol].x+ FTable[FSelectRow,FSelectCol].Width=FTableWidth then
-          begin
-            FTable[FSelectRow,FSelectCol-1].Width:=FTable[FSelectRow,FSelectCol-1].Width-abs(movedX);
-            FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width+abs(movedX);
-            FTable[FSelectRow,FSelectCol].x:=FTable[FSelectRow,FSelectCol].x-abs(movedX);
-          end
-          else
-          begin
-            cols:=jscell2(FSelectCol+1);
-            if FTable[FSelectRow,FSelectCol].x+FTable[FSelectRow,FSelectCol].Width-abs(movedX)<FTableWidth then
-            begin
-              FTable[FSelectRow,FSelectCol].Width:=FTable[FSelectRow,FSelectCol].Width-abs(movedX);
-              if cols<>FSelectCol+1 then
-                FTable[FSelectRow,cols-1].Width:=FTable[FSelectRow,cols-1].Width-abs(movedX);
-            end;
-            if FTable[FSelectRow,cols].x+FTable[FSelectRow,cols].Width=FTableWidth then
-              FTable[FSelectRow,cols].Width:=FTable[FSelectRow,FSelectCol+1].Width+abs(movedX);
-
-            if FTable[FSelectRow,cols].x+ FTable[FSelectRow,cols].Width+abs(movedX)<FTableWidth then
-            begin
-              FTable[FSelectRow,cols].Width:=FTable[FSelectRow,cols].Width+abs(movedX);
-            end;
-
-            FTable[FSelectRow,cols].x:=FTable[FSelectRow,cols].x-abs(movedX);
-          end;
+          ///////////////////////////////////////////////////////////////
         end;
       end;
       FRun:=0;
