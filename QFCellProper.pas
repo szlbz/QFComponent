@@ -364,8 +364,15 @@ begin
   TopLineStyle.ItemIndex:=ord(GTable[Row,Col+1].TopLineStyle);
   PanelFontPreview1.Font.Name:=GTable[Row,Col+1].FontName;
   if GTable[Row,Col+1].TextCellColor<> ClBlack then
-    TextCellColor.Color:=GTable[Row,Col+1].TextCellColor
-  else TextCellColor.Color:=clWhite;
+  begin
+    TextCellColor.Color:=GTable[Row,Col+1].TextCellColor;
+    PanelFontPreview1.Color:=GTable[Row,Col+1].TextCellColor;
+  end
+  else
+  begin
+    TextCellColor.Color:=clWhite;
+    PanelFontPreview1.Color:=clWhite;
+  end;
   StatusBar1.Panels[0].Text:='行:'+(row+1).ToString+'  列:'+(col+1).ToString;
   StatusBar1.Panels[1].Text:=GTable[Row,Col+1].str;//StringGrid1.Cells[col,row];
   CellTextEdit.Text:=GTable[Row,Col+1].str;

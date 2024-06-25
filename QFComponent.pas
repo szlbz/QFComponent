@@ -3864,8 +3864,10 @@ begin
     CellProper.CbxHAlign.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].Align)-1;
 
   if FTable[FSelectRow,FSelectCol].DispType<>dtComponent then
+  begin
     CellProper.TextCellColor.Color:=FTable[FSelectRow,FSelectCol].TextCellColor;
-
+    CellProper.PanelFontPreview1.Color:=FTable[FSelectRow,FSelectCol].TextCellColor;
+  end;
   if FTable[FSelectRow,FSelectCol].DispType=dtText then
     CellProper.CbxCellType.ItemIndex:=0;//文字
   if FTable[FSelectRow,FSelectCol].DispType=dtPict then
