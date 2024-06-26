@@ -4823,23 +4823,26 @@ begin
             Rect.Width:=FTable[i,j].Width-1;
             Rect.Height:=FTable[i,j].Height-1;
 
-            if i=0 then
+            if FBorder then //边框加粗时需要调整填充的尺寸
             begin
-              Rect.Top:=Rect.Top+1;
-              Rect.Height:=Rect.Height-1;
-            end;
-            if j=1 then
-            begin
-              Rect.Left:=Rect.Left+1;
-              Rect.Width:=Rect.Width-1;
-            end;
-            if i=FRowCount-1 then
-            begin
-              Rect.Height:=Rect.Height-1;
-            end;
-            if j=FColCount then
-            begin
-              Rect.Width:=Rect.Width-2;
+              if i=0 then //第1行
+              begin
+                Rect.Top:=Rect.Top+1;
+                Rect.Height:=Rect.Height-1;
+              end;
+              if j=1 then //第1列
+              begin
+                Rect.Left:=Rect.Left+1;
+                Rect.Width:=Rect.Width-1;
+              end;
+              if i=FRowCount-1 then  //最后1行
+              begin
+                Rect.Height:=Rect.Height-1;
+              end;
+              if j=FColCount then   //最右1行
+              begin
+                Rect.Width:=Rect.Width-2;
+              end;
             end;
             FBuffer.Canvas.FillRect(rect);
           end;
