@@ -4814,7 +4814,7 @@ begin
                  TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width)))-CellGap; //居右
           y2:=y0+ abs(FTable[i,j].Height- Texth) div 2;//垂直居中
 
-          //文字类型单元格填充颜色 2024-06-22
+          //Begin文字类型单元格填充颜色 2024-06-22
           if (FTable[i,j].str<>'') and (FTable[i,j].TextCellColor<>clBlack)then
           begin
             FBuffer.Canvas.Brush.Color:= FTable[i,j].TextCellColor;
@@ -4822,8 +4822,28 @@ begin
             Rect.Top:=FTable[i,j].y+1;
             Rect.Width:=FTable[i,j].Width-1;
             Rect.Height:=FTable[i,j].Height-1;
+
+            if i=0 then
+            begin
+              Rect.Top:=Rect.Top+1;
+              Rect.Height:=Rect.Height-1;
+            end;
+            if j=1 then
+            begin
+              Rect.Left:=Rect.Left+1;
+              Rect.Width:=Rect.Width-1;
+            end;
+            if i=FRowCount-1 then
+            begin
+              Rect.Height:=Rect.Height-1;
+            end;
+            if j=FColCount then
+            begin
+              Rect.Width:=Rect.Width-2;
+            end;
             FBuffer.Canvas.FillRect(rect);
           end;
+          //End文字类型单元格填充颜色 2024-06-22
 
           //在指定位置显示文字
           DisplayChar(FBuffer,x1+2, y2,TruncationStr(FBuffer,FTable[i,j].str,FTable[i,j].Width));
