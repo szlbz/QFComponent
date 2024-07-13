@@ -282,6 +282,9 @@ type
     FOldEditFocusColor:TColor;
     FOldFontName:string;
     FConfigFileName:string;
+    FMoveRows:integer;
+    FMoveX1:integer;
+    FMoveX2:integer;
     procedure TableMerge;
     function Tableiniti:boolean;
     procedure DisplayTable(Sender: TObject);
@@ -3683,6 +3686,7 @@ begin
   InitPopupMenu;
   FEditFocusColor:=clWhite;
   FEditFontFocusColor:=clBlack;
+  FMoveRows:=-1;
   FTableWidth:=0;
   FTableHeight:=0;
   FColCount:= 5;
@@ -3704,6 +3708,8 @@ begin
   FRowHeight:=0;
   FSelectCol:=-1;
   FSelectRow:=-1;
+  FMouseDownXY.X := -1;
+  FMouseDownXY.Y := -1;
   //Lines.Add('||||||');
   //Lines.Add('|:-:|:-:|:-:|:-:|:-:|');
   //Lines.Add('||||||');
@@ -5238,6 +5244,7 @@ var movedX:integer;
       dec(c);
     end;
   end;
+
   function jscell2(r,c:integer):integer;
   var
     i:integer;
@@ -5253,6 +5260,7 @@ var movedX:integer;
       inc(c);
     end;
   end;
+
   procedure isLine(xy:TPoint;out x1,x2,row:integer);
   var i,j,r,c,c2:integer;
   begin
@@ -5285,6 +5293,7 @@ var movedX:integer;
 begin
   if FisLeftButtonDown then  //按下鼠标左键
   begin
+   FMoveRows:=-1;
     //=================调整单元格高度======================
     if FResultCursor=crVSplit then
     begin
@@ -5303,7 +5312,7 @@ begin
     end;
     //=================调整单元格高度======================
 
-
+{
     //=================调整单元格宽度======================
     if FResultCursor=crHSplit then
     begin
@@ -5372,9 +5381,10 @@ begin
       end;
       FRun:=0;
       DrawTable;
-      Canvas.Draw(0,0,FBuffer)
+      //Canvas.Draw(0,0,FBuffer)
     end;
     //=================调整单元格宽度======================
+}
   end;
   if Button = mbLeft then
   begin
@@ -5405,6 +5415,7 @@ end;
 procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   i,j:integer;
+  movedX,x1,x2,rows1,c2:integer;
 
   function isLine(x,y:integer;out i0,j0:integer):TCursor;
   var
@@ -5448,6 +5459,36 @@ var
       end;
     end;
   end;
+  procedure isLine2(xy:TPoint;out x1,x2,row:integer);
+  var i,j,r,c,c2:integer;
+  begin
+    x1:=-1;
+    x2:=-1;
+    for r:=0 to FRowCount-1 do
+    begin
+      for c:=0 to FColCount do
+      begin
+        if (xy.Y>=FTable[r,c].y) and
+           (xy.Y<=FTable[r,c].y+FTable[r,c].Height) then
+        begin
+          if (xy.x>=FTable[r,c].x+FTable[r,c].Width-2) and
+             (xy.x<=FTable[r,c].x+FTable[r,c].Width+2) and
+             FTable[r,c].Visible then
+          begin
+            row:=r;
+            x1:=c;
+            c2:=c+FTable[r,c].ColMerge;
+            if (xy.x>=FTable[r,c2].x-2) and
+               (xy.x<=FTable[r,c2].x+2) and
+               FTable[r,c].Visible then
+              x2:=c2;
+            Break;
+          end;
+        end;
+      end;
+    end;
+  end;
+
 begin
   inherited MouseMove(Shift, X, Y);
 
@@ -5476,12 +5517,90 @@ begin
     begin
       FResultCursor:=isLine(x,y,FMoveRow,FMoveCol);
     end;
-    if FResultCursor=crHSplit then
+    //=================调整单元格宽度======================
+    if (FisLeftButtonDown) and (FResultCursor=crHSplit) then
     begin
-       //FMVLineX:=x;
-       //Canvas.Pen.Color:=clNone;
-       //Canvas.Line(x,0,x,y+Canvas.Height);
+      FOldSelectRow:=0;
+      FOldSelectCol:=0;
+      FOldR.Left:=0;
+      FOldR.Top:=0;
+      FOldR.Width:=0;
+      FOldR.Height:=0;
+      movedX := X - FMouseDownXY.X; // 计算Y轴水平移动距离
+      if FMoveRows=-1 then
+      begin
+        isLine2(FMouseDownXY,x1,x2,rows1);
+        FMoveX1:=x1;
+        FMoveX2:=x2;
+        FMoveRows:=rows1;
+      end
+      else
+      begin
+        FMouseDownXY.X:=x;
+        rows1:=FMoveRows;
+        x1:=FMoveX1;
+        x2:=FMoveX2;
+      end;
+      for i:=0 to FRowCount-1 do
+      begin
+        x1:=-1;
+        x2:=-1;
+        for j:=0 to FColCount do
+        begin
+          ///////////////////////////////////////////////////////////////
+          if (FMouseDownXY.x>=FTable[i,j].x+FTable[i,j].Width-abs(movedX)) and
+             (FMouseDownXY.x<=FTable[i,j].x+FTable[i,j].Width+abs(movedX)) and
+             FTable[i,j].Visible then
+          begin
+            x1:=j;
+            c2:=j+FTable[i,x1].ColMerge;
+            if (FMouseDownXY.x>=FTable[i,c2].x-2) and
+               (FMouseDownXY.x<=FTable[i,c2].x+2) and
+               FTable[i,c2].Visible then
+            begin
+                x2:=c2;
+            end
+            else
+            begin
+              x2:=c2+1;
+            end;
+
+            //按鼠标左键左右移动时，调整整列单元格宽度
+            //否则，调整单一单元格宽度
+            if ssShift in Shift then FMoveRows:=i;
+
+            if (x1>-1) and (x2>-1) and (FMoveRows=i) then
+            begin
+              if (movedX>0)  then //向右
+              begin
+                FTable[i,x1].Width:=FTable[i,x1].Width+abs(movedX);
+                begin
+                  FTable[i,x2].Width:=FTable[i,x2].Width-movedX;
+                  if (abs(x1-x2)>1) then
+                    FTable[i,x2-1].Width:=FTable[i,x2-1].Width+movedX;
+                  FTable[i,x2].x:=FTable[i,x2].x+movedX;
+                end;
+              end
+              else
+              begin
+                FTable[i,x1].Width:=FTable[i,x1].Width-abs(movedX);
+                FTable[i,x2].Width:=FTable[i,x2].Width+abs(movedX);
+                if abs(x1-x2)>1 then
+                begin
+                  FTable[i,x2-1].Width:=FTable[i,x2-1].Width-abs(movedX);
+                end;
+                FTable[i,x2].x:=FTable[i,x2].x-abs(movedX);
+              end;
+            end;
+          end;
+          ///////////////////////////////////////////////////////////////
+        end;
+      end;
+      FRun:=0;
+      DrawTable;
+      //Canvas.Draw(0,0,FBuffer)
     end;
+    //=================调整单元格宽度======================
   end;
 end;
 
