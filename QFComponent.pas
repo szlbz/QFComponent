@@ -283,8 +283,6 @@ type
     FOldFontName:string;
     FConfigFileName:string;
     FMoveRows:integer;
-    FMoveX1:integer;
-    FMoveX2:integer;
     procedure TableMerge;
     function Tableiniti:boolean;
     procedure DisplayTable(Sender: TObject);
@@ -5415,7 +5413,7 @@ end;
 procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   i,j:integer;
-  movedX,x1,x2,rows1,c2:integer;
+  movedX,x1,x2,c2:integer;
 
   function isLine(x,y:integer;out i0,j0:integer):TCursor;
   var
@@ -5459,6 +5457,7 @@ var
       end;
     end;
   end;
+
   procedure isLine2(xy:TPoint;out x1,x2,row:integer);
   var i,j,r,c,c2:integer;
   begin
@@ -5528,18 +5527,11 @@ begin
       FOldR.Height:=0;
       movedX := X - FMouseDownXY.X; // 计算Y轴水平移动距离
       if FMoveRows=-1 then
-      begin
-        isLine2(FMouseDownXY,x1,x2,rows1);
-        FMoveX1:=x1;
-        FMoveX2:=x2;
-        FMoveRows:=rows1;
-      end
+        isLine2(FMouseDownXY,x1,x2,FMoveRows)
       else
       begin
         FMouseDownXY.X:=x;
-        rows1:=FMoveRows;
-        x1:=FMoveX1;
-        x2:=FMoveX2;
+        FMouseDownXY.Y:=y;
       end;
       for i:=0 to FRowCount-1 do
       begin
