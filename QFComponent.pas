@@ -5546,8 +5546,10 @@ begin
           begin
             x1:=j;
             c2:=j+FTable[i,x1].ColMerge;
-            if (FMouseDownXY.x>=FTable[i,c2].x-2) and
-               (FMouseDownXY.x<=FTable[i,c2].x+2) and
+            if (FMouseDownXY.x>=FTable[i,c2].x) and
+               (FMouseDownXY.x<=FTable[i,c2].x) and
+            //if (FMouseDownXY.x>=FTable[i,c2].x-2) and
+            //   (FMouseDownXY.x<=FTable[i,c2].x+2) and
                FTable[i,c2].Visible then
             begin
                 x2:=c2;
