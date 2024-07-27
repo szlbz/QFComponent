@@ -5470,15 +5470,17 @@ var
         if (xy.Y>=FTable[r,c].y) and
            (xy.Y<=FTable[r,c].y+FTable[r,c].Height) then
         begin
-          if (xy.x>=FTable[r,c].x+FTable[r,c].Width-2) and
-             (xy.x<=FTable[r,c].x+FTable[r,c].Width+2) and
+          if (xy.x>=FTable[r,c].x+FTable[r,c].Width-1) and
+             (xy.x<=FTable[r,c].x+FTable[r,c].Width+1) and
              FTable[r,c].Visible then
           begin
             row:=r;
             x1:=c;
             c2:=c+FTable[r,c].ColMerge;
-            if (xy.x>=FTable[r,c2].x-2) and
-               (xy.x<=FTable[r,c2].x+2) and
+            if (xy.x=FTable[r,c2].x) and
+               //(xy.x<=FTable[r,c2].x) and
+            //if (xy.x>=FTable[r,c2].x-1) and
+            //   (xy.x<=FTable[r,c2].x+1) and
                FTable[r,c].Visible then
               x2:=c2;
             Break;
@@ -5516,6 +5518,7 @@ begin
     begin
       FResultCursor:=isLine(x,y,FMoveRow,FMoveCol);
     end;
+
     //=================调整单元格宽度======================
     if (FisLeftButtonDown) and (FResultCursor=crHSplit) then
     begin
@@ -5545,20 +5548,10 @@ begin
              FTable[i,j].Visible then
           begin
             x1:=j;
-            c2:=j+FTable[i,x1].ColMerge;
-            if (FMouseDownXY.x>=FTable[i,c2].x) and
-               (FMouseDownXY.x<=FTable[i,c2].x) and
-            //if (FMouseDownXY.x>=FTable[i,c2].x-2) and
-            //   (FMouseDownXY.x<=FTable[i,c2].x+2) and
-               FTable[i,c2].Visible then
-            begin
-                x2:=c2;
-            end
+            if FTable[i,x1].ColMerge>0 then
+              x2:=j+FTable[i,x1].ColMerge
             else
-            begin
-              x2:=c2+1;
-            end;
-
+              x2:=x1+1;
             //按鼠标左键左右移动时，调整整列单元格宽度
             //否则，调整单一单元格宽度
             if ssShift in Shift then FMoveRows:=i;
@@ -5568,12 +5561,10 @@ begin
               if (movedX>0)  then //向右
               begin
                 FTable[i,x1].Width:=FTable[i,x1].Width+abs(movedX);
-                begin
-                  FTable[i,x2].Width:=FTable[i,x2].Width-movedX;
-                  if (abs(x1-x2)>1) then
-                    FTable[i,x2-1].Width:=FTable[i,x2-1].Width+movedX;
-                  FTable[i,x2].x:=FTable[i,x2].x+movedX;
-                end;
+                FTable[i,x2].Width:=FTable[i,x2].Width-movedX;
+                if (abs(x1-x2)>1) then
+                  FTable[i,x2-1].Width:=FTable[i,x2-1].Width+movedX;
+                FTable[i,x2].x:=FTable[i,x2].x+movedX;
               end
               else
               begin
@@ -5594,6 +5585,7 @@ begin
       DrawTable;
       //Canvas.Draw(0,0,FBuffer)
     end;
+
     //=================调整单元格宽度======================
   end;
 end;
