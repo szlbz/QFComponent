@@ -47,7 +47,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='1.0.0.2';
+  Version ='1.0.0.3';
 
 type
 
@@ -5624,11 +5624,6 @@ begin
        else tmpstr:=tmpstr+Versions[i];
     end;
     VersionNum:=v1*1000000+v2*10000+v3*100+v4; //0.9.9.9==>90909
-{
-    for i := 0 to jData.Count - 1 do
-    begin
-      jItem := jData.Items[i];
-}
     // find:
     //"QFGridPanelComponent1" : {
     jItem:= jsonRoot.find(self.Name);
@@ -5725,11 +5720,18 @@ VAR
 begin
   if  FileExists(FPathConfig+files) then
   begin
+    //load原有的配置
     jsonFile:=TStringList.Create;
     jsonFile.LoadFromFile(FPathConfig+files);
     jData := GetJSON(utf8toansi(jsonFile.Text));
     jsonRoot:=TJSONObject(jData);
     jsonFile.Free;
+    jItem:= jsonRoot.find('Version');
+    if jItem<>nil then
+      jsonRoot.Strings['Version']:=Version; //修改版本号
+    jItem:= jsonRoot.find(self.Name);
+    if jItem<>nil then  //找到QFGridPanelComponent
+      jsonRoot.Delete(self.Name); //删除原有的QFGridPanelComponent
   end
   else
   begin
@@ -5738,10 +5740,6 @@ begin
     jsonRoot.Add('ConfigName', utf8toansi('QFGridPanelComponentConfig'));
     jsonRoot.Add('Version', Version);
   end;
-  jItem:= jsonRoot.find(self.Name);
-  if jItem<>nil then  //找到QFGridPanelComponent
-    jsonRoot.Delete(self.Name); //删除原有的找到QFGridPanelComponent
-
   jsonGrid := TJSONObject.Create;
   jsonRoot.Add(self.Name, jsonGrid);//添加QFGridPanelComponent
 
