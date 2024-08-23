@@ -5715,19 +5715,35 @@ end;
 
 procedure TQFGridPanelComponent.SaveJSON(files:string);
 VAR
-jsonRoot,jsoncomp, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
-jsonCol: TJSONArray;
-i,j: Integer;
-savejsonfile: TStringList ;
-str:string;
+  jsonRoot,jsoncomp, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
+  jsonCol: TJSONArray;
+  jData,jItem : TJSONData;
+  i,j: Integer;
+  savejsonfile: TStringList ;
+  str:string;
+  jsonFile: TStringList;
 begin
-  //创建一个新的JSON对象来写入数据
-  jsonRoot := TJSONObject.Create;
-  jsonRoot.Add('ConfigName', utf8toansi('QFGridPanelComponentConfig'));
-  jsonRoot.Add('Version', Version);
+  if  FileExists(FPathConfig+files) then
+  begin
+    jsonFile:=TStringList.Create;
+    jsonFile.LoadFromFile(FPathConfig+files);
+    jData := GetJSON(utf8toansi(jsonFile.Text));
+    jsonRoot:=TJSONObject(jData);
+    jsonFile.Free;
+  end
+  else
+  begin
+    //创建一个新的JSON对象来写入数据
+    jsonRoot := TJSONObject.Create;
+    jsonRoot.Add('ConfigName', utf8toansi('QFGridPanelComponentConfig'));
+    jsonRoot.Add('Version', Version);
+  end;
+  jItem:= jsonRoot.find(self.Name);
+  if jItem<>nil then  //找到QFGridPanelComponent
+    jsonRoot.Delete(self.Name); //删除原有的找到QFGridPanelComponent
 
   jsonGrid := TJSONObject.Create;
-  jsonRoot.Add(self.Name, jsonGrid);//添加QFGridPanelComponent1
+  jsonRoot.Add(self.Name, jsonGrid);//添加QFGridPanelComponent
 
   jsonGrid.Add('ComponentName', self.Name);
   jsonGrid.Add('FRowcount', FRowcount);
