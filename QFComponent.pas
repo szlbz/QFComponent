@@ -302,7 +302,7 @@ type
     procedure EditEnter(Sender: TObject);
     procedure EditExit(Sender: TObject);
     procedure InitPopupMenu;
-    procedure LoadJSON(jsonstr:string);
+    function LoadJSON(jsonstr:string):Boolean;
     procedure SaveJSON(files:string);
     function isCell(x,y:integer;out Rect:TRect):Boolean;
     function isComponent(Control:TControl):Boolean;
@@ -358,9 +358,8 @@ implementation
 
 procedure Register;
 begin
-  //RegisterClasses([TQFRichEditor]);
-  //RegisterComponentEditor(TString,TQFRichEditor);
-  RegisterComponents('QF Component', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText,TQFGridPanelComponent]);
+  RegisterComponents('QFComponent QFComponents', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText,TQFGridPanelComponent]);
+  RegisterComponentEditor(TQFGridPanelComponent, TQFGridPanelComponentEditor);
 end;
 
 { TScrollingText }
@@ -3708,13 +3707,6 @@ begin
   FSelectRow:=-1;
   FMouseDownXY.X := -1;
   FMouseDownXY.Y := -1;
-  //Lines.Add('||||||');
-  //Lines.Add('|:-:|:-:|:-:|:-:|:-:|');
-  //Lines.Add('||||||');
-  //Lines.Add('||||||');
-  //Lines.Add('||||||');
-  //Lines.Add('||||||');
-  //Lines.Add('||||||');
   OnPaint := @DisplayTable;
   FOldFontName:=FBuffer.Canvas.Font.Name;
   FConfigFileName:='QFGridPanelConfig.cfg';
@@ -4227,9 +4219,8 @@ begin
 
     if  FileExists(filename) then
     begin
-      Result:=true;
       jsonFile.LoadFromFile(filename);
-      loadjson(jsonFile.Text);
+      Result:=loadjson(jsonFile.Text);
     end;
   finally
     jsonFile.Free;
@@ -4245,9 +4236,8 @@ begin
     jsonFile:=TStringList.Create;
     if  FileExists(FPathConfig+FConfigFileName) then
     begin
-      Result:=true;
       jsonFile.LoadFromFile(FPathConfig+FConfigFileName);
-      loadjson(jsonFile.Text);
+      Result:=loadjson(jsonFile.Text);
     end;
   finally
     jsonFile.Free;
@@ -4510,8 +4500,8 @@ begin
     FRowHeight:= FBuffer.Height div FRowCount;
 
   if  FileExists(FPathConfig+FConfigFileName) then//如果当前目录有FConfigFileName文件，则直接调用配置文件
-    Result:= LoadQFConfig(FPathConfig+FConfigFileName)
-  else
+    Result:= LoadQFConfig(FPathConfig+FConfigFileName) ;
+  if not Result then
   begin
     Result:=false;
     index:=0;
@@ -5567,7 +5557,7 @@ begin
                 FTable[i,x2].x:=FTable[i,x2].x+movedX;
               end
               else
-              begin
+              begin    //向左
                 FTable[i,x1].Width:=FTable[i,x1].Width-abs(movedX);
                 FTable[i,x2].Width:=FTable[i,x2].Width+abs(movedX);
                 if abs(x1-x2)>1 then
@@ -5590,7 +5580,7 @@ begin
   end;
 end;
 
-procedure TQFGridPanelComponent.LoadJSON(jsonstr:string);
+function TQFGridPanelComponent.LoadJSON(jsonstr:string):Boolean;
 var
   jsonRoot: TJSONObject;
   jData : TJSONData;
@@ -5602,6 +5592,7 @@ var
   //object_name: String;
   OldRowcount,OldColcount:integer;
 begin
+  Result:=false;
   jData := GetJSON(utf8toansi(jsonstr));
   jsonRoot:=TJSONObject(jData);
 
@@ -5643,6 +5634,7 @@ begin
     jItem:= jsonRoot.find(self.Name);
     if jItem<>nil then  //找到QFGridPanelComponent1
     begin
+      Result:=true;
       no:=0;
       for j := 0 to jItem.Count - 1 do  //row
       begin
@@ -6056,7 +6048,7 @@ begin
 end;
 //添加设计时鼠标右按弹出菜单--end
 
+
 initialization
-RegisterComponentEditor(TQFGridPanelComponent, TQFGridPanelComponentEditor);
 
 end.
