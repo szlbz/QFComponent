@@ -12,14 +12,12 @@ object Form1: TForm1
   Position = poScreenCenter
   object PageControl1: TPageControl
     Left = 0
-    Height = 1015
-    Top = 32
+    Height = 1047
+    Top = 0
     Width = 1071
-    ActivePage = TabSheet1
+    ActivePage = TabSheet3
     Align = alClient
-    ShowTabs = False
-    Style = tsButtons
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'QFRichView Demo'
@@ -289,6 +287,7 @@ object Form1: TForm1
       end
     end
     object TabSheet3: TTabSheet
+      Caption = 'QFHorizontalScrollingText'
       ClientHeight = 1007
       ClientWidth = 1063
       object QFHorizontalScrollingText1: TQFHorizontalScrollingText
@@ -307,6 +306,7 @@ object Form1: TForm1
         ShowBackImage = True
         ScrollingText = '[s5][c2]<fontname=楷体>测试</fontname>QF<C1>R</C><!>ich<#>V</>iew<C5><fontname=方正舒体>使用</fontname></C>说明<sup>上标</sup>[c]<sub>下标</sub>测试[c]'
         Active = False
+        Interval = 30
       end
       object CheckBox2: TCheckBox
         Left = 128
@@ -330,7 +330,7 @@ object Form1: TForm1
       end
     end
     object TabSheet4: TTabSheet
-      Caption = 'TabSheet4'
+      Caption = '控件表格'
       ClientHeight = 1007
       ClientWidth = 1063
       object Panel3: TPanel
@@ -399,7 +399,10 @@ object Form1: TForm1
         EditFocusColor = 4227327
         ColCount = 4
         RowCount = 8
+        ColSizing = True
+        RowSizing = True
         ConfigFileName = 'QFGridPanelConfig.cfg'
+        RunEdit = False
       end
       object edit1: TEdit
         Left = 140
@@ -499,21 +502,5 @@ object Form1: TForm1
         TabOrder = 6
       end
     end
-  end
-  object TabControl1: TTabControl
-    Left = 0
-    Height = 32
-    Top = 0
-    Width = 1071
-    OnChange = TabControl1Change
-    TabIndex = 0
-    Tabs.Strings = (
-      'QFRichView Demo'
-      'QFScrollingText Demo'
-      'QFHorizontalScrollingText Demo'
-      '控件表格'
-    )
-    Align = alTop
-    TabOrder = 1
   end
 end

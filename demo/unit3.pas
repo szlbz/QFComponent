@@ -44,7 +44,6 @@ type
     QFHorizontalScrollingText1: TQFHorizontalScrollingText;
     QFRichView1: TQFRichView;
     ScrollingText1: TQFScrollingText;
-    TabControl1: TTabControl;
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
     TabSheet3: TTabSheet;
@@ -66,7 +65,6 @@ type
     procedure ColorBox1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
-    procedure TabControl1Change(Sender: TObject);
     //procedure UniQuery1nameGetText(Sender: TField; var aText: string;
     //  DisplayText: Boolean);
   private
@@ -86,7 +84,6 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  TabControl1.TabIndex:=3;
   PageControl1.TabIndex:=3;
   //QFRichView1.BackImagefile:='bg.jpg';
   ScrollingText1.BackImagefile:='bg.jpg';
@@ -100,26 +97,6 @@ end;
 procedure TForm1.ButtonClick(Sender: TObject);
 begin
   showmessage('QFGridPanelComponent演示！');
-end;
-
-procedure TForm1.TabControl1Change(Sender: TObject);
-begin
-  if TabControl1.TabIndex=0 then
-  begin
-    PageControl1.TabIndex:=0;
-  end
-  else if TabControl1.TabIndex=1 then
-  begin
-    PageControl1.TabIndex:=1;
-  end
-  else if TabControl1.TabIndex=2 then
-  begin
-    PageControl1.TabIndex:=2;
-  end
-  else if TabControl1.TabIndex=3 then
-  begin
-    PageControl1.TabIndex:=3;
-  end;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
