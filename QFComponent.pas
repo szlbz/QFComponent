@@ -201,6 +201,7 @@ type
   TQFHorizontalScrollingText= class(TCustomText)
   private
     FTimer: TTimer;
+    FInterval:integer;
     FOffsetX:integer;
     FTextWidth:integer;
     FScrollingText:string;
@@ -211,6 +212,7 @@ type
     procedure DrawScrollingText(Sender: TObject);
     procedure SetScrollingText(const AValue: string);
     procedure SetShowBackImage(AValue: Boolean);
+    procedure SetInterval(AValue: integer);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -218,6 +220,7 @@ type
     property ScrollingText:string read FScrollingText write SetScrollingText;
     property Active: boolean read FActive write SetActive;
     property ShowBackImage: Boolean read FShowBackImage write SetShowBackImage;
+    property Interval:integer read FInterval write SetInterval;
   end;
 
   TQFRichView =  class(TCustomText)
@@ -358,7 +361,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('QFComponent QFComponents', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText,TQFGridPanelComponent]);
+  RegisterComponents('QF QFComponents', [TQFRichView,TQFScrollingText,TQFHorizontalScrollingText,TQFGridPanelComponent]);
   RegisterComponentEditor(TQFGridPanelComponent, TQFGridPanelComponentEditor);
 end;
 
@@ -427,7 +430,7 @@ begin
   FColor:=AValue;
   Init(FBuffer);
   DrawTexts(FBuffer,0);
-  Canvas.Draw(0,0,FBuffer)
+  //Canvas.Draw(0,0,FBuffer); //真奇怪，有这行时TPageControl只显示1个Tab
 end;
 
 procedure TCustomText.GetCellInfo(s:string;out CellType:TCell);
@@ -3101,6 +3104,7 @@ constructor TQFHorizontalScrollingText.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
+  FInterval:=30;
   FTextWidth:=0;
   FOffsetX:=0;
   OnPaint := @DrawScrollingText;
@@ -3147,6 +3151,18 @@ begin
   end;
 end;
 
+procedure TQFHorizontalScrollingText.SetInterval(AValue: integer);
+begin
+  if (AValue <> FInterval) then
+  begin
+    if AValue<1 then AValue:=30;
+    FInterval:=AValue;
+    FTimer.Enabled:=False;
+    FTimer.Interval:=FInterval;
+    FTimer.Enabled:=FActive;
+  end;
+end;
+
 procedure TQFHorizontalScrollingText.SetShowBackImage(AValue: Boolean);
 begin
   if (AValue <> FShowBackImage) then
@@ -3179,26 +3195,29 @@ var
   str:string;
 begin
   str:='';
-  for i:=0 to Lineno-1 do
-     str:=str+FLineList[i].str;
+  if Lineno>0 then
+  begin
+    for i:=0 to Lineno-1 do
+       str:=str+FLineList[i].str;
 
-  Buffer.Canvas.Font.Size:=FLineList[0].FontSize;
-  if FLineList[0].FontStyle=0 then
-    Buffer.Canvas.Font.Style:=[];
-  if FLineList[0].FontStyle=1 then
-      Buffer.Canvas.Font.Style:=[fsBold];
-  if FLineList[0].FontStyle=2 then
-      Buffer.Canvas.Font.Style:=[fsStrikeOut];
-  if FLineList[0].FontStyle=3 then
-      Buffer.Canvas.Font.Style:=[fsItalic];
-  if FLineList[0].FontStyle=4 then
-      Buffer.Canvas.Font.Style:=[fsUnderline];
-  Buffer.Canvas.Font.Color:=FLineList[0].FontColor;
+    Buffer.Canvas.Font.Size:=FLineList[0].FontSize;
+    if FLineList[0].FontStyle=0 then
+      Buffer.Canvas.Font.Style:=[];
+    if FLineList[0].FontStyle=1 then
+        Buffer.Canvas.Font.Style:=[fsBold];
+    if FLineList[0].FontStyle=2 then
+        Buffer.Canvas.Font.Style:=[fsStrikeOut];
+    if FLineList[0].FontStyle=3 then
+        Buffer.Canvas.Font.Style:=[fsItalic];
+    if FLineList[0].FontStyle=4 then
+        Buffer.Canvas.Font.Style:=[fsUnderline];
+    Buffer.Canvas.Font.Color:=FLineList[0].FontColor;
 
-  FTextWidth:=GetStringTextWidth(Buffer,str);
-  h:=(Buffer.Canvas.GetTextHeight(str)+FGapY);
-  h:=abs(h-Buffer.Height) div 2; //垂直居中
-  DisplayChar(Buffer,x, y+h, str);
+    FTextWidth:=GetStringTextWidth(Buffer,str);
+    h:=(Buffer.Canvas.GetTextHeight(str)+FGapY);
+    h:=abs(h-Buffer.Height) div 2; //垂直居中
+    DisplayChar(Buffer,x, y+h, str);
+  end;
 end;
 
 procedure TQFHorizontalScrollingText.DoTimer(Sender: TObject);
@@ -6037,6 +6056,7 @@ begin
   end;
 end;
 
+//添加设计时鼠标右按弹出菜单--begin
 procedure TQFGridPanelComponentEditor.ExecuteVerb(Index: Integer);
 var
   Hook: TPropertyEditorHook;
