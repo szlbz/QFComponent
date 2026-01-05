@@ -1,2 +1,4 @@
 TQFRichView        BITMAP         "2.bmp"
 TQFScrollingText   BITMAP         "1.bmp"
+TQFHorizontalScrollingText   BITMAP         "3.bmp"
+TQFGridPanelComponent	BITMAP	"QF.bmp"

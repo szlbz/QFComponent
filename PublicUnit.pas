@@ -3,7 +3,7 @@ unit PublicUnit;
 interface
 
 uses
-  Classes, SysUtils,Controls,FPCanvas,  Graphics,db;
+  Controls,FPCanvas,Graphics,db;
 
 type
 

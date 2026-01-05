@@ -7,7 +7,7 @@
 {          支持Lazarus及windows、linux等平台            }
 {           x86_64/aarch64/lonngarch64等CPU             }
 {                                                       }
-{               Copyright(c) 2024-2024                  }
+{               Copyright(c) 2024-2026                  }
 {              秋风(QQ315795176)原创出品                }
 {                                                       }
 {                 All rights reserved                   }
@@ -28,7 +28,9 @@ QFComponent for lazarus 包含 4个控件：
 1、控件的自定义富文件格式渲染等核心功能是秋风独立原创编写。
 2、QFRichEditor参考了https://github.com/DreamVB编写的Markdown Editor界面及代码
 3、滚动控件的滚动部分参考了lazarus about的思路。
-*******************************************************************************}
+
+特别感谢：渔夫为QFGridPanelComponent控件增加IDE设计时将参数配置保存到控件config中
+*******************************************************************************************}
 
 unit QFComponent;
 
@@ -38,6 +40,7 @@ uses
   Classes, SysUtils, Forms, Controls,  Graphics, ExtCtrls,Dialogs, Printers,
   OSPrinters,StdCtrls,DBCtrls, Menus,QFCellProper, DB,Grids,DBGrids,  FPCanvas,
   fpjson,lazutf8,PublicUnit,LazIDEIntf,EditBtn,DBExtCtrls,
+  Buttons,
   lclintf, LazFileUtils,  LMessages,StrUtils,QFRichEdit,
   //添加IDE design时鼠标右按弹出菜单需要用到的单元
   ComponentEditors,PropEdits
@@ -47,7 +50,7 @@ const
   ReservedSpace = 1024;
 
   VerInfo = 'TQFGridPanelComponent';
-  Version ='1.0.0.3';
+  Version ='1.0.0.8';
 
 type
 
@@ -98,7 +101,7 @@ type
   end;
 
   // 弹出菜单的标识
-  TStMenuItemTag = (mtCopy, mtPaste, mtClearCells, mtSetCellProp, mtSaveCellProp);
+  TStMenuItemTag = (mtCopy, mtPaste, mtClearCells, mtSetCellProp, mtSaveCellProp);//, mtLoadCellProp);
 
   TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
@@ -157,6 +160,7 @@ type
     procedure SetBackImageFile(AValue: String);
     procedure SetShowBackImage(AValue: Boolean);
     procedure DeleteRecord(index:integer);
+    procedure Refresh;
   protected
     procedure SetLines(const AValue: TStrings); virtual;
     procedure DoOnChangeBounds; override;
@@ -252,6 +256,10 @@ type
   private
     FOldSelectRow:integer;
     FOldSelectCol:integer;
+    FClickRow:Integer;
+    FClickCol:Integer;
+    FClickSelectRow:integer;
+    FClickSelectCol:Integer;
     FSelectRow:integer;
     FSelectCol:integer;
     FMVLineX:integer;
@@ -261,6 +269,8 @@ type
     FRowCount:integer;
     FColSizing:Boolean;
     FRowSizing:Boolean;
+    FHideMenu:Boolean;
+    FMouseFollow:Boolean;
     FCellLineColor:TColor;
     FCellLineStyle:TFPPenStyle;
     FMouseDownXY:TPoint;//用于存储鼠标按下时的初始位置
@@ -273,7 +283,7 @@ type
     FRun:integer;
     FGap:integer;
     FBorder:Boolean;
-    FRunEdit:Boolean;
+    //FRunEdit:Boolean;
     FOldR:TRect;
     FCurrentR:TRect;
     FResultCursor:TCursor;
@@ -286,6 +296,7 @@ type
     FOldFontName:string;
     FConfigFileName:string;
     FMoveRows:integer;
+    FConfig: TStrings;
     procedure TableMerge;
     function Tableiniti:boolean;
     procedure DisplayTable(Sender: TObject);
@@ -297,7 +308,9 @@ type
     procedure SetCellLineStyle(Value : TFPPenStyle);
     procedure SetColCount(Value :integer);
     procedure SetRowCount(Value :integer);
-    procedure SetRunEdit(Value :Boolean);
+    procedure SetHideMenu(Value:Boolean);
+    procedure SetMouseFollow(Value:Boolean);
+    //procedure SetRunEdit(Value :Boolean);
     procedure SetColSizing(Value :Boolean);
     procedure SetRowSizing(Value :Boolean);
     function FindChildControls(str:string):TControl;
@@ -306,12 +319,15 @@ type
     procedure EditExit(Sender: TObject);
     procedure InitPopupMenu;
     function LoadJSON(jsonstr:string):Boolean;
-    procedure SaveJSON(files:string);
+    procedure SaveJSON(MSQC:Boolean=False);
+    //procedure SaveJSON(files:string='');// override;
     function isCell(x,y:integer;out Rect:TRect):Boolean;
     function isComponent(Control:TControl):Boolean;
     procedure ClearCells;
     procedure CopyCells;
     procedure PasteCells;
+    function GetConfig: TStrings;  //渔夫
+    procedure SetConfig(const Avalue: TStrings);  //渔夫
   protected
     procedure SetLines(const AValue: TStrings);override;
     procedure DoOnChangeBounds; override;
@@ -321,14 +337,19 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure SetCellProper;//设置单元格参数
+    procedure RedrawTable;
+    procedure SetCellProper;  //设置单元格参数
     procedure Refresh;
     procedure GetControlsList;
-    procedure SaveQFConfig(filename:string);
-    function LoadQFConfig(filename:string):boolean;
-    procedure SaveQFConfig;
-    function LoadQFConfig:boolean;
+    procedure SaveQFConfig(filename:string);overload;
+    //function LoadQFConfigFile:boolean;
+    procedure SaveQFConfig;overload;
+    function LoadQFConfig:boolean;overload;//渔夫
+    function LoadQFConfig(configFileName:string):boolean;overload;
+    function GetSelectRow:Integer;
+    function GetSelectCol:Integer;
   published
+    property OnClick;
     property RowHeight:integer read FRowHeight write FRowHeight;
     property Gap:integer read FGap write FGap;
     property Border:Boolean read FBorder write FBorder;
@@ -337,12 +358,15 @@ type
     property CellLineColor:TColor read FCellLineColor write SetCellLineColor default clSilver;
     property CellLineStyle:TFPPenStyle read FCellLineStyle write SetCellLineStyle default psSolid;
     property Font;
-    property ColCount:integer read FColCount write FColCount;// SetColCount default 5;
-    property RowCount:integer read FRowCount write FRowCount;//SetRowCount default 5;
+    //property ColCount:integer read FColCount ;//write FColCount;// SetColCount default 5;
+    //property RowCount:integer read FRowCount ;//write FRowCount;//SetRowCount default 5;
     property ColSizing:Boolean read FColSizing write SetColSizing;
     property RowSizing:Boolean read FRowSizing write SetRowSizing;
-    property ConfigFileName:string read FConfigFileName write FConfigFileName;
-    property RunEdit:Boolean read FRunEdit write SetRunEdit;
+    //property ConfigFileName:string read FConfigFileName write FConfigFileName;
+    //property RunEdit:Boolean read FRunEdit write SetRunEdit;
+    property HideMenu:Boolean read FHideMenu write SetHideMenu;
+    property MouseFollow:Boolean read FMouseFollow write SetMouseFollow;
+    property Config: TStrings read GetConfig write SetConfig; //渔夫
   end;
 
   //添加IDE design时控件右键设置功能
@@ -366,6 +390,11 @@ begin
 end;
 
 { TScrollingText }
+
+procedure TCustomText.Refresh;
+begin
+  Canvas.Draw(0,0,FBuffer);
+end;
 
 procedure TCustomText.DeleteRecord(index:integer);
 var
@@ -395,6 +424,10 @@ begin
 end;
 
 procedure TCustomText.SetShowBackImage(AValue: Boolean);
+var
+  FormClass: TClass;
+  ParentForm: TCustomForm;
+
 begin
   if (AValue <> FShowBackImage) then
   begin
@@ -402,7 +435,9 @@ begin
     Init(FBuffer);
     FOffset:=0;
     DrawTexts(FBuffer,FOffset);
-    Canvas.Draw(0,0,FBuffer);
+    //修正在TFrame的Bug
+    if LowerCase(TCustomForm(Owner).ClassType.ClassParent.ClassName)<>LowerCase('TFrame') then
+      Canvas.Draw(0,0,FBuffer);
     Invalidate;
   end;
 end;
@@ -3698,8 +3733,6 @@ begin
   //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
   //  FPOpupMenu:=TPopupMenu.Create(AOwner)
   //else
-  FPopupMenu:=TPopupMenu.Create(self);
-  InitPopupMenu;
   FEditFocusColor:=clWhite;
   FEditFontFocusColor:=clBlack;
   FMoveRows:=-1;
@@ -3709,6 +3742,9 @@ begin
   FRowCount:= 5;
   FColSizing:= true;
   FRowSizing:=true;
+  FMouseFollow:=True;
+  FClickSelectRow:=0;
+  FClickSelectCol:=0;
   FCellLineColor := clSilver;
   FCellLineStyle := psSolid;
   FOldR.Left:=0;
@@ -3717,7 +3753,7 @@ begin
   FOldR.Height:=0;
   FOldSelectRow:=0;
   FOldSelectCol:=0;
-  FRunEdit:=false;
+  //HideMemu:=False;
   FRun:=0;
   FGap:=5;
   FBorder:=true;
@@ -3730,11 +3766,18 @@ begin
   FOldFontName:=FBuffer.Canvas.Font.Name;
   FConfigFileName:='QFGridPanelConfig.cfg';
   FIsShowBackImage:=false;
+  //if FHideMenu=False then
+  //begin
+  //  FPopupMenu:=TPopupMenu.Create(self);
+  //  InitPopupMenu;
+  //end;
+  FConfig := TStringList.Create;  //渔夫
 end;
 
 destructor TQFGridPanelComponent.Destroy;
 begin
   inherited Destroy;
+  FConfig.Free;    //渔夫
   if FControlsList<>nil then
     FControlsList.Free;
   //FPopupMenu.Free;
@@ -3770,7 +3813,8 @@ begin
   FCopyTable.Visible:= FTable[FSelectRow,FSelectCol].Visible;
   FCopyTable.Width:= FTable[FSelectRow,FSelectCol].Width;
   FCopyTable.str:= FTable[FSelectRow,FSelectCol].str;
-  FPOpupMenu.Items[1].Enabled:=true;  //粘贴菜单项设置true
+  //if not FHideMenu then
+  //FPOpupMenu.Items[1].Enabled:=true;  //粘贴菜单项设置true
 end;
 
 //粘贴单元格
@@ -3855,6 +3899,24 @@ begin
   oldRowCount:= FRowCount;
   oldColCount:= FColCount;
   //根据当前单元格信息设置
+
+  CellProper.FShowBackImage:=FShowBackImage;
+  CellProper.FBackImageFile:=FBackImageFile;
+  CellProper.FEditFontFocusColor:=FEditFontFocusColor;
+  CellProper.FEditFocusColor:=FEditFocusColor;
+  CellProper.FBorder:=FBorder;
+  CellProper.FGap:=FGap;
+  CellProper.FColWidth:=FColWidth;
+  CellProper.FRowHeight:=FRowHeight;
+  CellProper.FTableWidth:=FTableWidth;
+  CellProper.FTableHeight:=FTableHeight;
+  CellProper.FCellLineStyle:=FCellLineStyle;
+  CellProper.FColSizing:=FColSizing;
+  CellProper.FRowSizing:=FRowSizing;
+  CellProper.FCellLineColor:=FCellLineColor;
+  CellProper.FRowCount:=FRowCount;
+  CellProper.FColCount:=FColCount;
+
   CellProper.ColEdit.Text:=FColCount.ToString;
   CellProper.RowEdit.Text:=FRowCount.ToString;
   CellProper.LineColor.Color:=FCellLineColor;
@@ -3862,8 +3924,6 @@ begin
   CellProper.ComboBox1.Items.Clear;
   CellProper.ComboBox1.text:='';
   CellProper.ComboBox1.Items.Assign(FControlsList);
-  CellProper.StringGrid1.Row:=FSelectRow;
-  CellProper.StringGrid1.Col:=FSelectCol-1;
   CellProper.row :=FSelectRow;
   CellProper.col :=FSelectCol-1;
   CellProper.CellTextEdit.Text:=FTable[FSelectRow,FSelectCol].str;
@@ -3911,9 +3971,6 @@ begin
   CellProper.RightLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].RightLineStyle);
   CellProper.BottomLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].BottomLineStyle);
   CellProper.TopLineStyle.ItemIndex:=ord(FTable[FSelectRow,FSelectCol].TopLineStyle);
-  //根据控件的FRowCount和FColCount设置StringGrid的行和列
-  CellProper.StringGrid1.RowCount:=FRowCount;
-  CellProper.StringGrid1.ColCount:=FColCount;
 
   CellProper.EditFontFocusColor.Color:=FEditFontFocusColor;
   CellProper.EditFocusColor.Color:=FEditFocusColor;
@@ -3923,7 +3980,6 @@ begin
 
   for i:=0 to FRowCount-1 do
   begin
-    //CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
     for j:=0 to FColCount do
     begin
       CellProper.GTable[i,j].Gap:=FTable[i,j].Gap;
@@ -3955,9 +4011,6 @@ begin
       CellProper.GTable[i,j].Width:=FTable[i,j].Width;
       CellProper.GTable[i,j].x:=FTable[i,j].x;
       CellProper.GTable[i,j].y:=FTable[i,j].y;
-      if j>0 then
-      CellProper.StringGrid1.cells[j-1,i]:=FTable[i,j].str;
-      //CellProper.StringGrid1.ColWidths[j]:=FColWidth;
       CellProper.GTable[i,j].TextCellColor:=FTable[i,j].TextCellColor;
 
     end;
@@ -4057,10 +4110,25 @@ begin
   CellProper.Free;
 end;
 
+procedure TQFGridPanelComponent.RedrawTable;
+begin
+  FOldR.Left:=0;
+  FOldR.Top:=0;
+  FOldR.Width:=0;
+  FOldR.Height:=0;
+  FOldSelectRow:=0;
+  FOldSelectCol:=0;
+
+  TableMerge;
+  DoOnChangeBounds;
+  SaveQFConfig;
+  DrawTable;
+end;
+
 procedure TQFGridPanelComponent.MenuItemClick(Sender: TObject);
 begin
-  if FRunEdit then //允许运行编辑单元格
-  begin
+  //if FRunEdit then //允许运行编辑单元格
+  //begin
     case TStMenuItemTag(TMenuItem(Sender).Tag) of
       mtCopy :
         CopyCells;
@@ -4071,10 +4139,12 @@ begin
       mtSetCellProp :
         SetCellProper;
       mtSaveCellProp :
-        SaveQFConfig;
+        savejson(True);
+      //mtLoadCellProp :
+        //LoadQFConfigFile;
     end;
-  end
-  else showmessage('不允许运行编辑！');
+  //end
+  //else showmessage('不允许运行时编辑！');
 end;
 
 // 初始化弹出式菜单
@@ -4082,48 +4152,58 @@ procedure TQFGridPanelComponent.InitPopupMenu;
 var
   AMenuItem: TMenuItem;
 begin
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '复制(&C)';
-    AMenuItem.Tag := Ord(mtCopy);
-    AMenuItem.OnClick := @MenuItemClick;
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '复制(&C)';
+  AMenuItem.Tag := Ord(mtCopy);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
 
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '粘贴(&P)';
-    AMenuItem.Tag := Ord(mtPaste);
-    AMenuItem.OnClick := @MenuItemClick;
-    AMenuItem.Enabled:=false;
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '粘贴(&P)';
+  AMenuItem.Tag := Ord(mtPaste);
+  AMenuItem.OnClick := @MenuItemClick;
+  AMenuItem.Enabled:=false;
+  FPOpupMenu.Items.Add(AMenuItem);
 
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '-';
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '-';
+  FPOpupMenu.Items.Add(AMenuItem);
 
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '清除单元格内容';
-    AMenuItem.Tag := Ord(mtClearCells);
-    AMenuItem.OnClick := @MenuItemClick;
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '清除单元格内容';
+  AMenuItem.Tag := Ord(mtClearCells);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
 
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '-';
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '-';
+  FPOpupMenu.Items.Add(AMenuItem);
 
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '设置单元格';
-    AMenuItem.Tag := Ord(mtSetCellProp);
-    AMenuItem.OnClick := @MenuItemClick;
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '设置单元格';
+  AMenuItem.Tag := Ord(mtSetCellProp);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
 
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
-    AMenuItem.Caption := '-';
-    FPOpupMenu.Items.Add(AMenuItem);
-    AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '-';
+  FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
 
-    AMenuItem.Caption := '保存单元格设置';
-    AMenuItem.Tag := Ord(mtSaveCellProp);
-    AMenuItem.OnClick := @MenuItemClick;
-    FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem.Caption := '保存单元格设置';
+  AMenuItem.Tag := Ord(mtSaveCellProp);
+  AMenuItem.OnClick := @MenuItemClick;
+  FPOpupMenu.Items.Add(AMenuItem);
+
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+  AMenuItem.Caption := '-';
+  FPOpupMenu.Items.Add(AMenuItem);
+  AMenuItem := TMenuItem.Create(FPOpupMenu);
+
+  //AMenuItem.Caption := '从文件读取单元格设置';
+  //AMenuItem.Tag := Ord(mtLoadCellProp);
+  //AMenuItem.OnClick := @MenuItemClick;
+  //FPOpupMenu.Items.Add(AMenuItem);
 end;
 
 procedure TQFGridPanelComponent.EditEnter(Sender: TObject);
@@ -4226,36 +4306,67 @@ begin
   end;
 end;
 
-function TQFGridPanelComponent.LoadQFConfig(filename:string):boolean;
-var
-  jsonFile: TStringList;
-begin
-  Result:=false;
-  try
-    jsonFile:=TStringList.Create;
-    if trim(filename)='' then
-      filename:=FConfigFileName;
-
-    if  FileExists(filename) then
-    begin
-      jsonFile.LoadFromFile(filename);
-      Result:=loadjson(jsonFile.Text);
-    end;
-  finally
-    jsonFile.Free;
-  end;
-end;
+//function TQFGridPanelComponent.LoadQFConfigFile:boolean;
+//var
+//  jsonFile: TStringList;
+//  dialog: TOpenDialog;
+//begin
+//  Result:=false;
+//  dialog := TOpenDialog.Create(nil);
+//  dialog.Title := '打开配置文件';
+//  dialog.Filter := 'QF表格配置文件(*.cfg)|*.cfg|所有文件(*.*)|*.*';
+//  dialog.FileName := FPathConfig+FConfigFileName;
+//  if dialog.Execute then begin
+//    try
+//      jsonFile := TStringList.Create;
+//      jsonFile.LoadFromFile(dialog.FileName);
+//      Result:=loadjson(jsonFile.Text);
+//
+//      Tableiniti
+//    finally
+//      jsonFile.Free;
+//    end;
+//  end;
+//end;
 
 function TQFGridPanelComponent.LoadQFConfig:boolean;
 var
   jsonFile: TStringList;
 begin
+  Result:=loadjson(FConfig.Text);
+  //Result:=false;
+  //try
+  //  jsonFile:=TStringList.Create;
+  //  if  FileExists(FPathConfig+FConfigFileName) then
+  //  begin
+  //    jsonFile.LoadFromFile(FPathConfig+FConfigFileName);
+  //    Result:=loadjson(jsonFile.Text);
+  //  end;
+  //finally
+  //  jsonFile.Free;
+  //end;
+end;
+
+function TQFGridPanelComponent.GetSelectRow:Integer;
+begin
+  Result:=FClickRow;
+end;
+
+function TQFGridPanelComponent.GetSelectCol:Integer;
+begin
+  Result:=FClickCol;
+end;
+
+function TQFGridPanelComponent.LoadQFConfig(ConfigFileName:String):boolean;
+var
+  jsonFile:TStringList;
+begin
   Result:=false;
   try
     jsonFile:=TStringList.Create;
-    if  FileExists(FPathConfig+FConfigFileName) then
+    if  FileExists(ConfigFileName) then
     begin
-      jsonFile.LoadFromFile(FPathConfig+FConfigFileName);
+      jsonFile.LoadFromFile(ConfigFileName);
       Result:=loadjson(jsonFile.Text);
     end;
   finally
@@ -4265,14 +4376,14 @@ end;
 
 procedure TQFGridPanelComponent.SaveQFConfig(filename:string);
 begin
-  if trim(filename)='' then
-    filename:=FConfigFileName;
-  savejson(filename);
+//  if trim(filename)='' then
+//    filename:=FConfigFileName;
+//  savejson(filename);
 end;
 
 procedure TQFGridPanelComponent.SaveQFConfig;
 begin
-  savejson(FConfigFileName);
+  savejson;        //(FConfigFileName);
 end;
 
 procedure TQFGridPanelComponent.Refresh;
@@ -4285,7 +4396,7 @@ begin
   end;
   if Tableiniti then
     DrawTable;
-  //Canvas.Draw(0,0,FBuffer)
+  Canvas.Draw(0,0,FBuffer)
 end;
 
 procedure TQFGridPanelComponent.SetLines(const AValue: TStrings);
@@ -4319,6 +4430,7 @@ begin
   if (FColCount<>Value) and (FColCount>-1)then
   begin
     FColCount := Value;
+    ShowMessage(FColCount.ToString);
     if FColCount<>0 then
       FColWidth:= FBuffer.Width div FColCount;
     if FRowCount<>0 then
@@ -4326,8 +4438,25 @@ begin
     FTable:=nil;
     setlength(FTable,FRowcount+1,FColcount+1);
     TableMerge;
+  end
+  else
+  begin
+    FTable:=nil;
+    setlength(FTable,FRowcount+1,FColcount+1);
+    TableMerge;
+    if FRun=0 then
+    begin
+      if Init(FBuffer) then
+      begin
+        if FTablesl<>nil then
+          GetTableInfo(0);
+      end;
+      Tableiniti;
+    end;
+    if FTable<>nil then
+      DrawTable;
   end;
-  DrawTable;
+  //DrawTable;
 end;
 
 procedure TQFGridPanelComponent.SetColSizing(Value :Boolean);
@@ -4346,12 +4475,24 @@ begin
   Invalidate;
 end;
 
-procedure TQFGridPanelComponent.SetRunEdit(Value :Boolean);
+procedure TQFGridPanelComponent.SetHideMenu(Value :Boolean);
 begin
-  if (FRunEdit <> Value) then
-    FRunEdit:=Value;
-  Invalidate;
+  if (FHideMenu <> Value) then
+    FHideMenu:=Value;
 end;
+
+procedure TQFGridPanelComponent.SetMouseFollow(Value:Boolean);
+begin
+  if (FMouseFollow <> Value) then
+    FMouseFollow:=Value;
+end;
+
+//procedure TQFGridPanelComponent.SetRunEdit(Value :Boolean);
+//begin
+//  if (FRunEdit <> Value) then
+//    FRunEdit:=Value;
+//  Invalidate;
+//end;
 
 procedure TQFGridPanelComponent.SetRowCount(Value :integer);
 begin
@@ -4365,9 +4506,26 @@ begin
     FTable:=nil;
     setlength(FTable,FRowcount+1,FColcount+1);
     TableMerge;
+    DrawTable;
+  end
+  else
+  begin
+    FTable:=nil;
+    setlength(FTable,FRowcount+1,FColcount+1);
+    TableMerge;
+    if FRun=0 then
+    begin
+      if Init(FBuffer) then
+      begin
+        if FTablesl<>nil then
+          GetTableInfo(0);
+      end;
+      Tableiniti;
+    end;
+    if FTable<>nil then
+      DrawTable;
   end;
   //if FRowCount=-1 then Tableiniti;
-  DrawTable;
 end;
 
 procedure TQFGridPanelComponent.SetCellLineColor(Value : TColor);
@@ -4519,7 +4677,12 @@ begin
     FRowHeight:= FBuffer.Height div FRowCount;
 
   if  FileExists(FPathConfig+FConfigFileName) then//如果当前目录有FConfigFileName文件，则直接调用配置文件
-    Result:= LoadQFConfig(FPathConfig+FConfigFileName) ;
+    Result:= LoadQFConfig(FPathConfig+FConfigFileName)
+  else
+  if FConfig.Text <> '' then     //20251120 渔夫加入：从当前配置读入
+     Result:= LoadQFConfig;
+  if (Result=false) and (FConfig.Text <> '') then
+     Result:= LoadQFConfig;
   if not Result then
   begin
     Result:=false;
@@ -4653,6 +4816,11 @@ var
   CellGap,Index,y:integer;
   rect:TRect;
 begin
+  if FHideMenu=False then
+  begin
+    FPopupMenu:=TPopupMenu.Create(self);
+    InitPopupMenu;
+  end;
   Index:=0;
   y:=0;
   BackgroundRefresh(FBuffer); //刷新背景
@@ -4667,7 +4835,7 @@ begin
   hg:=0;
   x0:=0;
   y0:=0;
-  for i:=0 to FRowCount do
+  for i:=0 to FRowCount-1 do
   begin
     x0:=0;
     for j:=1 to FColCount do
@@ -4944,6 +5112,19 @@ begin
   Canvas.Draw(0,0,FBuffer);
 end;
 
+function TQFGridPanelComponent.GetConfig: TStrings;
+begin
+  result := FConfig;
+end;
+
+procedure TQFGridPanelComponent.SetConfig(const Avalue: TStrings);
+begin
+  if (FConfig.text <> Avalue.Text) then
+  begin
+    FConfig.Assign(AValue);
+  end;
+end;
+
 function ControlToScreenX(AControl: TControl): Integer;
 var
   ParentControl: TControl;
@@ -5214,6 +5395,16 @@ begin
   if Button = mbLeft then
   begin
     // 处理左键按下
+    FClickRow:=FSelectRow;
+    FClickCol:=FSelectCol;
+    if FMouseFollow=False then
+    begin
+      DrawRect(FoldR,FCellLineColor,1,FClickSelectRow,FClickSelectCol,true);
+      DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol);
+      FClickSelectRow:=FSelectRow;
+      FClickSelectCol:=FSelectCol;
+      isCell(x,y,FoldR);
+    end;
     if (FResultCursor=crHSplit)or (FResultCursor=crVSplit)then //当调整光标时记录x,y坐标
     begin
       FisLeftButtonDown := True;
@@ -5402,6 +5593,8 @@ begin
   end;
   if Button=mbRight then
   begin
+    if FMouseFollow=False then Exit;
+
     if (FSelectRow>-1) and (FSelectCol>-1) then
     begin
       if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
@@ -5414,7 +5607,8 @@ begin
       FSelectRow:=0;
       FSelectCol:=0;
     end;
-    FPopupMenu.PopUp(ControlToScreenX(self)+x,ControlToScreenY(self)+y);
+    if FHideMenu=false then
+      FPopupMenu.PopUp(ControlToScreenX(self)+x,ControlToScreenY(self)+y);
   end;
   inherited MouseUP(Button,Shift, X, Y);
 end;
@@ -5506,14 +5700,17 @@ begin
   begin
     if isCell(x,y,FCurrentR) then
     begin
-      DrawRect(FoldR,FCellLineColor,1,FOldSelectRow,FOldSelectCol,true);
-      FOldR:=FCurrentR;
-      FOldSelectRow:=FSelectRow;
-      FOldSelectCol:=FSelectCol;
-      if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
-        DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
-      else
-        DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+      if FMouseFollow then
+      begin
+        DrawRect(FoldR,FCellLineColor,1,FOldSelectRow,FOldSelectCol,true);
+        FOldR:=FCurrentR;
+        FOldSelectRow:=FSelectRow;
+        FOldSelectCol:=FSelectCol;
+        if FTable[FSelectRow,FSelectCol].DispType=dtComponent then
+          DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
+        else
+          DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+      end;
     end;
     if FisLeftButtonDown then
     begin
@@ -5526,6 +5723,13 @@ begin
     else
     begin
       FResultCursor:=isLine(x,y,FMoveRow,FMoveCol);
+    end;
+
+    if FMouseFollow=False then
+    begin
+      FMouseDownXY.X:=x;
+      FMouseDownXY.Y:=y;
+      Exit;
     end;
 
     //=================调整单元格宽度======================
@@ -5592,9 +5796,7 @@ begin
       end;
       FRun:=0;
       DrawTable;
-      //Canvas.Draw(0,0,FBuffer)
     end;
-
     //=================调整单元格宽度======================
   end;
 end;
@@ -5674,7 +5876,11 @@ begin
             FShowBackImage:=TJSONObject(jItem).get('FShowBackImage');
           end;
           //if VersionNum>=1000000 then//1.0.0.0
-          //  FRunEdit:=TJSONObject(jItem).get('FRunEdit');
+          //FRunEdit:=TJSONObject(jItem).get('FRunEdit');
+          //if VersionNum>10000003 then
+          //  FHideMenu:=TJSONObject(jItem).get('FHideMenu');
+          //if FHideMenu then
+          //   FPopupMenu.Items.Clear;
           FTable:=nil;
           setlength(FTable,FRowcount+1,FColcount+1);
         end;
@@ -5727,30 +5933,43 @@ begin
   jsonRoot:=nil;
 end;
 
-procedure TQFGridPanelComponent.SaveJSON(files:string);
+//运行期另存为文件,设计期存入FConfig
+procedure TQFGridPanelComponent.SaveJSON(MSQC:Boolean=False);
 VAR
-  jsonRoot,jsoncomp, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
+  jsonRoot, jsoncomp, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
   jsonCol: TJSONArray;
   jData,jItem : TJSONData;
   i,j: Integer;
   savejsonfile: TStringList ;
   str:string;
   jsonFile: TStringList;
+  //dialog: TSaveDialog;
 begin
-  if  FileExists(FPathConfig+files) then
+  if MSQC then
   begin
-    //load原有的配置
-    jsonFile:=TStringList.Create;
-    jsonFile.LoadFromFile(FPathConfig+files);
-    jData := GetJSON(utf8toansi(jsonFile.Text));
-    jsonRoot:=TJSONObject(jData);
-    jsonFile.Free;
-    jItem:= jsonRoot.find('Version');
-    if jItem<>nil then
-      jsonRoot.Strings['Version']:=Version; //修改版本号
-    jItem:= jsonRoot.find(self.Name);
-    if jItem<>nil then  //找到QFGridPanelComponent
-      jsonRoot.Delete(self.Name); //删除原有的QFGridPanelComponent
+    if FileExists(FPathConfig+FConfigFileName) then
+    begin
+      //load原有的配置
+      jsonFile:=TStringList.Create;
+      jsonFile.LoadFromFile(FPathConfig+FConfigFileName);
+      jData := GetJSON(utf8toansi(jsonFile.Text));
+
+      jsonRoot:=TJSONObject(jData);
+      jsonFile.Free;
+      jItem:= jsonRoot.find('Version');
+      if jItem<>nil then
+        jsonRoot.Strings['Version']:=Version; //修改版本号
+      jItem:= jsonRoot.find(self.Name);
+      if jItem<>nil then  //找到QFGridPanelComponent
+        jsonRoot.Delete(self.Name); //删除原有的QFGridPanelComponent
+    end
+    else
+    begin
+      //创建一个新的JSON对象来写入数据
+      jsonRoot := TJSONObject.Create;
+      jsonRoot.Add('ConfigName', utf8toansi('QFGridPanelComponentConfig'));
+      jsonRoot.Add('Version', Version);
+    end;
   end
   else
   begin
@@ -5779,7 +5998,8 @@ begin
   jsonGrid.Add('FEditFocusColor', FEditFocusColor);
   jsonGrid.Add('FBackImageFile', FBackImageFile);
   jsonGrid.Add('FShowBackImage', FShowBackImage);
-  jsonGrid.Add('FRunEdit', FRunEdit);
+  //jsonGrid.Add('FRunEdit', FRunEdit);
+  //jsonGrid.Add('FHideMenu', FHideMenu);
 
   for i := 0 to FRowCount-1 do
   begin
@@ -5828,15 +6048,176 @@ begin
     end;
   end;
   str:=jsonRoot.FormatJSON;
-  savejsonfile:=TStringList.Create;
-  savejsonfile.add(str);
-  savejsonfile.SaveToFile(FPathConfig+files);
-  savejsonfile.Free;
-
+  if MSQC=True then
+  begin
+    try
+      savejsonfile := TStringList.Create;
+      savejsonfile.add(str);
+      savejsonfile.SaveToFile(FPathConfig+FConfigFileName);
+    finally
+      savejsonfile.Free;
+    end;
+  end;
+  //if not (csDesigning in ComponentState) then begin     //运行期另存为文件
+  //  try
+  //    dialog := TSaveDialog.Create(nil);
+  //    dialog.Title := '另存为配置文件';
+  //    dialog.Filter := 'QF表格配置文件(*.cfg)|*.cfg|所有文件(*.*)|*.*';
+  //    dialog.FileName := FPathConfig+FConfigFileName;
+  //    if dialog.Execute then begin
+  //      try
+  //        savejsonfile := TStringList.Create;
+  //        savejsonfile.add(str);
+  //        savejsonfile.SaveToFile(dialog.FileName);
+  //      finally
+  //        savejsonfile.Free;
+  //      end;
+  //    end;
+  //  finally
+  //    dialog.Free;
+  //  end;
+  //end
+  //else
+  if (csDesigning in ComponentState) then
+    FConfig.Text := str; //设计期直接存入FCOnfig    //渔夫
   jsonGrid:=nil;
   jsonRow:=nil;
   jsonRoot:=nil;
 end;
+
+{
+procedure TQFGridPanelComponent.SaveJSON(files:string);
+VAR
+  jsonRoot, jsoncomp, jsonGrid, jsonRow,  jsonParamObj: TJSONObject;
+  jsonCol: TJSONArray;
+  jData,jItem : TJSONData;
+  i,j: Integer;
+  savejsonfile: TStringList ;
+  str:string;
+  jsonFile: TStringList;
+  dialog: TSaveDialog;
+begin
+  if FileExists(FPathConfig+files) then
+  begin
+    //load原有的配置
+    jsonFile:=TStringList.Create;
+    jsonFile.LoadFromFile(FPathConfig+files);
+    jData := GetJSON(utf8toansi(jsonFile.Text));
+
+    jsonRoot:=TJSONObject(jData);
+    jsonFile.Free;
+    jItem:= jsonRoot.find('Version');
+    if jItem<>nil then
+      jsonRoot.Strings['Version']:=Version; //修改版本号
+    jItem:= jsonRoot.find(self.Name);
+    if jItem<>nil then  //找到QFGridPanelComponent
+      jsonRoot.Delete(self.Name); //删除原有的QFGridPanelComponent
+  end
+  else
+  begin
+    //创建一个新的JSON对象来写入数据
+    jsonRoot := TJSONObject.Create;
+    jsonRoot.Add('ConfigName', utf8toansi('QFGridPanelComponentConfig'));
+    jsonRoot.Add('Version', Version);
+  end;
+  jsonGrid := TJSONObject.Create;
+  jsonRoot.Add(self.Name, jsonGrid);//添加QFGridPanelComponent
+
+  jsonGrid.Add('ComponentName', self.Name);
+  jsonGrid.Add('FRowcount', FRowcount);
+  jsonGrid.Add('FColcount', FColcount);
+  jsonGrid.Add('FCellLineColor', FCellLineColor);
+  jsonGrid.Add('FColSizing', FColSizing);
+  jsonGrid.Add('FRowSizing', FRowSizing);
+  jsonGrid.Add('FCellLineStyle', ord(FCellLineStyle));
+  jsonGrid.Add('FColWidth', FColWidth);
+  jsonGrid.Add('FRowHeight', FRowHeight);
+  jsonGrid.Add('FTableWidth', FTableWidth);
+  jsonGrid.Add('FTableHeight', FTableHeight);
+  jsonGrid.Add('FGap', FGap);
+  jsonGrid.Add('FBorder', FBorder);
+  jsonGrid.Add('FEditFontFocusColor', FEditFontFocusColor);
+  jsonGrid.Add('FEditFocusColor', FEditFocusColor);
+  jsonGrid.Add('FBackImageFile', FBackImageFile);
+  jsonGrid.Add('FShowBackImage', FShowBackImage);
+  //jsonGrid.Add('FRunEdit', FRunEdit);
+  //jsonGrid.Add('FHideMenu', FHideMenu);
+
+  for i := 0 to FRowCount-1 do
+  begin
+    jsonRow := TJSONObject.Create;
+    jsonGrid.Add(Format('row%d', [i]), jsonRow);
+    for j := 0 to FColCount do
+    begin
+      jsonCol := TJSONArray.Create;
+      jsonRow.Add(Format('col%d', [j]), jsonCol);
+
+      jsonParamObj := TJSONObject.Create;
+      jsonParamObj.Add('x', FTable[i,j].x);
+      jsonParamObj.Add('y', FTable[i,j].y);
+      jsonParamObj.Add('Gap', FTable[i,j].Gap);
+      jsonParamObj.Add('Width', FTable[i,j].Width);
+      jsonParamObj.Add('Height', FTable[i,j].Height);
+      jsonParamObj.Add('ColMerge', FTable[i,j].ColMerge);
+      jsonParamObj.Add('RowMerge', FTable[i,j].RowMerge);
+      jsonParamObj.Add('DispType', ord(FTable[i,j].DispType));
+      jsonParamObj.Add('str', FTable[i,j].str);
+      jsonParamObj.Add('Color', FTable[i,j].Color);
+      jsonParamObj.Add('Align', ord(FTable[i,j].Align));
+      jsonParamObj.Add('FontName', FTable[i,j].FontName);
+      jsonParamObj.Add('FontSize', FTable[i,j].FontSize);
+      jsonParamObj.Add('FontStyle', ord(FTable[i,j].FontStyle));
+      jsonParamObj.Add('FontColor', FTable[i,j].FontColor);
+      jsonParamObj.Add('ComponentType', FTable[i,j].ComponentType);
+      jsonParamObj.Add('ComponentName', FTable[i,j].ComponentName);
+      //jsonParamObj.Add('ComponentDataSource', TJSONObject.Create(FTable[i,j].ComponentDataSource));
+      //jsonParamObj.Add('ComponentDataFieldName',TJSONObjectClass.Create(FTable[i,j].ComponentDataFieldName.ClassName));
+      jsonParamObj.Add('Visible', FTable[i,j].Visible);
+      jsonParamObj.Add('DrawTop', FTable[i,j].DrawTop);
+      jsonParamObj.Add('DrawLeft', FTable[i,j].DrawLeft);
+      jsonParamObj.Add('DrawBottom', FTable[i,j].DrawBottom);
+      jsonParamObj.Add('DrawRight', FTable[i,j].DrawRight);
+      jsonParamObj.Add('LineStyle', ord(FTable[i,j].LineStyle));
+      jsonParamObj.Add('TopLineStyle', ord(FTable[i,j].TopLineStyle));
+      jsonParamObj.Add('LeftLineStyle', ord(FTable[i,j].LeftLineStyle));
+      jsonParamObj.Add('BottomLineStyle', ord(FTable[i,j].BottomLineStyle));
+      jsonParamObj.Add('RightLineStyle', ord(FTable[i,j].RightLineStyle));
+      jsonParamObj.Add('TextCellColor', FTable[i,j].TextCellColor);
+
+      jsonCol.Add(jsonParamObj);
+      jsonParamObj:=nil;
+      jsonCol:=nil;
+    end;
+  end;
+  str:=jsonRoot.FormatJSON;
+  //渔夫
+  if not (csDesigning in ComponentState) then begin     //运行期另存为文件
+    try
+      dialog := TSaveDialog.Create(nil);
+      dialog.Title := '另存为配置文件';
+      dialog.Filter := 'QF表格配置文件(*.cfg)|*.cfg|所有文件(*.*)|*.*';
+      dialog.FileName := FPathConfig+FConfigFileName;
+      if dialog.Execute then begin
+        try
+          savejsonfile := TStringList.Create;
+          savejsonfile.add(str);
+          savejsonfile.SaveToFile(dialog.FileName);
+        finally
+          savejsonfile.Free;
+        end;
+      end;
+    finally
+      dialog.Free;
+    end;
+  end
+  else
+    FConfig.Text := str; //设计期直接存入FCOnfig
+  //渔夫
+  jsonGrid:=nil;
+  jsonRow:=nil;
+  jsonRoot:=nil;
+end;
+}
 
 //添加设计时鼠标右按弹出菜单
 function EditQFGridPanel(AGrid: TQFGridPanelComponent): Boolean;
@@ -5849,6 +6230,8 @@ begin
   AGrid.GetControlsList;
   CellProper := TQFCellProper.Create(Application);
   try
+    CellProper.FRowCount:=AGrid.FRowCount+1;
+    CellProper.FColCount:=AGrid.FColCount+1;
     setlength(CellProper.GTable,AGrid.FRowCount+1,AGrid.FColCount+2);
     AGrid.FSelectRow:=0;
     AGrid.FSelectCol:=1;
@@ -5861,11 +6244,13 @@ begin
     CellProper.RowEdit.Text:=AGrid.FRowCount.ToString;
     CellProper.LineColor.Color:=AGrid.FCellLineColor;
     CellProper.CbxLineStyle.ItemIndex:=ord(AGrid.FCellLineStyle);
+    CellProper.FEditFontFocusColor:=AGrid.FEditFontFocusColor;
     CellProper.ComboBox1.Items.Clear;
     CellProper.ComboBox1.text:='';
     CellProper.ComboBox1.Items.Assign(AGrid.FControlsList);
-    CellProper.StringGrid1.Row:=AGrid.FSelectRow;
-    CellProper.StringGrid1.Col:=AGrid.FSelectCol-1;
+    CellProper.FHeight:=AGrid.Height;
+    CellProper.FWidth :=AGrid.Width;
+
     CellProper.CellTextEdit.Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].str;
     CellProper.StatusBar1.Panels[0].Text:='行:'+(AGrid.FSelectRow+1).ToString+'  列:'+(AGrid.FSelectCol).ToString;
     CellProper.StatusBar1.Panels[1].Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].str;//StringGrid1.Cells[col,row];
@@ -5908,9 +6293,6 @@ begin
     CellProper.RightLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].RightLineStyle);
     CellProper.BottomLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].BottomLineStyle);
     CellProper.TopLineStyle.ItemIndex:=ord(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].TopLineStyle);
-    //根据控件的FRowCount和FColCount设置StringGrid的行和列
-    CellProper.StringGrid1.RowCount:=AGrid.FRowCount;
-    CellProper.StringGrid1.ColCount:=AGrid.FColCount;
 
     CellProper.EditFontFocusColor.Color:=AGrid.FEditFontFocusColor;
     CellProper.EditFocusColor.Color:=AGrid.FEditFocusColor;
@@ -5920,7 +6302,6 @@ begin
 
     for i:=0 to AGrid.FRowCount-1 do
     begin
-      //CellProper.StringGrid1.RowHeights[i]:=FRowHeight;
       for j:=0 to AGrid.FColCount do
       begin
         CellProper.GTable[i,j].Gap:=AGrid.FTable[i,j].Gap;
@@ -5953,8 +6334,6 @@ begin
         CellProper.GTable[i,j].x:=AGrid.FTable[i,j].x;
         CellProper.GTable[i,j].y:=AGrid.FTable[i,j].y;
         CellProper.GTable[i,j].TextCellColor:=AGrid.FTable[i,j].TextCellColor;
-        if j>0 then
-        CellProper.StringGrid1.cells[j-1,i]:=AGrid.FTable[i,j].str;
       end;
     end;
     CellProper.ComboBox1.ItemIndex:=
@@ -6043,10 +6422,12 @@ begin
       AGrid.FOldR.Height:=0;
       AGrid.FOldSelectRow:=0;
       AGrid.FOldSelectCol:=0;
+
       AGrid.TableMerge;
       AGrid.DoOnChangeBounds;
-      AGrid.SaveQFConfig;
+      AGrid.SaveQFConfig;                 //直接存入FConfig
       AGrid.DrawTable;
+
       Result:=true;
     end
     else
