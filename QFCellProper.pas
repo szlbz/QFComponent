@@ -550,7 +550,8 @@ begin
   RightLineStyle.ItemIndex:=ord(GTable[Row,Col+1].RightLineStyle);
   BottomLineStyle.ItemIndex:=ord(GTable[Row,Col+1].BottomLineStyle);
   TopLineStyle.ItemIndex:=ord(GTable[Row,Col+1].TopLineStyle);
-  PanelFontPreview1.Font.Name:=GTable[Row,Col+1].FontName;
+  if GTable[Row,Col+1].FontName<>'' then
+    PanelFontPreview1.Font.Name:=GTable[Row,Col+1].FontName; //2026
   if GTable[Row,Col+1].TextCellColor<> ClBlack then
   begin
     TextCellColor.Color:=GTable[Row,Col+1].TextCellColor;

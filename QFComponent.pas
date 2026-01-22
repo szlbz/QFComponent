@@ -3893,7 +3893,6 @@ var
 begin
   GetControlsList;
   CellProper := TQFCellProper.Create(Self);
-
   setlength(CellProper.GTable,FRowCount+1,FColCount+2);
 
   oldRowCount:= FRowCount;
@@ -3957,7 +3956,8 @@ begin
   CellProper.RowHeightEdit.Text:=FRowHeight.ToString;
   CellProper.EditFontSize.Text:=FTable[FSelectRow,FSelectCol].FontSize.ToString;
   CellProper.LbxFontName.ItemIndex:=CellProper.LbxFontName.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontName);
-  CellProper.PanelFontPreview1.Font.Name:=FTable[FSelectRow,FSelectCol].FontName;
+  if FTable[FSelectRow,FSelectCol].FontName<>'' then
+    CellProper.PanelFontPreview1.Font.Name:=FTable[FSelectRow,FSelectCol].FontName;    //2026
   CellProper.LbxFontSize.ItemIndex:=CellProper.LbxFontSize.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontSize.ToString);
   CellProper.PanelFontColor.Color:=FTable[FSelectRow,FSelectCol].FontColor;
   CellProper.PanelFontPreview1.Font.Color:=FTable[FSelectRow,FSelectCol].FontColor;
@@ -4671,6 +4671,7 @@ var
   path:string;
   y,Index:integer;
 begin
+  Result:=False;
   if FColCount<>0 then
     FColWidth:= FBuffer.Width div FColCount;
   if FRowCount<>0 then
