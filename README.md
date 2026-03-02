@@ -1,3 +1,5 @@
+# [秋风原创控件] QQ：315795176 
+
 QFComponent for lazarus    
 最新的简介在：  
 https://www.cnblogs.com/qiufeng2014/p/18058856     
