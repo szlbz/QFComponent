@@ -3801,7 +3801,9 @@ begin
   FCopyTable.DrawRight:= FTable[FSelectRow,FSelectCol].DrawRight;
   FCopyTable.DrawTop:= FTable[FSelectRow,FSelectCol].DrawTop;
   FCopyTable.FontColor:= FTable[FSelectRow,FSelectCol].FontColor;
-  FCopyTable.FontName:= FTable[FSelectRow,FSelectCol].FontName;
+  if FTable[FSelectRow,FSelectCol].FontName<>'' then
+    FCopyTable.FontName:=FTable[FSelectRow,FSelectCol].FontName;    //2026
+  //FCopyTable.FontName:= FTable[FSelectRow,FSelectCol].FontName;
   FCopyTable.FontSize:= FTable[FSelectRow,FSelectCol].FontSize;
   FCopyTable.FontStyle:= FTable[FSelectRow,FSelectCol].FontStyle;
 
@@ -3956,8 +3958,10 @@ begin
   CellProper.RowHeightEdit.Text:=FRowHeight.ToString;
   CellProper.EditFontSize.Text:=FTable[FSelectRow,FSelectCol].FontSize.ToString;
   CellProper.LbxFontName.ItemIndex:=CellProper.LbxFontName.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontName);
+
   if FTable[FSelectRow,FSelectCol].FontName<>'' then
-    CellProper.PanelFontPreview1.Font.Name:=FTable[FSelectRow,FSelectCol].FontName;    //2026
+    CellProper.PanelFontPreview1.Font.Name:=FTable[FSelectRow,FSelectCol].FontName; //2026
+
   CellProper.LbxFontSize.ItemIndex:=CellProper.LbxFontSize.Items.IndexOf(FTable[FSelectRow,FSelectCol].FontSize.ToString);
   CellProper.PanelFontColor.Color:=FTable[FSelectRow,FSelectCol].FontColor;
   CellProper.PanelFontPreview1.Font.Color:=FTable[FSelectRow,FSelectCol].FontColor;
@@ -6279,8 +6283,11 @@ begin
     CellProper.ColWidthEdit.Text:=AGrid.FColWidth.ToString;
     CellProper.RowHeightEdit.Text:=AGrid.FRowHeight.ToString;
     CellProper.EditFontSize.Text:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontSize.ToString;
-    CellProper.LbxFontName.ItemIndex:=CellProper.LbxFontName.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName);
-    CellProper.PanelFontPreview1.Font.Name:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName;
+    if AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName<>'' then  //2026
+    begin
+      CellProper.LbxFontName.ItemIndex:=CellProper.LbxFontName.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName);
+      CellProper.PanelFontPreview1.Font.Name:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontName;
+    end;
     CellProper.LbxFontSize.ItemIndex:=CellProper.LbxFontSize.Items.IndexOf(AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontSize.ToString);
     CellProper.PanelFontColor.Color:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontColor;
     CellProper.PanelFontPreview1.Font.Color:=AGrid.FTable[AGrid.FSelectRow,AGrid.FSelectCol].FontColor;

@@ -12,13 +12,7 @@ type
 
   TQFCellProper = class(TForm)
     BackImageFile: TLabeledEdit;
-    BevelCellType1: TBevel;
-    BevelCellType2: TBevel;
-    BevelCellType3: TBevel;
-    BevelCellType4: TBevel;
-    BevelCellType5: TBevel;
     BevelCellType6: TBevel;
-    BevelCellType7: TBevel;
     BtnCancel: TButton;
     BtnOk: TButton;
     BtnSetCellLineColor1: TButton;
@@ -30,7 +24,6 @@ type
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
-    Button4: TButton;
     CbxCellType: TComboBox;
     CbxLineStyle: TComboBox;
     CellGapEdit: TLabeledEdit;
@@ -90,7 +83,6 @@ type
     LabelControl3: TLabel;
     LineColor: TPanel;
     LabelCellType: TLabel;
-    BevelCellType: TBevel;
     ColorDialogCellProp: TColorDialog;
     CbxHAlign: TComboBox;
     procedure BtnCancelClick(Sender: TObject);
@@ -103,7 +95,6 @@ type
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
-    procedure Button4Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormResize(Sender: TObject);
@@ -444,13 +435,6 @@ begin
   QFGridPanel.RedrawTable;
 end;
 
-procedure TQFCellProper.Button4Click(Sender: TObject);
-begin
-  QFGridPanel.Config.Text:=GetJSON;
-  QFGridPanel.Refresh;
-  QFGridPanel.RedrawTable;
-end;
-
 procedure TQFCellProper.ComboBox1Change(Sender: TObject);
 begin
   if combobox1.ItemIndex>-1 then
@@ -467,6 +451,9 @@ procedure TQFCellProper.FormResize(Sender: TObject);
 begin
   QFGridPanel.Width:=ScrollBox1.Width+100;
   QFGridPanel.Height:=ScrollBox1.Height+100;
+  QFGridPanel.Config.Text:=GetJSON;
+  QFGridPanel.Refresh;
+  QFGridPanel.RedrawTable;
 end;
 
 procedure TQFCellProper.SetNumControls(Value: boolean);
@@ -485,6 +472,9 @@ procedure TQFCellProper.FormShow(Sender: TObject);
 begin
   GetFirstCellProp;
   SetControlState;
+  //QFGridPanel.Width:=ScrollBox1.Width+100;
+  //QFGridPanel.Height:=ScrollBox1.Height+100;
+
   QFGridPanel.Config.Text:=GetJSON;
   QFGridPanel.Refresh;
   QFGridPanel.RedrawTable;
