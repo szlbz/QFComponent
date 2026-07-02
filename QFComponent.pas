@@ -3729,7 +3729,6 @@ constructor TQFGridPanelComponent.Create(AOwner: TComponent);
 var m:TMenuItem;
 begin
   inherited Create(AOwner);
-  //BringToFront;
   //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
   //  FPOpupMenu:=TPopupMenu.Create(AOwner)
   //else
@@ -5352,11 +5351,9 @@ begin
      (Control is TComboBox) or
      (Control is TDBComboBox) or
      (Control is TDateEdit) or
-     (Control is TDBDateEdit) or
-     (Control is TBitBtn) or
-     (Control is TButton) then
+     (Control is TDBDateEdit)  then
      Result:=true
-     else
+  else
      Result:=false;
 end;
 
