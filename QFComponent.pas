@@ -103,7 +103,7 @@ type
   // 弹出菜单的标识
   TStMenuItemTag = (mtCopy, mtPaste, mtClearCells, mtSetCellProp, mtSaveCellProp);//, mtLoadCellProp);
 
-  TCustomText = class(TCustomControl)//TScrollingWinControl)//TCustomControl)
+  TCustomText = class(TCustomControl)//TCustomControl)//TScrollingWinControl)//TCustomControl)
   private
     FRect:TRect;
     FMV:integer;
@@ -3729,10 +3729,11 @@ constructor TQFGridPanelComponent.Create(AOwner: TComponent);
 var m:TMenuItem;
 begin
   inherited Create(AOwner);
-
+  //BringToFront;
   //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
   //  FPOpupMenu:=TPopupMenu.Create(AOwner)
   //else
+  ControlStyle := ControlStyle + [csAcceptsControls];//, csDesignInteractive];
   FEditFocusColor:=clWhite;
   FEditFontFocusColor:=clBlack;
   FMoveRows:=-1;
@@ -5042,25 +5043,26 @@ begin
           Control:=FindChildControls(FTable[i,j].ComponentName);//查找控件
           if Control<>nil then
           begin
-            Control.BringToFront;//将控件置前
-            Control.Parent:=self.Parent;
+            //Control.Parent:=self.Parent;
+            //Control.BringToFront;//将控件置前
             Control.Width:=FTable[i,j].Width-CellGap*2;
             //if isComponent(Control) then
-            if (Control is TMemo) or
-               (Control is TButton) or
-               (Control is TDBMemo) or
-               (Control is TStringGrid) or
-               (Control is TDBGrid) or
-               (Control is TComboBox) or
-               (Control is TDBListBox) or
-               (Control is TListBox) or
-               (Control is TDBComboBox) then
+            //if (Control is TMemo) or
+            //   (Control is TBitBtn) or
+            //   (Control is TButton) or
+            //   (Control is TDBMemo) or
+            //   (Control is TStringGrid) or
+            //   (Control is TDBGrid) or
+            //   (Control is TComboBox) or
+            //   (Control is TDBListBox) or
+            //   (Control is TListBox) or
+            //   (Control is TDBComboBox) then
             begin
               Control.Height:= FTable[i,j].Height-CellGap*2;
             end;
-            Control.Left:=FTable[i,j].x+CellGap+self.Left;
+            Control.Left:=FTable[i,j].x+CellGap;// +self.Left;
             y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-CellGap;
-            Control.Top:=FTable[i,j].y+CellGap+self.Top+y1;//垂直居中显示控件
+            Control.Top:=FTable[i,j].y+CellGap;// +self.Top+y1;//垂直居中显示控件
             if isComponent(Control) then
             //if (Control is TEdit) or
             //   (Control is TDBEdit) or
@@ -5208,6 +5210,7 @@ begin
       Canvas.FillRect(rect);
     if CellControl<>nil then
     begin
+
       if isComponent(CellControl) then
       begin
         FOldEditFocusColor:=TEdit(CellControl).Color;
@@ -5350,6 +5353,7 @@ begin
      (Control is TDBComboBox) or
      (Control is TDateEdit) or
      (Control is TDBDateEdit) or
+     (Control is TBitBtn) or
      (Control is TButton) then
      Result:=true
      else
@@ -5622,6 +5626,7 @@ procedure TQFGridPanelComponent.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   i,j:integer;
   movedX,x1,x2,c2:integer;
+  Control: TControl;
 
   function isLine(x,y:integer;out i0,j0:integer):TCursor;
   var
@@ -5708,6 +5713,11 @@ begin
       if FMouseFollow then
       begin
         DrawRect(FoldR,FCellLineColor,1,FOldSelectRow,FOldSelectCol,true);
+        Control:=FindChildControls(FTable[FOldSelectRow,FOldSelectCol].ComponentName);//查找控件
+        if Control<>nil then
+        begin
+          Control.Refresh;
+        end;
         FOldR:=FCurrentR;
         FOldSelectRow:=FSelectRow;
         FOldSelectCol:=FSelectCol;
@@ -5715,6 +5725,11 @@ begin
           DrawRect(FCurrentR,clred,1,FSelectRow,FSelectCol)
         else
           DrawRect(FCurrentR,clBlue,1,FSelectRow,FSelectCol);
+      end;
+      Control:=FindChildControls(FTable[FSelectRow,FSelectCol].ComponentName);//查找控件
+      if Control<>nil then
+      begin
+        Control.Refresh;
       end;
     end;
     if FisLeftButtonDown then
