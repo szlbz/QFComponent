@@ -3729,6 +3729,7 @@ constructor TQFGridPanelComponent.Create(AOwner: TComponent);
 var m:TMenuItem;
 begin
   inherited Create(AOwner);
+  //BringToFront;
   //if (csDesigning in ComponentState) or Assigned(LazarusIDE) then
   //  FPOpupMenu:=TPopupMenu.Create(AOwner)
   //else
@@ -5062,6 +5063,10 @@ begin
             Control.Left:=FTable[i,j].x+CellGap;// +self.Left;
             y1:=(abs(Control.Height-FTable[i,j].Height) div 2)-CellGap;
             Control.Top:=FTable[i,j].y+CellGap;// +self.Top+y1;//垂直居中显示控件
+            if Control.Height< FTable[i,j].Height-CellGap*2 then
+            begin
+              Control.top:= FTable[i,j].y+FTable[i,j].Height div 2 -Control.Height div 2+CellGap;
+            end;
             if isComponent(Control) then
             //if (Control is TEdit) or
             //   (Control is TDBEdit) or
@@ -5353,7 +5358,7 @@ begin
      (Control is TDateEdit) or
      (Control is TDBDateEdit)  then
      Result:=true
-  else
+     else
      Result:=false;
 end;
 
